@@ -25,7 +25,7 @@ contain references to the dataflows attached to the categories.
     HTTP/1.1 200 OK
     Content-Type: application/vnd.sdmx.structure+json;version=2.1
     
-    JSON response (see 1_categoryscheme_response.json)
+    JSON response (see prototype 1_categoryscheme_response.json)
 
 Response contains the category schemes, as well as the categorisations with
 references to the dataflows will be returned.
@@ -50,7 +50,7 @@ and the constraints will also be returned.
     HTTP/1.1 200 OK
     Content-Type: application/vnd.sdmx.structure+json;version=2.1
     
-    JSON response (see 2_dataflow_response.json)
+    JSON response (see prototype 2_dataflow_response.json)
 
 Response contains the requested dataflow, as well as the data structure
 definition and the dataflow constraints attached.
@@ -84,7 +84,12 @@ ECB+123456+1.2 instead of 123456).
     HTTP/1.1 200 OK
     Content-Type: application/vnd.sdmx.genericdata+json;version=2.1
     
-    JSON response (see 3_data_response.json)
+    JSON response 
+    See three alternative prototypes: 
+     - 3_data_response_series.json
+     - 3_data_response_tables.json
+     - 3_data_response_arrays.json
+    
 
 Response contains the requested time series.
 
