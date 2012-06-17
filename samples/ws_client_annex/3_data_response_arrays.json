@@ -1,83 +1,86 @@
 [
-	{
-		"annotations":[
-			"In this prototype data is arranged in arrays indexed by coded dimensions.",
-			"There are three groups of data arrays. First group is indexed at sibling level,",
-			"second group is indexed at series level and the third group at observation level",
-			"Each data array is indentified with a concept name, e.g. COLL_METHOD",
-			"Indexing is based on the order of dimensions and codes. Values for any dimension combination",
-			"can be accessed by calculating the array index with simple arithmetic."
-		    "This layout resembles PC-AXIS format without KEYS and the format",
-		    "presented at json-stat.org."
-		],
-	},
-	{
-		"class":"group",
-		"dimensions":[
-			{ "id":"CURRENCY", "codes":["CHF","GBP","JPY","USD"] },
-			{ "id":"CURRENCY_DENOM", "codes":["EUR"] },
-			{ "id":"EXR_TYPE", "codes":["SP00"] },
-			{ "id":"EXR_VAR", "codes":["E"] },
-		 ],
-		"data":[
-			{ 
-				"id":"TITLE", 
-				"values":[
-					"ECB reference exchange rate, Swiss franc/Euro", 
-					"ECB reference exchange rate, U.K. Pound sterling /Euro", 
-					"ECB reference exchange rate, Japanese yen/Euro", 
-					"ECB reference exchange rate, U.S. dollar/Euro"
-				] 
-			},
-		]
-	},
-	{
-		"class":"group",
-		"dimensions":[
-			{ "id":"FREQ", "codes":["M"] },
-			{ "id":"CURRENCY", "codes":["CHF","GBP","JPY","USD"] },
-			{ "id":"CURRENCY_DENOM", "codes":["EUR"] },
-			{ "id":"EXR_TYPE", "codes":["SP00"] },
-			{ "id":"EXR_VAR", "codes":["E"] },
-		 ],
-		"data":[
-			{ 
-				"id":"DECIMALS", 
-				"values":["4","5","2","4"]
-			},
-			{ 
-				"id":"UNIT_MEASURE", 
-				"values":["CHF","GBP","JPY","USD"]
-			},
-			{ 
-				"id":"UNIT_MULT", 
-				"values":["0","0","0","0"]
-			},
-			{ 
-				"id":"COLL_METHOD", 
-				"values":[
-					"Average of observations through period",
-					"Average of observations through period",
-					"Average of observations through period",
-					"Average of observations through period"
-				]
-			},
-		]
-	},
-	{
-		"class":"observation",
-		"dimensions":[
-			{ "id":"FREQ", "codes":["M"] },
-			{ "id":"CURRENCY", "codes":["CHF","GBP","JPY","USD"] },
-			{ "id":"CURRENCY_DENOM", "codes":["EUR"] },
-			{ "id":"EXR_TYPE", "codes":["SP00"] },
-			{ "id":"EXR_VAR", "codes":["E"] },
-			{ "id":"TIME_PERIOD", "codes":["2010-08","2010-09","2010-10"] },
-		 ],
-		"data":[
-			{ "id":"OBS_VALUE", "values":[1.3413, 1.3089, 1.3452, 0.82363, 0.83987, 0.87637, 110.04, 110.26, 113.67, 1.2894, 1.3067, 1.3898] },
-			{ "id":"OBS_STATUS", "values":["A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A", "A"] },
-			{ "id":"CONF_STATUS_OBS", "values":["F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F", "F"] },
-		]
-	}
+    {
+        "annotations":[
+            "In this prototype data is arranged in arrays indexed by coded dimensions.",
+            "There are three groups of data arrays. First group is indexed at sibling level,",
+            "second group is indexed at series level and the third group at observation level",
+            "Each data array is indentified with a concept name, e.g. COLL_METHOD",
+            "Indexing is based on the order of dimensions and codes. Values for any dimension combination",
+            "can be accessed by calculating the array index with simple arithmetic."
+            "This layout resembles PC-AXIS format without KEYS and the format",
+            "presented at json-stat.org."
+        ],
+    },
+    {
+        "class":"group",
+        "dimensions":[
+            { "id":"CURRENCY", "codes":[ "CHF", "GBP", "JPY", "USD" ] },
+            { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
+            { "id":"EXR_TYPE", "codes":[ "SP00" ] },
+            { "id":"EXR_VAR", "codes":[ "E" ] },
+         ],
+        "attributes":[
+            { "id":"TITLE" },
+        ],
+        "data":[
+            [
+                "ECB reference exchange rate, Swiss franc/Euro", 
+                "ECB reference exchange rate, U.K. Pound sterling /Euro", 
+                "ECB reference exchange rate, Japanese yen/Euro", 
+                "ECB reference exchange rate, U.S. dollar/Euro" 
+            ],
+        ]
+    },
+    {
+        "class":"group",
+        "dimensions":[
+            { "id":"FREQ", "codes":[ "M" ] },
+            { "id":"CURRENCY", "codes":[ "CHF", "GBP", "JPY", "USD" ] },
+            { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
+            { "id":"EXR_TYPE", "codes":[ "SP00" ] },
+            { "id":"EXR_VAR", "codes":[ "E" ] },
+         ],
+        "attributes":[
+            { "id":"DECIMALS" },
+            { "id":"UNIT_MEASURE" },
+            { "id":"UNIT_MULT" },
+            { "id":"COLL_METHOD" },
+        ],
+        "data":[
+            [ "4", "CHF", "0", "Average of observations through period" ],
+            [ "5", "GBP", "0", "Average of observations through period" ],
+            [ "2", "JPY", "0", "Average of observations through period" ],
+            [ "4", "USD", "0", "Average of observations through period" ],
+        ]
+    },
+    {
+        "class":"observation",
+        "dimensions":[
+            { "id":"FREQ", "codes":[ "M" ] },
+            { "id":"CURRENCY", "codes":[ "CHF", "GBP", "JPY", "USD" ] },
+            { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
+            { "id":"EXR_TYPE", "codes":[ "SP00" ] },
+            { "id":"EXR_VAR", "codes":[ "E" ] },
+            { "id":"TIME_PERIOD", "codes":[ "2010-08", "2010-09", "2010-10" ] },
+         ],
+        "attributes":[
+            { "id":"OBS_VALUE" },
+            { "id":"OBS_STATUS" },
+            { "id":"CONF_STATUS_OBS" },
+        ],
+        "data":[
+            [ 1.3413, "A", "F" ],
+            [ 1.3089, "A", "F" ],
+            [ 1.3452, "A", "F" ],
+            [ 0.82363, "A", "F" ],
+            [ 0.83987, "A", "F" ],
+            [ 0.87637, "A", "F" ],
+            [ 110.04, "A", "F" ], 
+            [ 110.26, "A", "F" ],
+            [ 113.67, "A", "F" ],
+            [ 1.2894, "A", "F" ],
+            [ 1.3067, "A", "F" ],
+            [ 1.3898, "A", "F" ],
+        ]
+    }
 ]
