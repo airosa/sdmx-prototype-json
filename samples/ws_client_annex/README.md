@@ -85,10 +85,11 @@ ECB+123456+1.2 instead of 123456).
     Content-Type: application/vnd.sdmx.genericdata+json;version=2.1
     
     JSON response 
-    See three alternative prototypes: 
+    See alternative prototypes: 
      - 3_data_response_series.json
      - 3_data_response_tables.json
      - 3_data_response_arrays.json
+     - 3_data_response_objects.json
     
 
 Response contains the requested time series.
