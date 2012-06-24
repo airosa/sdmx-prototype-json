@@ -7,26 +7,43 @@
             "Each data array is indentified with a concept name, e.g. COLL_METHOD",
             "Indexing is based on the order of dimensions and codes. Values for any dimension combination",
             "can be accessed by calculating the array index with simple arithmetic."
+        ]
+    },
+    {
+        "class":"dataset",
+        "dimensions":[
+            { "id":"FREQ" },
+            { "id":"CURRENCY" },
+            { "id":"CURRENCY_DENOM" },
+            { "id":"EXR_TYPE" },
+            { "id":"EXR_VAR" },
+            { "id":"TIME_PERIOD" }
+         ],
+        "attributes":[
+            { "id":"DESCRIPTION" }
         ],
+        "data":{
+            "0":[ "ECB reference exchange rates" ]
+        }
     },
     {
         "class":"group",
         "dimensions":[
+            { "id":"FREQ" },
             { "id":"CURRENCY", "codes":[ "CHF", "GBP", "JPY", "USD" ] },
             { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
             { "id":"EXR_TYPE", "codes":[ "SP00" ] },
             { "id":"EXR_VAR", "codes":[ "E" ] },
+            { "id":"TIME_PERIOD" }
          ],
         "attributes":[
-            { "id":"TITLE" },
+            { "id":"TITLE" }
         ],
         "data":{
-            "1":[
-                "ECB reference exchange rate, Swiss franc/Euro", 
-                "ECB reference exchange rate, U.K. Pound sterling /Euro", 
-                "ECB reference exchange rate, Japanese yen/Euro", 
-                "ECB reference exchange rate, U.S. dollar/Euro" 
-            ],
+            "0":[ "ECB reference exchange rate, Swiss franc/Euro" ], 
+            "1":[ "ECB reference exchange rate, U.K. Pound sterling /Euro" ], 
+            "2":[ "ECB reference exchange rate, Japanese yen/Euro" ], 
+            "3":[ "ECB reference exchange rate, U.S. dollar/Euro" ]
         }
     },
     {
@@ -37,18 +54,19 @@
             { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
             { "id":"EXR_TYPE", "codes":[ "SP00" ] },
             { "id":"EXR_VAR", "codes":[ "E" ] },
+            { "id":"TIME_PERIOD" }
          ],
         "attributes":[
             { "id":"DECIMALS" },
             { "id":"UNIT_MEASURE" },
-            { "id":"UNIT_MULT" },
-            { "id":"COLL_METHOD" },
+            { "id":"UNIT_MULT", "default":"0" },
+            { "id":"COLL_METHOD", "default":"Average of observations through period" }
         ],
         "data":{
-            "1":[ "4", "CHF", "0", "Average of observations through period" ],
-            "2":[ "5", "GBP", "0", "Average of observations through period" ],
-            "3":[ "2", "JPY", "0", "Average of observations through period" ],
-            "4":[ "4", "USD", "0", "Average of observations through period" ],
+            "0":[ "4", "CHF" ],
+            "1":[ "5", "GBP" ],
+            "2":[ "2", "JPY" ],
+            "3":[ "4", "USD" ]
         }
     },
     {
@@ -59,26 +77,27 @@
             { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
             { "id":"EXR_TYPE", "codes":[ "SP00" ] },
             { "id":"EXR_VAR", "codes":[ "E" ] },
-            { "id":"TIME_PERIOD", "codes":[ "2010-08", "2010-09", "2010-10" ] },
+            { "id":"TIME_PERIOD", "codes":[ "2010-08", "2010-09", "2010-10" ] }
          ],
         "attributes":[
             { "id":"OBS_VALUE" },
-            { "id":"OBS_STATUS" },
-            { "id":"CONF_STATUS_OBS" },
+            { "id":"OBS_STATUS", "default":"A" },
+            { "id":"CONF_STATUS_OBS", "default":"F" }
         ],
         "data":{
-            "1":[ 1.3413, "A", "F" ],
-            "2":[ 1.3089, "A", "F" ],
-            "3":[ 1.3452, "A", "F" ],
-            "4":[ 0.82363, "A", "F" ],
-            "5":[ 0.83987, "A", "F" ],
-            "6":[ 0.87637, "A", "F" ],
-            "7":[ 110.04, "A", "F" ], 
-            "8":[ 110.26, "A", "F" ],
-            "9":[ 113.67, "A", "F" ],
-            "10":[ 1.2894, "A", "F" ],
-            "11":[ 1.3067, "A", "F" ],
-            "12":[ 1.3898, "A", "F" ],
+            "0":[ 1.3413 ],
+            "1":[ 1.3089 ],
+            "2":[ 1.3452 ],
+            "3":[ 0.82363 ],
+            "4":[ 0.83987 ],
+            "5":[ 0.87637 ],
+            "6":[ 110.04 ], 
+            "7":[ 110.26 ],
+            "8":[ 113.67 ],
+            "9":[ 1.2894 ],
+            "10":[ 1.3067 ],
+            "11":[ 1.3898 ]
         }
     }
 ]
+
