@@ -5,6 +5,8 @@ fs = require 'fs'
 #-------------------------------------------------------------------------------
 # Globals and constants
 
+SERVER_NAME = 'LIVE-TEST-WS'
+SERVER_VERSION = '0.1'
 PORT_NUMBER = 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -32,7 +34,7 @@ calculateIndexMultipliers = (dimensions) ->
 
 # Load in JSON format from a file
 loadDataset = (filename) ->
-    jsonString =  fs.readFileSync filename
+    jsonString = fs.readFileSync filename
     data = JSON.parse jsonString
     data.indexMultipliers = calculateIndexMultipliers data.codes
     data
@@ -40,83 +42,74 @@ loadDataset = (filename) ->
 #-------------------------------------------------------------------------------
 # Functions for date processing
 
-# Parses dates in reporting periof format e.g. 2010-Q1
+# Parses dates in reporting period format e.g. 2010-Q1
 # Returns a date object set to the beginning of the reporting period.
 # if end is true return the beginning of the next period
 parseReportingTimePeriod = (frequency, year, period, end) ->
-    if year % 1 isnt 0 
-        throw new Error "Invalid year value #{year}"
-
-    if period % 1 isnt 0
-        throw new Error "Invalid period value #{period}"
+    return null if year % 1 isnt 0
+    return null if period % 1 isnt 0
+    return null if period < 1
 
     date = new Date Date.UTC(year,0,1,0,0,0)
     period = period - 1 unless end
+
     switch frequency
         when 'A'
-            date
+            return date
         when 'S'
-            if 0 < period and period < 3
-                date.setUTCMonth date.getUTCMonth() + (6 * period)
-            else
-                throw new Error "Invalid period value #{period}"
+            return null if 2 < period
+            date.setUTCMonth date.getUTCMonth() + (6 * period)
         when 'T'
-            if 0 < period and period < 4
-                date.setUTCMonth date.getUTCMonth() + (4 * period)
-            else
-                throw new Error "Invalid period value #{period}"
+            return null if 3 < period
+            date.setUTCMonth date.getUTCMonth() + (4 * period)
         when 'Q'
-            if 0 < period and period < 5
-                date.setUTCMonth date.getUTCMonth() + (3 * period)
-            else
-                throw new Error "Invalid period value #{period}"
+            return null if 4 < period
+            date.setUTCMonth date.getUTCMonth() + (3 * period)
         when 'M'
-            if 0 < period and period < 13
-                date.setUTCMonth date.getUTCMonth() + period
-            else
-                throw new Error "Invalid period value #{period}"
+            return null if 12 < period
+            date.setUTCMonth date.getUTCMonth() + period
         when 'W'
+            return null if 53 < period
             if date.getUTCDay() isnt 4
                 date.setUTCMonth 0, 1 + (((4 - date.getUTCDay()) + 7) % 7)
             date.setUTCDate date.getUTCDate() - 3
             date.setUTCDate date.getUTCDate() + (7 * period)
         when 'D'
+            return null if 366 < period
             date.setUTCDate date.getUTCDate() + period
+        else
+            return null
+
     date
 
-# Parses dates in all supported formats. Format is detected from the value
-# length. Returns date object set the beginning of the period. If end is true
+
+# Parses time periods in all supported formats. 
+# Returns date object set the beginning of the period. If end is true
 # then returned date is set to the end of the period.
 parseDate = (value, end) ->
     date = null
 
-    try
-        switch value.length
-            when 4
-                date = new Date Date.UTC(+value,0,1,0,0,0)
-                if end
-                    date.setUTCFullYear date.getUTCFullYear() + 1
-            when 7
-                switch value[5..5]
-                    when 'A', 'S', 'T', 'Q'
-                        date = parseReportingTimePeriod value[5..5], +value[0..3], +value[6..], end
-                    else    
-                        date = new Date Date.UTC(+value[0..3],+value[5..6]-1,1,0,0,0)
-                        if end
-                            date.setUTCMonth date.getUTCMonth() + 1
-            when 8, 9
-                date = parseReportingTimePeriod value[5..5], +value[0..3], +value[6..], end
-            when 10
-                date = new Date Date.UTC(+value[0..3],+value[5..6]-1,+value[8..9],0,0,0)
-                if end 
-                    date.setUTCDate date.getUTCDate() + 1
-            when 19
-                return Date.parse value, 'yyyy-MM-ddTHH:mm:ss'
-
-        if end 
-            date.setUTCSeconds date.getUTCSeconds() - 1
-    catch error
-        date = null
+    if /^\d\d\d\d$/.test value
+        date = new Date Date.UTC( +value, 0, 1, 0, 0, 0 )
+        date.setUTCFullYear date.getUTCFullYear() + 1 if end
+    else if /^\d\d\d\d-[A|S|T|Q]\d$/.test value
+        date = parseReportingTimePeriod value[5], +value[0..3], +value[6], end
+    else if /^\d\d\d\d-[M|W]\d\d$/.test value
+        date = parseReportingTimePeriod value[5], +value[0..3], +value[6..7], end
+    else if /^\d\d\d\d-D\d\d\d$/.test value
+        date = parseReportingTimePeriod value[5], +value[0..3], +value[6..8], end
+    else if /^\d\d\d\d-\d\d$/.test value
+        date = new Date Date.UTC( +value[0..3], +value[5..6]-1 , 1 , 0 , 0 , 0 )
+        date.setUTCMonth date.getUTCMonth() + 1 if end
+    else if /^\d\d\d\d-\d\d-\d\d$/.test value
+        date = new Date Date.UTC(+value[0..3],+value[5..6]-1,+value[8..9],0,0,0)
+        date.setUTCDate date.getUTCDate() + 1 if end 
+    else if /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/.test value
+        return Date.parse value, 'yyyy-MM-ddTHH:mm:ss'
+    else
+        return null   
+    
+    date.setUTCSeconds date.getUTCSeconds() - 1 if date? and end 
 
     date
 
@@ -151,6 +144,7 @@ parseFlowRef = (flowRefStr, dataQuery, response) ->
 
 parseKey = (keyStr, dataQuery, dataset, response) ->
     dataQuery.codes = []
+
     if keyStr?
         keys = keyStr.split '.'
 
@@ -229,27 +223,11 @@ parseQueryParameters = (parameters, dataQuery, dataset, response) ->
         response.statusCode = 400  
         return
 
-    periods = []
-
-    if dataQuery.startPeriod? or dataQuery.endPeriod?
-        for period, i in dataset.codes[ dataset.codes.length - 1]
-            startDate = parseDate period, false
-            endDate = parseDate period, true
-            if dataQuery.startPeriod?
-                continue unless dataQuery.startPeriod <= startDate
-            if dataQuery.endPeriod?
-                continue unless endDate <= dataQuery.endPeriod
-            periods.push i
-    else
-        for period, i in dataset.codes[ dataset.codes.length - 1]
-            periods.push i
-    
-    dataQuery.codes.push periods
-
 
 # Main parsing function
 parseUrl = (requestUrl, response) ->
     dataQuery = {}
+    
     parsedUrl = url.parse requestUrl, yes
     path = parsedUrl.pathname.split '/'
 
@@ -274,37 +252,68 @@ parseUrl = (requestUrl, response) ->
 #-------------------------------------------------------------------------------
 # Functions for querying the sample data set
 
+# Applies the date parameters to the codes in the time dimension
+queryTimeDimension = (query, dataset) ->
+    periods = []
+
+    for period, i in dataset.codes[ dataset.codes.length - 1]
+        if query.startPeriod?
+            startDate = parseDate period, false
+            continue unless query.startPeriod <= startDate
+        if query.endPeriod?
+            endDate = parseDate period, true
+            continue unless endDate <= query.endPeriod
+        periods.push i
+
+    query.codes.push periods
+
+
 # Recursive function that loops over each query dimension combination
-# and returns all non-missing observation index
+# and returns all non-missing observation indices
 findMatchingObsIndices = (key, keyPosition, queryResult, query, dataset) ->
+    # Check if we are in the last dimension
     if keyPosition is query.length - 1
         obsCount = 0
+
+        # Loop over codes in the last dimension
         for codeIndex, i in query[keyPosition]
+            # Set the code in the last dimension
             key[keyPosition] = codeIndex
 
+            # Calculate observation index for the combination of dimension values
             index = 0
             for multiplier, j in dataset.indexMultipliers
                 index += key[j] * multiplier
 
+            # Check if we have an observation in the current index
             if dataset.data[index]?
+                # We have a non-missing observation
+                # Loop over the dimension in the key
                 for codeIndex, j in key
+                    # Store the codes in key
                     queryResult.codes[j][codeIndex] = 1
+                # Store the index
                 queryResult.obsIndices.push index
                 obsCount += 1
 
         return
 
+    # We are not yet in the last dimension
+    # Loop over codes in the current dimensions
     for codeIndex, i in query[keyPosition]
         key[keyPosition] = codeIndex
+        # Move to next dimension
         findMatchingObsIndices key, keyPosition+1, queryResult, query, dataset
 
 
-# Main query function. It finds matching observation observations, maps
-# dimensions code positions and creates the result data and code arrays. 
-queryData = (query, response) ->
+# Main query function. It finds matching observations, maps
+# dimension code positions and creates the result data and code arrays. 
+queryData = (query, dataset, response) ->
     queryTmpResult = 
         codes: []
         obsIndices: []
+
+    queryTimeDimension query, dataset
 
     for dim in dataset.codes
         queryTmpResult.codes.push {}
@@ -343,9 +352,7 @@ queryData = (query, response) ->
 # Main function for handling HTTP requests
 
 handleRequest = (request, response) ->
-    log "request #{request.url} from #{request.connection.remoteAddress}"
-
-    response.setHeader 'Server', 'SDMX-PROTOTYPE-JSON-TEST/0.1'
+    response.setHeader 'Server', "#{SERVER_NAME}/#{SERVER_VERSION}"
     response.setHeader 'Cache-Control', 'no-cache, no-store'
     response.setHeader 'Pragma', 'no-cache'
     response.setHeader 'Access-Control-Allow-Origin', '*'
@@ -354,32 +361,25 @@ handleRequest = (request, response) ->
     if not (request.method is 'GET' or request.method is 'HEAD')
         response.statusCode = 405
         response.setHeader 'Allow', 'GET, HEAD'
-        response.end()
-        return
+  
+    if response.statusCode is 200
+        dataQuery = parseUrl request.url, response
 
-    dataQuery = parseUrl request.url, response
+    if response.statusCode is 200
+        data = queryData dataQuery, dataset, response
 
-    if response.statusCode isnt 200
-        response.end()
-        return
+    if response.statusCode is 200
+        response.setHeader 'Content-Type', 'application/json'
 
-    data = queryData dataQuery, response
+        if request.method is 'GET'
+            response.end JSON.stringify data, null, 2
+    
+    response.end()
 
-    if response.statusCode isnt 200
-        response.end()
-        return
-
-    response.setHeader 'Content-Type', 'application/json'
-
-    if request.method is 'GET'
-        response.end JSON.stringify data, null, 2
-    else
-        response.end()
-
-    log "response #{response.statusCode}"
+    log "#{request.method} #{request.url} #{response.statusCode}"
 
 #-------------------------------------------------------------------------------
-# Code to initialise and start the server
+# Initialise and start the server
 
 log 'starting'
 
@@ -388,4 +388,5 @@ dataset = loadDataset DATA_FILE
 
 # Start an HTTP server
 http.createServer( handleRequest ).listen PORT_NUMBER
+
 log "listening on port #{PORT_NUMBER}"
