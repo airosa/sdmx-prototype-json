@@ -401,6 +401,8 @@ handleRequest = (request, response) ->
     if response.statusCode is 200
         if request.method is 'GET'
             response.end JSON.stringify response.result, null, 2
+        else # HEAD
+            response.end()
     else
         response.end JSON.stringify { error: response.errors }, null, 2
 
