@@ -116,9 +116,9 @@ parseDate = (value, end) ->
 #-------------------------------------------------------------------------------
 # Functions for parsing the request url
 
-parseFlowRef = (flowRefStr, dataQuery, response) ->
+parseFlowRef = (flowRefStr, query, response) ->
     if not flowRefStr? 
-        response.setHeader 'Warning', '199 Mandatory parameter flowRef is missing'
+        response.errors.push 'Mandatory parameter flowRef is missing'
         response.statusCode = 400
         return
 
@@ -137,40 +137,36 @@ parseFlowRef = (flowRefStr, dataQuery, response) ->
     flowRefOk = flowRefOk and flowRef.length is 3
 
     if not flowRefOk
-        response.setHeader 'Warning', "199 Invalid parameter flowRef #{flowRefStr}"
+        response.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
         return
 
-
-parseKey = (keyStr, dataQuery, dataset, response) ->
-    dataQuery.codes = []
-
-    if keyStr?
-        keys = keyStr.split '.'
-
-        if keys.length isnt dataset.codes.length - 1
-            response.setHeader 'Warning', "199 Invalid number of dimensions in parameter key"
-            response.statusCode = 400
-            return
-
-        for key, i in keys
-            codes = key.split '+'
-            dataQuery.codes[i] = []
-            if codes.length is 1 and codes[0].length is 0
-                for code, j in dataset.codes[i]
-                    dataQuery.codes[i].push j
-            else
-                for code in codes 
-                    index = dataset.codes[i].indexOf code
-                    dataQuery.codes[i].push index if 0 <= index
-    else
-        for i in [0..dataset.codes.length-2] 
-            dataQuery.codes[i] = []
-            for j in [0..dataset.codes[i].length-1]
-                dataQuery.codes[i].push j
+    query.flowRef =
+        agencyID: flowRef[0]
+        id: flowRef[1]
+        version: flowRef[2]
 
 
-parseProviderRef = (providerRefStr, dataQuery, response) ->
+parseKey = (keyStr, query, dataset, response) ->
+    keyStr = 'all' unless keyStr? 
+
+    if keyStr is 'all'
+        query.key = 'all'
+        return
+
+    query.key = []
+    keys = keyStr.split '.'
+
+    if keys.length isnt dataset.codes.length - 1
+        response.errors.push "Invalid number of dimensions in parameter key"
+        response.statusCode = 400
+        return
+
+    for key, i in keys
+        query.key[i] = key.split '+'
+
+
+parseProviderRef = (providerRefStr, query, response) ->
     if providerRefStr?
         providerRef = providerRefStr.split ','
 
@@ -187,23 +183,27 @@ parseProviderRef = (providerRefStr, dataQuery, response) ->
         providerRefOk = providerRef[1] is 'ECB' or providerRef[1] is 'ALL'
 
         if not providerRefOk
-            response.setHeader 'Warning', "199 Invalid parameter providerRef #{providerRefStr}"
+            response.errors.push "Invalid parameter providerRef #{providerRefStr}"
             response.statusCode = 400
             return
 
+        query.providerRef =
+            agencyID: providerRef[0]
+            id: providerRef[1]
 
-parseQueryParameters = (parameters, dataQuery, dataset, response) ->
+
+parseQueryParameters = (parameters, query, response) ->
     for param, value of parameters
         switch param
             when 'startPeriod', 'endPeriod'
                 date = parseDate value, (param is 'endPeriod')
                 if date?
-                    dataQuery[param] = date
+                    query[param] = date
                     continue
             when 'firstNObservations', 'lastNObservations'
                 n = ~Number(value)
                 if String(n) is value and n >= 0
-                    dataQuery[param] = n
+                    query[param] = n
                     continue
             when 'updatedAfter'
                 response.statusCode = 501
@@ -213,64 +213,89 @@ parseQueryParameters = (parameters, dataQuery, dataset, response) ->
             when 'detail'
                 switch value
                     when 'full', 'dataonly', 'nodata'
-                        dataQuery.detail = value
+                        query.detail = value
                         continue
                     when 'serieskeysonly'
                         response.statusCode = 501
                         return
 
-        response.setHeader 'Warning', "199 Invalid query parameter #{param} value #{value}"
+        response.errors.push "Invalid query parameter #{param} value #{value}"
         response.statusCode = 400  
         return
 
 
-# Main parsing function
-parseUrl = (requestUrl, response) ->
-    dataQuery = {}
-    
-    parsedUrl = url.parse requestUrl, yes
-    path = parsedUrl.pathname.split '/'
+parseDataQuery = (request, response) ->
+    path = request.parsedUrl.pathname.split '/'
 
-    if path[1] isnt 'data'
-        response.statusCode = 501
-        return
-
-    parseFlowRef path[2], dataQuery, response
+    parseFlowRef path[2], request.query, response
     return unless response.statusCode is 200
  
-    parseKey path[3], dataQuery, dataset, response
+    parseKey path[3], request.query, dataset, response
     return unless response.statusCode is 200
 
-    parseProviderRef path[4], dataQuery, response
+    parseProviderRef path[4], request.query, response
     return unless response.statusCode is 200
 
-    parseQueryParameters parsedUrl.query, dataQuery, dataset, response
+    parseQueryParameters request.parsedUrl.query, request.query, response
     return unless response.statusCode is 200
 
-    dataQuery
+
+# Main parsing function
+parse = (request, response) ->
+    request.query = {} 
+    request.parsedUrl = url.parse request.url, yes
+
+    path = request.parsedUrl.pathname.split '/'
+    request.query.resource = path[1]
+
+    switch request.query.resource
+        when 'data'
+            parseDataQuery request, response
+        else
+            response.statusCode = 501
+            return
 
 #-------------------------------------------------------------------------------
 # Functions for querying the sample data set
 
+addCodesToQuery = (request, codes, query) ->
+    if request.query.key is 'all'
+        for i in [0..codes.length-2] 
+            query[i] = []
+            for j in [0..codes[i].length-1]
+                query[i].push j
+        return
+
+    for keyCodes, i in request.query.key
+        query[i] = []
+        if keyCodes.length is 1 and keyCodes[0].length is 0
+            for code, j in codes[i]
+                query[i].push j
+        else
+            for code in keyCodes
+                index = codes[i].indexOf code
+                query[i].push index if 0 <= index
+
+
 # Applies the date parameters to the codes in the time dimension
-queryTimeDimension = (query, dataset) ->
-    periods = []
+addPeriodsToQuery = (request, periods, query) ->
+    filteredPeriods = []
 
-    for period, i in dataset.codes[ dataset.codes.length - 1]
-        if query.startPeriod?
+    for period, i in periods
+        if request.query.startPeriod?
             startDate = parseDate period, false
-            continue unless query.startPeriod <= startDate
-        if query.endPeriod?
+            continue unless request.query.startPeriod <= startDate
+        if request.query.endPeriod?
             endDate = parseDate period, true
-            continue unless endDate <= query.endPeriod
-        periods.push i
+            continue unless endDate <= request.query.endPeriod
+        filteredPeriods.push i
 
-    query.codes.push periods
+    query.push filteredPeriods
 
 
 # Recursive function that loops over each query dimension combination
 # and returns all non-missing observation indices
-findMatchingObsIndices = (key, keyPosition, queryResult, query, dataset) ->
+findMatchingObsIndices = (key, keyPosition, query, dataset, result) ->
     # Check if we are in the last dimension
     if keyPosition is query.length - 1
         obsCount = 0
@@ -291,9 +316,9 @@ findMatchingObsIndices = (key, keyPosition, queryResult, query, dataset) ->
                 # Loop over the dimension in the key
                 for codeIndex, j in key
                     # Store the codes in key
-                    queryResult.codes[j][codeIndex] = 1
+                    result.codeIndices[j][codeIndex] = 1
                 # Store the index
-                queryResult.obsIndices.push index
+                result.obsIndices.push index
                 obsCount += 1
 
         return
@@ -303,50 +328,52 @@ findMatchingObsIndices = (key, keyPosition, queryResult, query, dataset) ->
     for codeIndex, i in query[keyPosition]
         key[keyPosition] = codeIndex
         # Move to next dimension
-        findMatchingObsIndices key, keyPosition+1, queryResult, query, dataset
+        findMatchingObsIndices key, keyPosition+1, query, dataset, result
 
 
 # Main query function. It finds matching observations, maps
 # dimension code positions and creates the result data and code arrays. 
-queryData = (query, dataset, response) ->
-    queryTmpResult = 
-        codes: []
+query = (dataset, request, response) ->
+    codesInQuery = []
+
+    addCodesToQuery request, dataset.codes, codesInQuery
+    addPeriodsToQuery request, dataset.codes[ dataset.codes.length - 1 ], codesInQuery
+
+    firstResult = 
+        codeIndices: []
         obsIndices: []
 
-    queryTimeDimension query, dataset
+    for dim in codesInQuery
+        firstResult.codeIndices.push {}
 
-    for dim in dataset.codes
-        queryTmpResult.codes.push {}
+    # Find code and data indices for result
+    findMatchingObsIndices [], 0, codesInQuery, dataset, firstResult
 
-    findMatchingObsIndices [], 0, queryTmpResult, query.codes, dataset
-
-    queryResult =
-        codes: []
-        data: []
     codeIndexMapping = []
 
-    for dim, i in queryTmpResult.codes
-        queryResult.codes[i] = []
+    # Add codes to result
+    response.result.codes = []
+    for indices, i in firstResult.codeIndices
+        response.result.codes[i] = []
         codeIndexMapping[i] = []
-        for codeIndex, j in Object.keys(dim).sort()
+        for codeIndex, j in Object.keys(indices).sort()
             codeIndexMapping[i][codeIndex] = j
-            queryResult.codes[i][j] = dataset.codes[i][codeIndex]
+            response.result.codes[i][j] = dataset.codes[i][codeIndex]
 
-    resultIndexMultipliers = calculateIndexMultipliers queryResult.codes
+    return if request.query.detail is 'nodata'
 
-    for index in queryTmpResult.obsIndices
+    resultIndexMultipliers = calculateIndexMultipliers response.result.codes
+
+    # Add data to result
+    response.result.data = []
+    for index in firstResult.obsIndices
         newIndex = 0
         remainder = index
         for mult, i in dataset.indexMultipliers
             codeIndex = Math.floor( remainder / mult )
             remainder = remainder - ( codeIndex * mult )
             newIndex += codeIndexMapping[i][codeIndex] * resultIndexMultipliers[i]
-        queryResult.data[newIndex] = dataset.data[index]
-
-    if query.detail is 'nodata'
-        delete queryResult.data
-
-    queryResult
+        response.result.data[newIndex] = dataset.data[index]
 
 #-------------------------------------------------------------------------------
 # Main function for handling HTTP requests
@@ -356,6 +383,9 @@ handleRequest = (request, response) ->
     response.setHeader 'Cache-Control', 'no-cache, no-store'
     response.setHeader 'Pragma', 'no-cache'
     response.setHeader 'Access-Control-Allow-Origin', '*'
+    response.setHeader 'Content-Type', 'application/json'
+    response.errors = []
+    response.result = {}
     response.statusCode = 200
 
     if not (request.method is 'GET' or request.method is 'HEAD')
@@ -363,18 +393,16 @@ handleRequest = (request, response) ->
         response.setHeader 'Allow', 'GET, HEAD'
   
     if response.statusCode is 200
-        dataQuery = parseUrl request.url, response
+        parse request, response
 
     if response.statusCode is 200
-        data = queryData dataQuery, dataset, response
+        query dataset, request, response
 
     if response.statusCode is 200
-        response.setHeader 'Content-Type', 'application/json'
-
         if request.method is 'GET'
-            response.end JSON.stringify data, null, 2
-    
-    response.end()
+            response.end JSON.stringify response.result, null, 2
+    else
+        response.end JSON.stringify { error: response.errors }, null, 2
 
     log "#{request.method} #{request.url} #{response.statusCode}"
 
