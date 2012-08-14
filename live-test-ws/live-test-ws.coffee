@@ -7,7 +7,7 @@ fs = require 'fs'
 
 SERVER_NAME = 'LIVE-TEST-WS'
 SERVER_VERSION = '0.1'
-PORT_NUMBER = 8081
+PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
 dataset = null
@@ -45,7 +45,7 @@ loadDataset = (filename) ->
 # Parses dates in reporting period format e.g. 2010-Q1
 # Returns a date object set to the beginning of the reporting period.
 # if end is true return the beginning of the next period
-parseReportingTimePeriod = (frequency, year, period, end) ->
+exports.timePeriodToDate = timePeriodToDate = (frequency, year, period, end) ->
     return null if year % 1 isnt 0
     return null if period % 1 isnt 0
     return null if period < 1
@@ -55,7 +55,8 @@ parseReportingTimePeriod = (frequency, year, period, end) ->
 
     switch frequency
         when 'A'
-            return date
+            return null if 1 < period
+            date.setUTCMonth date.getUTCMonth() + (12 * period)
         when 'S'
             return null if 2 < period
             date.setUTCMonth date.getUTCMonth() + (6 * period)
@@ -86,28 +87,24 @@ parseReportingTimePeriod = (frequency, year, period, end) ->
 # Parses time periods in all supported formats. 
 # Returns date object set the beginning of the period. If end is true
 # then returned date is set to the end of the period.
-parseDate = (value, end) ->
+exports.parseDate = parseDate = (value, end) ->
     date = null
 
-    if /^\d\d\d\d$/.test value
-        date = new Date Date.UTC( +value, 0, 1, 0, 0, 0 )
-        date.setUTCFullYear date.getUTCFullYear() + 1 if end
-    else if /^\d\d\d\d-[A|S|T|Q]\d$/.test value
-        date = parseReportingTimePeriod value[5], +value[0..3], +value[6], end
+    if /^\d\d\d\d-[A|S|T|Q]\d$/.test value
+        date = timePeriodToDate value[5], +value[0..3], +value[6], end
     else if /^\d\d\d\d-[M|W]\d\d$/.test value
-        date = parseReportingTimePeriod value[5], +value[0..3], +value[6..7], end
+        date = timePeriodToDate value[5], +value[0..3], +value[6..7], end
     else if /^\d\d\d\d-D\d\d\d$/.test value
-        date = parseReportingTimePeriod value[5], +value[0..3], +value[6..8], end
-    else if /^\d\d\d\d-\d\d$/.test value
-        date = new Date Date.UTC( +value[0..3], +value[5..6]-1 , 1 , 0 , 0 , 0 )
-        date.setUTCMonth date.getUTCMonth() + 1 if end
-    else if /^\d\d\d\d-\d\d-\d\d$/.test value
-        date = new Date Date.UTC(+value[0..3],+value[5..6]-1,+value[8..9],0,0,0)
-        date.setUTCDate date.getUTCDate() + 1 if end 
-    else if /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d$/.test value
-        return Date.parse value, 'yyyy-MM-ddTHH:mm:ss'
-    else
-        return null   
+        date = timePeriodToDate value[5], +value[0..3], +value[6..8], end
+    else # give up on pattern matching and assume it is a date in ISO format
+        millisecs = Date.parse value
+        return null if isNaN millisecs
+        date = new Date millisecs
+        if end
+            switch value.length
+                when 4 then date.setUTCFullYear date.getUTCFullYear() + 1
+                when 7 then date.setUTCMonth date.getUTCMonth() + 1
+                when 10 then date.setUTCDate date.getUTCDate() + 1
     
     date.setUTCSeconds date.getUTCSeconds() - 1 if date? and end 
 
@@ -116,7 +113,7 @@ parseDate = (value, end) ->
 #-------------------------------------------------------------------------------
 # Functions for parsing the request url
 
-parseFlowRef = (flowRefStr, query, response) ->
+exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     if not flowRefStr? 
         response.errors.push 'Mandatory parameter flowRef is missing'
         response.statusCode = 400
@@ -131,79 +128,71 @@ parseFlowRef = (flowRefStr, query, response) ->
         when 2
             flowRef[2] = 'LATEST'
 
-    flowRefOk = flowRef[0] is 'ALL' or flowRef[0] is 'ECB'
-    flowRefOk = flowRefOk and flowRef[1] is 'ECB_ICP1'
-    flowRefOk = flowRefOk and flowRef[2] is 'LATEST'
-    flowRefOk = flowRefOk and flowRef.length is 3
-
-    if not flowRefOk
+    if flowRef.length isnt 3
         response.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
         return
 
-    query.flowRef =
+    request.query.flowRef =
         agencyID: flowRef[0]
         id: flowRef[1]
         version: flowRef[2]
 
 
-parseKey = (keyStr, query, dataset, response) ->
+exports.parseKey = parseKey = (keyStr, request, response) ->
     keyStr = 'all' unless keyStr? 
 
     if keyStr is 'all'
-        query.key = 'all'
+        request.query.key = 'all'
         return
 
-    query.key = []
-    keys = keyStr.split '.'
+    request.query.key = []
+    key = keyStr.split '.'
 
-    if keys.length isnt dataset.codes.length - 1
-        response.errors.push "Invalid number of dimensions in parameter key"
+    for dim, i in key
+        codes = dim.split '+'
+        request.query.key.push []
+        for code in codes
+            request.query.key[i].push code unless code is ''
+
+
+exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response) ->
+    providerRefStr = 'all' unless providerRefStr? 
+
+    providerRef = providerRefStr.split ','
+
+    switch providerRef.length
+        when 1
+            if providerRef[0] is 'all'
+                providerRef[1] = 'ALL'
+            else
+                providerRef[1] = providerRef[0]
+            providerRef[0] = 'ALL'
+
+    if providerRef.length isnt 2
+        response.errors.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
         return
 
-    for key, i in keys
-        query.key[i] = key.split '+'
+    request.query.providerRef =
+        agencyID: providerRef[0]
+        id: providerRef[1]
 
 
-parseProviderRef = (providerRefStr, query, response) ->
-    if providerRefStr?
-        providerRef = providerRefStr.split ','
+exports.parseQueryParams = parseQueryParams = (request, response) ->
+    parameters = url.parse( request.url, yes, no).query
 
-        switch providerRef.length
-            when 1
-                if providerRef[0] is 'all'
-                    providerRef[1] = 'ALL'
-                else
-                    providerRef[1] = providerRef[0]
-                providerRef[0] = 'ALL'
-
-        providerRefOk = providerRef.length is 1
-        providerRefOk = providerRefOk and providerRef[0] is 'ECB' or providerRef[0] is 'ALL'
-        providerRefOk = providerRef[1] is 'ECB' or providerRef[1] is 'ALL'
-
-        if not providerRefOk
-            response.errors.push "Invalid parameter providerRef #{providerRefStr}"
-            response.statusCode = 400
-            return
-
-        query.providerRef =
-            agencyID: providerRef[0]
-            id: providerRef[1]
-
-
-parseQueryParameters = (parameters, query, response) ->
     for param, value of parameters
         switch param
             when 'startPeriod', 'endPeriod'
                 date = parseDate value, (param is 'endPeriod')
                 if date?
-                    query[param] = date
+                    request.query[param] = date
                     continue
             when 'firstNObservations', 'lastNObservations'
                 n = ~Number(value)
                 if String(n) is value and n >= 0
-                    query[param] = n
+                    request.query[param] = n
                     continue
             when 'updatedAfter'
                 response.statusCode = 501
@@ -213,7 +202,7 @@ parseQueryParameters = (parameters, query, response) ->
             when 'detail'
                 switch value
                     when 'full', 'dataonly', 'nodata'
-                        query.detail = value
+                        request.query.detail = value
                         continue
                     when 'serieskeysonly'
                         response.statusCode = 501
@@ -224,33 +213,29 @@ parseQueryParameters = (parameters, query, response) ->
         return
 
 
-parseDataQuery = (request, response) ->
-    path = request.parsedUrl.pathname.split '/'
-
-    parseFlowRef path[2], request.query, response
+parseDataQuery = (path, request, response) ->
+    parseFlowRef path[2], request, response
     return unless response.statusCode is 200
  
-    parseKey path[3], request.query, dataset, response
+    parseKey path[3], request, response
     return unless response.statusCode is 200
 
-    parseProviderRef path[4], request.query, response
+    parseProviderRef path[4], request, response
     return unless response.statusCode is 200
 
-    parseQueryParameters request.parsedUrl.query, request.query, response
+    parseQueryParams request, response
     return unless response.statusCode is 200
 
 
 # Main parsing function
 parse = (request, response) ->
     request.query = {} 
-    request.parsedUrl = url.parse request.url, yes
-
-    path = request.parsedUrl.pathname.split '/'
+    path = url.parse( request.url, no, no).pathname.split '/'
+    
     request.query.resource = path[1]
-
     switch request.query.resource
         when 'data'
-            parseDataQuery request, response
+            parseDataQuery path, request, response
         else
             response.statusCode = 501
             return
@@ -258,17 +243,53 @@ parse = (request, response) ->
 #-------------------------------------------------------------------------------
 # Functions for querying the sample data set
 
-addCodesToQuery = (request, codes, query) ->
+findDataFlow = (request, response) ->
+    found = yes
+
+    found &= switch request.query.flowRef.agencyID
+        when 'ALL', 'ECB' then true
+        else false
+
+    found &= switch request.query.flowRef.id
+        when 'ECB_ICP1' then true
+        else false
+
+    found &= switch request.query.flowRef.version
+        when 'LATEST' then true
+        else false
+
+    found &= switch request.query.providerRef.agencyID
+        when 'ECB', 'ALL' then true
+        else false
+
+    found &= switch request.query.providerRef.id
+        when 'ECB', 'ALL' then true
+        else false
+
+    if not found 
+        response.statusCode = 404
+        response.errors.push "Data flow not found"
+        return
+
+    dataset
+
+
+addCodesToQuery = (request, response, codes, query) ->
     if request.query.key is 'all'
         for i in [0..codes.length-2] 
             query[i] = []
             for j in [0..codes[i].length-1]
                 query[i].push j
         return
+    
+    if request.query.key.length isnt codes.length - 1
+        response.errors.push "Invalid number of dimensions in parameter key"
+        response.statusCode = 400
+        return
 
     for keyCodes, i in request.query.key
         query[i] = []
-        if keyCodes.length is 1 and keyCodes[0].length is 0
+        if keyCodes.length is 0
             for code, j in codes[i]
                 query[i].push j
         else
@@ -336,7 +357,7 @@ findMatchingObsIndices = (key, keyPosition, query, dataset, result) ->
 query = (dataset, request, response) ->
     codesInQuery = []
 
-    addCodesToQuery request, dataset.codes, codesInQuery
+    addCodesToQuery request, response, dataset.codes, codesInQuery
     addPeriodsToQuery request, dataset.codes[ dataset.codes.length - 1 ], codesInQuery
 
     firstResult = 
@@ -348,6 +369,11 @@ query = (dataset, request, response) ->
 
     # Find code and data indices for result
     findMatchingObsIndices [], 0, codesInQuery, dataset, firstResult
+
+    if firstResult.obsIndices.length is 0
+        response.statusCode = 404
+        response.errors.push 'Observations not found'
+        return
 
     codeIndexMapping = []
 
@@ -376,9 +402,33 @@ query = (dataset, request, response) ->
         response.result.data[newIndex] = dataset.data[index]
 
 #-------------------------------------------------------------------------------
+
+validateRequest = (request, response) ->
+    methods = [ 'GET', 'HEAD' ]
+    mediaTypes = [ 'application/json', 'application/*', '*/*' ]
+
+    if methods.indexOf( request.method ) is -1
+        response.statusCode = 405
+        response.setHeader 'Allow', methods.join( ',' )
+        response.errors.push 'Supported methods: ' + methods.join(',')
+        return
+
+    if request.headers['accept']?
+        matches = 0
+        for type in mediaTypes
+            matches += request.headers['accept'].indexOf(type) + 1
+        if matches is 0
+            response.statusCode = 406
+            response.errors.push 'Supported media types: ' + mediaTypes.join(',')
+            return
+
+#-------------------------------------------------------------------------------
 # Main function for handling HTTP requests
 
 handleRequest = (request, response) ->
+    start = new Date()
+
+    response.setHeader 'X-Powered-By', "Node.js/#{process.version}"
     response.setHeader 'Server', "#{SERVER_NAME}/#{SERVER_VERSION}"
     response.setHeader 'Cache-Control', 'no-cache, no-store'
     response.setHeader 'Pragma', 'no-cache'
@@ -388,23 +438,29 @@ handleRequest = (request, response) ->
     response.result = {}
     response.statusCode = 200
 
-    if not (request.method is 'GET' or request.method is 'HEAD')
-        response.statusCode = 405
-        response.setHeader 'Allow', 'GET, HEAD'
-  
+    validateRequest request, response
+
     if response.statusCode is 200
         parse request, response
 
     if response.statusCode is 200
-        query dataset, request, response
+        dataflow = findDataFlow request, response
 
     if response.statusCode is 200
-        if request.method is 'GET'
-            response.end JSON.stringify response.result, null, 2
-        else # HEAD
-            response.end()
+        query dataflow, request, response
+
+    if response.statusCode is 200
+        body = JSON.stringify response.result, null, 2
     else
-        response.end JSON.stringify { error: response.errors }, null, 2
+        body = JSON.stringify { error: response.errors }, null, 2
+
+    response.setHeader 'Content-Length', Buffer.byteLength body
+    response.setHeader 'X-Runtime', new Date() - start
+
+    if request.method is 'GET'
+        response.end body
+    else # HEAD
+        response.end()
 
     log "#{request.method} #{request.url} #{response.statusCode}"
 

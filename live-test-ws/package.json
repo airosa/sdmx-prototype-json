@@ -1,0 +1,24 @@
+{
+  "name":         	"live-test-ws",
+  "version":      	"0.1.1",
+  "description":    "Experimental SDMX RESTful web service for testing and development",
+  "keywords":     	["sdmx", "coffeescript"],
+  "author":       	"Sami Airo",
+  "licenses": [{
+    "type":       	"MIT",
+    "url":        	"http://opensource.org/licenses/mit-license.php"
+  }],
+  "engine":         "node >= 0.8.0",
+  "dependencies": {
+  },
+  "devDependencies": {
+	  "coffee-script": "1.3.x",
+    "mocha":         "1.3.x",
+    "should":        "1.1.x"
+  },
+  "repository": {
+    "type": "git",
+    "url":  "https://github.com/airosa/sdxm-protype-json/sdmx-prototype-json.git"
+  },
+  "license":         "MIT"
+}
