@@ -6,10 +6,15 @@ describe 'live-test-ws parsing functions', ->
 
     it 'parses data flow references', ->
         testData = [
-            [ 'ECB,ECB_ICP1,1.0', { agencyID: 'ECB', id: 'ECB_ICP1', version:    '1.0' }, 200 ]
-            [ 'ECB,ECB_ICP1',     { agencyID: 'ECB', id: 'ECB_ICP1', version: 'LATEST' }, 200 ]
-            [ 'ECB_ICP1',         { agencyID: 'ALL', id: 'ECB_ICP1', version: 'LATEST' }, 200 ]
-            [ 'A,B,C,D',                                                       undefined, 400 ]
+            [ 'ECB,ECB_ICP1,1.0', { agencyID: 'ECB', id: 'ECB_ICP1', version: '1.0'    }, 200 ]
+            [ 'ECB,ECB_ICP1'    , { agencyID: 'ECB', id: 'ECB_ICP1', version: 'LATEST' }, 200 ]
+            [ 'ECB_ICP1'        , { agencyID: 'ALL', id: 'ECB_ICP1', version: 'LATEST' }, 200 ]
+            [ ',ECB_ICP1,'      , { agencyID: 'ALL', id: 'ECB_ICP1', version: 'LATEST' }, 200 ]
+            [ ',ECB_ICP1,1.0'   , { agencyID: 'ALL', id: 'ECB_ICP1', version: '1.0'    }, 200 ]
+            [ 'ECB,,'           , undefined                                             , 400 ]
+            [ ',,1.0'           , undefined                                             , 400 ]
+            [ ',,'              , undefined                                             , 400 ]
+            [ 'A,B,C,D'         , undefined                                             , 400 ]
         ]
 
         for f in testData
@@ -25,11 +30,14 @@ describe 'live-test-ws parsing functions', ->
 
     it 'parses data provider references', ->
         testData = [
-            [ 'ECB,ECB',  { agencyID: 'ECB', id: 'ECB' }, 200 ]
-            [ 'ALL,ECB',  { agencyID: 'ALL', id: 'ECB' }, 200 ]
-            [ 'ECB',      { agencyID: 'ALL', id: 'ECB' }, 200 ]
-            [ 'all',      { agencyID: 'ALL', id: 'ALL' }, 200 ]
-            [ 'A,B,C',                         undefined, 400 ]
+            [ 'ECB,ECB', { agencyID: 'ECB', id: 'ECB' }, 200 ]
+            [ 'ALL,ECB', { agencyID: 'ALL', id: 'ECB' }, 200 ]
+            [ 'ECB'    , { agencyID: 'ALL', id: 'ECB' }, 200 ]
+            [ 'ECB,'   , { agencyID: 'ECB', id: 'ALL' }, 200 ]
+            [ ',ECB'   , { agencyID: 'ALL', id: 'ECB' }, 200 ]
+            [ ','      , { agencyID: 'ALL', id: 'ALL' }, 200 ]
+            [ 'all'    , { agencyID: 'ALL', id: 'ALL' }, 200 ]
+            [ 'A,B,C'  , undefined                     , 400 ]
         ]
 
         for f in testData
@@ -45,10 +53,16 @@ describe 'live-test-ws parsing functions', ->
 
     it 'parses keys', ->
         testData = [
-            [ 'all',   'all'                 , 200 ]
-            [ 'A.B',   [ ['A'], ['B'] ]      , 200 ]
-            [ 'A.B+C', [ ['A'], ['B', 'C'] ] , 200 ]
-            [ 'A..',   [ ['A'], [ ], [ ] ]   , 200 ]
+            [ 'all'    , 'all'                   , 200 ]
+            [ 'A.B'    , [ ['A'], ['B'] ]        , 200 ]
+            [ 'A.B+C'  , [ ['A'], ['B', 'C'] ]   , 200 ]
+            [ 'A.+B.C' , [ ['A'], ['B'], ['C'] ] , 200 ]
+            [ 'A..'    , [ ['A'], [ ], [ ] ]     , 200 ]
+            [ '.A.'    , [ [ ], ['A'], [ ] ]     , 200 ]
+            [ 'A.B+.C' , [ ['A'], ['B'], ['C'] ] , 200 ]
+            [ 'A.B++.C', [ ['A'], ['B'], ['C'] ] , 200 ]
+            [ 'A.++B.C', [ ['A'], ['B'], ['C'] ] , 200 ]
+            [ 'A.+.C'  , undefined               , 400 ]
         ]
 
         for k in testData

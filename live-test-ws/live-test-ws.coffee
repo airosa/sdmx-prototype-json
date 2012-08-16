@@ -120,15 +120,22 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
         return
 
     flowRef = flowRefStr.split ','
+
     switch flowRef.length
         when 1
             flowRef[1] = flowRef[0]
-            flowRef[0] = 'ALL'
-            flowRef[2] = 'LATEST'
-        when 2
-            flowRef[2] = 'LATEST'
+            flowRef[0] = ''
+        when 2, 3 
+            yes
+        else
+            response.errors.push "Invalid parameter flowRef #{flowRefStr}"
+            response.statusCode = 400
+            return
 
-    if flowRef.length isnt 3
+    flowRef[0] = 'ALL' if not flowRef[0]? or flowRef[0] is ''
+    flowRef[2] = 'LATEST' if not flowRef[2]? or flowRef[2] is ''
+
+    if not flowRef[1]? or flowRef[1] is ''
         response.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
         return
@@ -146,14 +153,22 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
         request.query.key = 'all'
         return
 
-    request.query.key = []
-    key = keyStr.split '.'
+    key = []
 
-    for dim, i in key
+    dims = keyStr.split '.'
+    for dim, i in dims
         codes = dim.split '+'
-        request.query.key.push []
-        for code in codes
-            request.query.key[i].push code unless code is ''
+        
+        key[i] = []
+        for code in codes when code isnt ''
+            key[i].push code
+
+        if -1 < dim.indexOf('+') and key[i].length is 0
+            response.errors.push "Invalid parameter key #{keyStr}"
+            response.statusCode = 400
+            return
+
+    request.query.key = key
 
 
 exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response) ->
@@ -168,6 +183,9 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
             else
                 providerRef[1] = providerRef[0]
             providerRef[0] = 'ALL'
+
+    providerRef[0] = 'ALL' if not providerRef[0]? or providerRef[0] is ''
+    providerRef[1] = 'ALL' if not providerRef[1]? or providerRef[1] is ''
 
     if providerRef.length isnt 2
         response.errors.push "Invalid parameter providerRef #{providerRefStr}"

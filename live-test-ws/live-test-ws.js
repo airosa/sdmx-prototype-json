@@ -156,13 +156,24 @@
     switch (flowRef.length) {
       case 1:
         flowRef[1] = flowRef[0];
-        flowRef[0] = 'ALL';
-        flowRef[2] = 'LATEST';
+        flowRef[0] = '';
         break;
       case 2:
-        flowRef[2] = 'LATEST';
+      case 3:
+        true;
+        break;
+      default:
+        response.errors.push("Invalid parameter flowRef " + flowRefStr);
+        response.statusCode = 400;
+        return;
     }
-    if (flowRef.length !== 3) {
+    if (!(flowRef[0] != null) || flowRef[0] === '') {
+      flowRef[0] = 'ALL';
+    }
+    if (!(flowRef[2] != null) || flowRef[2] === '') {
+      flowRef[2] = 'LATEST';
+    }
+    if (!(flowRef[1] != null) || flowRef[1] === '') {
       response.errors.push("Invalid parameter flowRef " + flowRefStr);
       response.statusCode = 400;
       return;
@@ -175,7 +186,7 @@
   };
 
   exports.parseKey = parseKey = function(keyStr, request, response) {
-    var code, codes, dim, i, key, _i, _len, _results;
+    var code, codes, dim, dims, i, key, _i, _j, _len, _len1;
     if (keyStr == null) {
       keyStr = 'all';
     }
@@ -183,28 +194,25 @@
       request.query.key = 'all';
       return;
     }
-    request.query.key = [];
-    key = keyStr.split('.');
-    _results = [];
-    for (i = _i = 0, _len = key.length; _i < _len; i = ++_i) {
-      dim = key[i];
+    key = [];
+    dims = keyStr.split('.');
+    for (i = _i = 0, _len = dims.length; _i < _len; i = ++_i) {
+      dim = dims[i];
       codes = dim.split('+');
-      request.query.key.push([]);
-      _results.push((function() {
-        var _j, _len1, _results1;
-        _results1 = [];
-        for (_j = 0, _len1 = codes.length; _j < _len1; _j++) {
-          code = codes[_j];
-          if (code !== '') {
-            _results1.push(request.query.key[i].push(code));
-          } else {
-            _results1.push(void 0);
-          }
+      key[i] = [];
+      for (_j = 0, _len1 = codes.length; _j < _len1; _j++) {
+        code = codes[_j];
+        if (code !== '') {
+          key[i].push(code);
         }
-        return _results1;
-      })());
+      }
+      if (-1 < dim.indexOf('+') && key[i].length === 0) {
+        response.errors.push("Invalid parameter key " + keyStr);
+        response.statusCode = 400;
+        return;
+      }
     }
-    return _results;
+    return request.query.key = key;
   };
 
   exports.parseProviderRef = parseProviderRef = function(providerRefStr, request, response) {
@@ -221,6 +229,12 @@
           providerRef[1] = providerRef[0];
         }
         providerRef[0] = 'ALL';
+    }
+    if (!(providerRef[0] != null) || providerRef[0] === '') {
+      providerRef[0] = 'ALL';
+    }
+    if (!(providerRef[1] != null) || providerRef[1] === '') {
+      providerRef[1] = 'ALL';
     }
     if (providerRef.length !== 2) {
       response.errors.push("Invalid parameter providerRef " + providerRefStr);
