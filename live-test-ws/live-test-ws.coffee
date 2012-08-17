@@ -119,26 +119,25 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
         response.statusCode = 400
         return
 
-    flowRef = flowRefStr.split ','
+    regex = ///
+        ^(([A-z0-9_@$\-]+)
+        |(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*)
+        (\,[A-z0-9_@$\-]+)
+        (\,(latest|([0-9]+(\.[0-9]+)*)))?))$
+    ///
 
-    switch flowRef.length
-        when 1
-            flowRef[1] = flowRef[0]
-            flowRef[0] = ''
-        when 2, 3 
-            yes
-        else
-            response.errors.push "Invalid parameter flowRef #{flowRefStr}"
-            response.statusCode = 400
-            return
-
-    flowRef[0] = 'ALL' if not flowRef[0]? or flowRef[0] is ''
-    flowRef[2] = 'LATEST' if not flowRef[2]? or flowRef[2] is ''
-
-    if not flowRef[1]? or flowRef[1] is ''
+    if not regex.test flowRefStr
         response.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
-        return
+        return        
+
+    flowRef = flowRefStr.split ','
+
+    if flowRef.length is 1
+        flowRef[1] = flowRef[0]
+        flowRef[0] = 'all'
+
+    flowRef[2] = 'latest' if not flowRef[2]? or flowRef[2] is ''
 
     request.query.flowRef =
         agencyID: flowRef[0]
@@ -152,6 +151,13 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
     if keyStr is 'all'
         request.query.key = 'all'
         return
+
+    regex = /^(([A-z0-9_@$\-]+)(\.(([A-z0-9_@$\-]+)(\+([A-z0-9_@$\-]+))*)?)*)$/
+
+    if not regex.test keyStr
+        response.errors.push "Invalid parameter flowRef #{keyStr}"
+        response.statusCode = 400
+        return        
 
     key = []
 
@@ -174,18 +180,23 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
 exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response) ->
     providerRefStr = 'all' unless providerRefStr? 
 
+    regex = /^(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*\,)?([A-z0-9_@$\-]+))$/
+
+    if not regex.test providerRefStr
+        response.errors.push "Invalid parameter providerRef #{providerRefStr}"
+        response.statusCode = 400
+        return        
+
     providerRef = providerRefStr.split ','
 
     switch providerRef.length
         when 1
-            if providerRef[0] is 'all'
-                providerRef[1] = 'ALL'
-            else
+            if providerRef[0] isnt 'all'
                 providerRef[1] = providerRef[0]
-            providerRef[0] = 'ALL'
+                providerRef[0] = 'all'
 
-    providerRef[0] = 'ALL' if not providerRef[0]? or providerRef[0] is ''
-    providerRef[1] = 'ALL' if not providerRef[1]? or providerRef[1] is ''
+    providerRef[0] = 'all' if not providerRef[0]? or providerRef[0] is ''
+    providerRef[1] = 'all' if not providerRef[1]? or providerRef[1] is ''
 
     if providerRef.length isnt 2
         response.errors.push "Invalid parameter providerRef #{providerRefStr}"
@@ -265,7 +276,7 @@ findDataFlow = (request, response) ->
     found = yes
 
     found &= switch request.query.flowRef.agencyID
-        when 'ALL', 'ECB' then true
+        when 'all', 'ECB' then true
         else false
 
     found &= switch request.query.flowRef.id
@@ -273,15 +284,15 @@ findDataFlow = (request, response) ->
         else false
 
     found &= switch request.query.flowRef.version
-        when 'LATEST' then true
+        when 'latest' then true
         else false
 
     found &= switch request.query.providerRef.agencyID
-        when 'ECB', 'ALL' then true
+        when 'ECB', 'all' then true
         else false
 
     found &= switch request.query.providerRef.id
-        when 'ECB', 'ALL' then true
+        when 'ECB', 'all' then true
         else false
 
     if not found 

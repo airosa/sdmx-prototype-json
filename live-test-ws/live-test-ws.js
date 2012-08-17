@@ -146,37 +146,25 @@
   };
 
   exports.parseFlowRef = parseFlowRef = function(flowRefStr, request, response) {
-    var flowRef;
+    var flowRef, regex;
     if (!(flowRefStr != null)) {
       response.errors.push('Mandatory parameter flowRef is missing');
       response.statusCode = 400;
       return;
     }
-    flowRef = flowRefStr.split(',');
-    switch (flowRef.length) {
-      case 1:
-        flowRef[1] = flowRef[0];
-        flowRef[0] = '';
-        break;
-      case 2:
-      case 3:
-        true;
-        break;
-      default:
-        response.errors.push("Invalid parameter flowRef " + flowRefStr);
-        response.statusCode = 400;
-        return;
-    }
-    if (!(flowRef[0] != null) || flowRef[0] === '') {
-      flowRef[0] = 'ALL';
-    }
-    if (!(flowRef[2] != null) || flowRef[2] === '') {
-      flowRef[2] = 'LATEST';
-    }
-    if (!(flowRef[1] != null) || flowRef[1] === '') {
+    regex = /^(([A-z0-9_@$\-]+)|(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*)(\,[A-z0-9_@$\-]+)(\,(latest|([0-9]+(\.[0-9]+)*)))?))$/;
+    if (!regex.test(flowRefStr)) {
       response.errors.push("Invalid parameter flowRef " + flowRefStr);
       response.statusCode = 400;
       return;
+    }
+    flowRef = flowRefStr.split(',');
+    if (flowRef.length === 1) {
+      flowRef[1] = flowRef[0];
+      flowRef[0] = 'all';
+    }
+    if (!(flowRef[2] != null) || flowRef[2] === '') {
+      flowRef[2] = 'latest';
     }
     return request.query.flowRef = {
       agencyID: flowRef[0],
@@ -186,12 +174,18 @@
   };
 
   exports.parseKey = parseKey = function(keyStr, request, response) {
-    var code, codes, dim, dims, i, key, _i, _j, _len, _len1;
+    var code, codes, dim, dims, i, key, regex, _i, _j, _len, _len1;
     if (keyStr == null) {
       keyStr = 'all';
     }
     if (keyStr === 'all') {
       request.query.key = 'all';
+      return;
+    }
+    regex = /^(([A-z0-9_@$\-]+)(\.(([A-z0-9_@$\-]+)(\+([A-z0-9_@$\-]+))*)?)*)$/;
+    if (!regex.test(keyStr)) {
+      response.errors.push("Invalid parameter flowRef " + keyStr);
+      response.statusCode = 400;
       return;
     }
     key = [];
@@ -216,25 +210,29 @@
   };
 
   exports.parseProviderRef = parseProviderRef = function(providerRefStr, request, response) {
-    var providerRef;
+    var providerRef, regex;
     if (providerRefStr == null) {
       providerRefStr = 'all';
+    }
+    regex = /^(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*\,)?([A-z0-9_@$\-]+))$/;
+    if (!regex.test(providerRefStr)) {
+      response.errors.push("Invalid parameter providerRef " + providerRefStr);
+      response.statusCode = 400;
+      return;
     }
     providerRef = providerRefStr.split(',');
     switch (providerRef.length) {
       case 1:
-        if (providerRef[0] === 'all') {
-          providerRef[1] = 'ALL';
-        } else {
+        if (providerRef[0] !== 'all') {
           providerRef[1] = providerRef[0];
+          providerRef[0] = 'all';
         }
-        providerRef[0] = 'ALL';
     }
     if (!(providerRef[0] != null) || providerRef[0] === '') {
-      providerRef[0] = 'ALL';
+      providerRef[0] = 'all';
     }
     if (!(providerRef[1] != null) || providerRef[1] === '') {
-      providerRef[1] = 'ALL';
+      providerRef[1] = 'all';
     }
     if (providerRef.length !== 2) {
       response.errors.push("Invalid parameter providerRef " + providerRefStr);
@@ -329,7 +327,7 @@
     found = true;
     found &= (function() {
       switch (request.query.flowRef.agencyID) {
-        case 'ALL':
+        case 'all':
         case 'ECB':
           return true;
         default:
@@ -346,7 +344,7 @@
     })();
     found &= (function() {
       switch (request.query.flowRef.version) {
-        case 'LATEST':
+        case 'latest':
           return true;
         default:
           return false;
@@ -355,7 +353,7 @@
     found &= (function() {
       switch (request.query.providerRef.agencyID) {
         case 'ECB':
-        case 'ALL':
+        case 'all':
           return true;
         default:
           return false;
@@ -364,7 +362,7 @@
     found &= (function() {
       switch (request.query.providerRef.id) {
         case 'ECB':
-        case 'ALL':
+        case 'all':
           return true;
         default:
           return false;
