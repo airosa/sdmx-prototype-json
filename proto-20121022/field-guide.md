@@ -7,11 +7,11 @@ date: August 21, 2012
 
 Use this guide to better understand SDMX-JSON objects.
 
-- [Message][]
-- [Measure][]
-- [Dimension][]
-- [Attribute][]
-- [Code][]
+- [Message][#Message]
+- [Measure][#Measure]
+- [Dimension][#Dimension]
+- [Attribute][#Attribute]
+- [Code][#Code]
 
 Consumers of SDMX-JSON should tolerate the addition of new fields and variance
 in ordering of fields with ease. Not all fields appear in all contexts. It is
@@ -71,7 +71,7 @@ standard. Example
 
 ### measure [measureAttribute]
 
-*[Measure][]* *nullable*. Contains measures with observation values. Normal 
+*[Measure][#Measure]* *nullable*. Contains measures with observation values. Normal 
 message contains only one measure but there can be multiple measure or no 
 measures. Example:
 
@@ -93,7 +93,7 @@ measures. Example:
  
 ### dimension [dim]
 
-*[Dimension][]*. Contains dimensions related to measures and
+*[Dimension][#Dimension]*. Contains dimensions related to measures and
 attributes in the message. Example:
 
     "dimension": {
@@ -120,7 +120,7 @@ attributes in the message. Example:
 
 ### attribute [attr]
 
-*[Attribute][]* *nullable*. Contains attributes that provide information about
+*[Attribute][#Attribute]* *nullable*. Contains attributes that provide information about
 the observation values. Example:
 
     attribute: {
@@ -181,7 +181,7 @@ the observation values. Example:
 
 ----
 
-## Measure
+## <a id="Measure"/>Measure
 
 Measure is the container for measures with observation values. It contains fields
 common to all measures and individual measures with measure specific fields. 
@@ -246,7 +246,7 @@ and the size is the theoretical size of message. Example:
 
 ----
 
-## Dimension
+## <a id="Dimension"/>Dimension
 
 Dimension is a container for all dimensions in the message. It contains fields
 common to all dimensions and the indidual dimensions. Dimensions have a common 
@@ -308,7 +308,7 @@ Example:
 
 ### code [codeAttribute]
 
-*[Code][]*. Collection of codes for the dimension. Example:
+*[Code][#Code]*. Collection of codes for the dimension. Example:
 
     "code": {
       "id": [
@@ -325,7 +325,7 @@ Example:
 
 ---
 
-## Attribute
+## <a id="Attribute">Attribute
 
 Attribute is the container for attributes in the message. Like other containers
 it contains fields common to all attributes and individual attributes. All
@@ -408,7 +408,7 @@ attached to other levels have varying number of dimensions. Example:
 
 ### code [codeAttribute]
 
-*[Code][]* *nullable*. Collection of codes for the attribute. Null if the 
+*[Code][#Code]* *nullable*. Collection of codes for the attribute. Null if the 
 attribute is not coded. Example:
 
     "code": {
@@ -461,7 +461,7 @@ size of the value array can be smaller. Example:
 
 ----
 
-## Code
+## <a id="Code">Code
 
 Code is the container of codes for dimensions and coded attributes. Code
 contains collections of ids, indices, names and other information for individual
