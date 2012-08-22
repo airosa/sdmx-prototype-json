@@ -120,10 +120,12 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
         return
 
     regex = ///
-        ^(([A-z0-9_@$\-]+)
-        |(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*)
-        (\,[A-z0-9_@$\-]+)
-        (\,(latest|([0-9]+(\.[0-9]+)*)))?))$
+        ^(
+            ([A-z0-9_@$\-]+)
+            |(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*)
+            (\,[A-z0-9_@$\-]+)
+            (\,(latest|([0-9]+(\.[0-9]+)*)))?)
+        )$
     ///
 
     if not regex.test flowRefStr
@@ -152,7 +154,27 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
         request.query.key = 'all'
         return
 
-    regex = /^(([A-z0-9_@$\-]+)(\.(([A-z0-9_@$\-]+)(\+([A-z0-9_@$\-]+))*)?)*)$/
+    regex = ///
+        ^(
+            (
+                [A-Za-z0-9_@$\-]+
+                (
+                    [+]
+                    [A-Za-z0-9_@$\-]+
+                )*
+            )?
+            (
+                [.]
+                (
+                    [A-Za-z0-9_@$\-]+
+                    (
+                        [+]
+                        [A-Za-z0-9_@$\-]+
+                    )*
+                )?
+            )*
+        )$
+    ///
 
     if not regex.test keyStr
         response.errors.push "Invalid parameter flowRef #{keyStr}"
@@ -180,7 +202,11 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
 exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response) ->
     providerRefStr = 'all' unless providerRefStr? 
 
-    regex = /^(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*\,)?([A-z0-9_@$\-]+))$/
+    regex = ///
+        ^(
+            ([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*\,)?([A-z0-9_@$\-]+)
+        )$
+    ///
 
     if not regex.test providerRefStr
         response.errors.push "Invalid parameter providerRef #{providerRefStr}"

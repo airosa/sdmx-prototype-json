@@ -182,7 +182,7 @@
       request.query.key = 'all';
       return;
     }
-    regex = /^(([A-z0-9_@$\-]+)(\.(([A-z0-9_@$\-]+)(\+([A-z0-9_@$\-]+))*)?)*)$/;
+    regex = /^(([A-Za-z0-9_@$\-]+([+][A-Za-z0-9_@$\-]+)*)?([.]([A-Za-z0-9_@$\-]+([+][A-Za-z0-9_@$\-]+)*)?)*)$/;
     if (!regex.test(keyStr)) {
       response.errors.push("Invalid parameter flowRef " + keyStr);
       response.statusCode = 400;

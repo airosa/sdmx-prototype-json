@@ -55,16 +55,18 @@ describe 'live-test-ws parsing functions', ->
 
     it 'parses keys', ->
         testData = [
-            [ 'all'    , 'all'                   , 200 ]
-            [ 'A.B'    , [ ['A'], ['B'] ]        , 200 ]
-            [ 'A.B+C'  , [ ['A'], ['B', 'C'] ]   , 200 ]
-            [ 'A.+B.C' , undefined               , 400 ]
-            [ 'A..'    , [ ['A'], [ ], [ ] ]     , 200 ]
-#            [ '.A.'    , [ [ ], ['A'], [ ] ]     , 200 ]
-            [ 'A.B+.C' , undefined               , 400 ]
-            [ 'A.B++.C', undefined               , 400 ]
-            [ 'A.++B.C', undefined               , 400 ]
-            [ 'A.+.C'  , undefined               , 400 ]
+            [ 'all'    , 'all'                     , 200 ]
+            [ 'A.B'    , [ ['A'], ['B'] ]          , 200 ]
+            [ 'A.B+C'  , [ ['A'], ['B', 'C'] ]     , 200 ]
+            [ 'A.+B.C' , undefined                 , 400 ]
+            [ 'A..'    , [ ['A'], [ ], [ ] ]       , 200 ]
+            [ '.A.'    , [ [ ], ['A'], [ ] ]      , 200 ]
+            [ 'A.B+.C' , undefined                 , 400 ]
+            [ 'A.B++.C', undefined                 , 400 ]
+            [ 'A.++B.C', undefined                 , 400 ]
+            [ 'A.+.C'  , undefined                 , 400 ]
+            [ 'M+D..E' , [ ['M', 'D'], [], ['E'] ] , 200 ]
+            [ 'M.E&st' , undefined                 , 400 ]
         ]
 
         for k in testData
