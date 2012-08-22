@@ -16,7 +16,7 @@ field as the same thing.
 
 ----
 
-## <a id="Message"></a>Message
+## <a name="Message"></a>Message
 
 Message is the response you get back from the RESTful API. Message is the top
 level object and it contains dimensions, attributes, observations and other
@@ -177,7 +177,7 @@ the observation values. Example:
 
 ----
 
-## <a id="Measure"></aMeasure
+## <a name="Measure"></a>Measure
 
 Measure is the container for measures with observation values. It contains fields
 common to all measures and individual measures with measure specific fields. 
@@ -242,7 +242,7 @@ and the size is the theoretical size of message. Example:
 
 ----
 
-## <a id="Dimension"></a>Dimension
+## <a name="Dimension"></a>Dimension
 
 Dimension is a container for all dimensions in the message. It contains fields
 common to all dimensions and the indidual dimensions. Dimensions have a common 
@@ -321,7 +321,7 @@ Example:
 
 ---
 
-## <a id="Attribute"></a>Attribute
+## <a name="Attribute"></a>Attribute
 
 Attribute is the container for attributes in the message. Like other containers
 it contains fields common to all attributes and individual attributes. All
@@ -457,7 +457,7 @@ size of the value array can be smaller. Example:
 
 ----
 
-## <a id="Code"></a>Code
+## <a name="Code"></a>Code
 
 Code is the container of codes for dimensions and coded attributes. Code
 contains collections of ids, indices, names and other information for individual
