@@ -7,11 +7,11 @@ date: August 21, 2012
 
 Use this guide to better understand SDMX-JSON objects.
 
-- [Message][#Message]
-- [Measure][#Measure]
-- [Dimension][#Dimension]
-- [Attribute][#Attribute]
-- [Code][#Code]
+- [Message](#Message)
+- [Measure](#Measure)
+- [Dimension](#Dimension)
+- [Attribute](#Attribute)
+- [Code](#Code)
 
 Consumers of SDMX-JSON should tolerate the addition of new fields and variance
 in ordering of fields with ease. Not all fields appear in all contexts. It is
@@ -20,7 +20,7 @@ field as the same thing.
 
 ----
 
-## Message
+## <a id="Message">Message
 
 Message is the response you get back from the RESTful API. Message is the top
 level object and it contains dimensions, attributes, observations and other
@@ -69,9 +69,9 @@ standard. Example
 
     "prepared": "2012-05-04T03:30:00.000Z"
 
-### measure [measureAttribute]
+### measure
 
-*[Measure][#Measure]* *nullable*. Contains measures with observation values. Normal 
+*[Measure](#Measure)* *nullable*. Contains measures with observation values. Normal 
 message contains only one measure but there can be multiple measure or no 
 measures. Example:
 
@@ -91,9 +91,9 @@ measures. Example:
       }
     }
  
-### dimension [dim]
+### dimension
 
-*[Dimension][#Dimension]*. Contains dimensions related to measures and
+*[Dimension](#Dimension)*. Contains dimensions related to measures and
 attributes in the message. Example:
 
     "dimension": {
@@ -118,9 +118,9 @@ attributes in the message. Example:
         } 
     }
 
-### attribute [attr]
+### attribute
 
-*[Attribute][#Attribute]* *nullable*. Contains attributes that provide information about
+*[Attribute](#Attribute)* *nullable*. Contains attributes that provide information about
 the observation values. Example:
 
     attribute: {
@@ -306,9 +306,9 @@ Example:
 
     "role": "time"
 
-### code [codeAttribute]
+### code
 
-*[Code][#Code]*. Collection of codes for the dimension. Example:
+*[Code](#Code)*. Collection of codes for the dimension. Example:
 
     "code": {
       "id": [
@@ -406,9 +406,9 @@ attached to other levels have varying number of dimensions. Example:
 
     "role": "decimals"
 
-### code [codeAttribute]
+### code
 
-*[Code][#Code]* *nullable*. Collection of codes for the attribute. Null if the 
+*[Code](#Code)* *nullable*. Collection of codes for the attribute. Null if the 
 attribute is not coded. Example:
 
     "code": {
