@@ -331,7 +331,7 @@ findDataFlow = (request, response) ->
 
 addCodesToQuery = (request, response, msg) ->
     query = []
-    query[i] = [] for dim, i in msg.dimension.id
+    query.push [] for dim in msg.dimension.id
 
     # Applies the date parameters to the codes in the time dimension
     for dim, i in msg.dimension.id
@@ -382,34 +382,37 @@ addCodesToQuery = (request, response, msg) ->
 # Main query function. It finds matching observations, maps
 # dimension code positions and creates the result data and code arrays. 
 query = (msg, request, response) ->
+    # shorthand for result
     rslt = response.result
 
+    # build an array of codes for the query
     codesInQuery = addCodesToQuery request, response, msg
 
-    obsCount = 1
+    # built up multipliers for accesing data in the message
+    msgSize = 1
     msgMultipliers = []
     for dim in msg.dimension.id.slice().reverse()
-        msgMultipliers.push obsCount
-        obsCount *= msg.dimension[dim].code.size
+        msgMultipliers.push msgSize
+        msgSize *= msg.dimension[dim].code.size
     msgMultipliers.reverse()
 
     # enumerate all keys in the query, algorithm is from stackoverflow
-    keyCount = 1
+    querySize = 1
     queryMultipliers = []
     codesWithData = []
     for codes in codesInQuery
-        queryMultipliers.push keyCount
-        keyCount *= codes.length
+        queryMultipliers.push querySize
+        querySize *= codes.length
         codesWithData.push {}
 
-    if keyCount is 0
+    if querySize is 0
         response.statusCode = 404
         response.result.error.push 'Observations not found'
         return
 
     # magic loop
     matchingObs = 0
-    for i in [0..keyCount-1]
+    for i in [0..querySize-1]
         key = []
         obsIndex = 0
         for codes, n in codesInQuery
@@ -432,7 +435,7 @@ query = (msg, request, response) ->
         response.result.error.push 'Observations not found'
         return
 
-    # add dimensions for the response
+    # add dimensions to the response
     rslt.dimension = {}
     rslt.dimension.id = msg.dimension.id
     rslt.dimension.size = msg.dimension.id.length
@@ -445,7 +448,7 @@ query = (msg, request, response) ->
             name: msg.dimension[dim].name
             role: msg.dimension[dim].role
 
-        for pos, j in Object.keys( codesWithData[i] ).sort()
+        for pos, j in Object.keys codesWithData[i]
             code = msg.dimension[dim].code.id[pos]
             rslt.dimension[dim].code.id.push code
             rslt.dimension[dim].code.index[code] = j
@@ -458,12 +461,12 @@ query = (msg, request, response) ->
     # Build code mapping between codes in the response and codes in the
     # data set. 
 
-    codeMapping = []
+    codeMap = []
     for dim, n in rslt.dimension.id
         map = []
         for code, m in rslt.dimension[dim].code.id
             map.push msg.dimension[dim].code.index[code]
-        codeMapping.push map
+        codeMap.push map
 
     # Add measures to response
 
@@ -484,7 +487,7 @@ query = (msg, request, response) ->
         # magic loop
         for i in [0..resultCount-1]
             obsIndex = 0
-            for codes, n in codeMapping
+            for codes, n in codeMap
                 index = Math.floor( i / resultMultipliers[n] ) % codes.length
                 obsIndex += codes[index] * msgMultipliers[n]
             
@@ -498,9 +501,9 @@ query = (msg, request, response) ->
         resultMultipliers = []
         for dim in msg.attribute[attr].dimension
             dimPos = msg.dimension.id.indexOf dim
-            attrCodeMapping.push codeMapping[dimPos]
+            attrCodeMapping.push codeMap[dimPos]
             resultMultipliers.push resultCount
-            resultCount *= codeMapping[dimPos].length
+            resultCount *= codeMap[dimPos].length
 
         msgCount = 1
         msgMultipliers = []
@@ -590,8 +593,6 @@ handleRequest = (request, response) ->
         response.result.error = null
 
     body = JSON.stringify response.result, null, 2
-   #else
-    #    body = JSON.stringify { error: response.errors }, null, 2
 
     response.setHeader 'Content-Length', Buffer.byteLength body
     response.setHeader 'X-Runtime', new Date() - start

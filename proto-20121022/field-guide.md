@@ -586,13 +586,13 @@ period. Example:
       "2008-01": "2008-01-31T23:59:59.000Z"
     }
 
-### coordinates
+### geometry
 
 *Object* *nullable*. Represents the geographic location of this code (country,
 reference area etc.). The inner coordinates array is formatted as [geoJSON]
 (http://www.geojson.org) (longitude first, then latitude). Example:
 
-    "coordinates": {
+    "geometry": {
       "FI": {
         "type":"Point",
         "coordinates": [
