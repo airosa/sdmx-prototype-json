@@ -36,7 +36,7 @@ calculateIndexMultipliers = (dimensions) ->
 loadDataset = (filename) ->
     jsonString = fs.readFileSync filename
     data = JSON.parse jsonString
-    data.indexMultipliers = calculateIndexMultipliers data.codes
+    #data.indexMultipliers = calculateIndexMultipliers data.codes
     data
 
 #-------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ exports.parseDate = parseDate = (value, end) ->
 
 exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     if not flowRefStr? 
-        response.errors.push 'Mandatory parameter flowRef is missing'
+        response.result.error.push 'Mandatory parameter flowRef is missing'
         response.statusCode = 400
         return
 
@@ -129,7 +129,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     ///
 
     if not regex.test flowRefStr
-        response.errors.push "Invalid parameter flowRef #{flowRefStr}"
+        response.result.error.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
         return        
 
@@ -177,7 +177,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
     ///
 
     if not regex.test keyStr
-        response.errors.push "Invalid parameter flowRef #{keyStr}"
+        response.result.error.push "Invalid parameter flowRef #{keyStr}"
         response.statusCode = 400
         return        
 
@@ -192,7 +192,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
             key[i].push code
 
         if -1 < dim.indexOf('+') and key[i].length is 0
-            response.errors.push "Invalid parameter key #{keyStr}"
+            response.result.error.push "Invalid parameter key #{keyStr}"
             response.statusCode = 400
             return
 
@@ -209,7 +209,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
     ///
 
     if not regex.test providerRefStr
-        response.errors.push "Invalid parameter providerRef #{providerRefStr}"
+        response.result.error.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
         return        
 
@@ -225,7 +225,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
     providerRef[1] = 'all' if not providerRef[1]? or providerRef[1] is ''
 
     if providerRef.length isnt 2
-        response.errors.push "Invalid parameter providerRef #{providerRefStr}"
+        response.result.error.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
         return
 
@@ -263,7 +263,7 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                         response.statusCode = 501
                         return
 
-        response.errors.push "Invalid query parameter #{param} value #{value}"
+        response.result.error.push "Invalid query parameter #{param} value #{value}"
         response.statusCode = 400  
         return
 
@@ -323,138 +323,216 @@ findDataFlow = (request, response) ->
 
     if not found 
         response.statusCode = 404
-        response.errors.push "Data flow not found"
+        response.result.error.push "Data flow not found"
         return
 
     dataset
 
 
-addCodesToQuery = (request, response, codes, query) ->
+addCodesToQuery = (request, response, msg) ->
+    query = []
+    query[i] = [] for dim, i in msg.dimension.id
+
+    # Applies the date parameters to the codes in the time dimension
+    for dim, i in msg.dimension.id
+        continue unless msg.dimension[dim].role is 'time'
+
+        for period, j in msg.dimension[dim].code.id
+            if request.query.startPeriod?
+                startDate = parseDate period, false
+                continue unless request.query.startPeriod <= startDate
+            if request.query.endPeriod?
+                endDate = parseDate period, true
+                continue unless endDate <= request.query.endPeriod
+            query[i].push j
+
+        break
+
+    # Special case, all codes for all dimensions are in
     if request.query.key is 'all'
-        for i in [0..codes.length-2] 
-            query[i] = []
-            for j in [0..codes[i].length-1]
-                query[i].push j
+        for dim, i in msg.dimension.id
+            continue if msg.dimension[dim].role is 'time' 
+            query[i].push j for code, j in msg.dimension[dim].code.id
         return
-    
-    if request.query.key.length isnt codes.length - 1
-        response.errors.push "Invalid number of dimensions in parameter key"
+
+    if request.query.key.length isnt msg.dimension.id.length - 1
+        response.result.error.push "Invalid number of dimensions in parameter key"
         response.statusCode = 400
         return
 
+    # Normal query
     for keyCodes, i in request.query.key
-        query[i] = []
+        dim = msg.dimension.id[i]
+
+        # Dimension was wildcarded in the key
         if keyCodes.length is 0
-            for code, j in codes[i]
+            for code, j in msg.dimension[dim].code.id
                 query[i].push j
-        else
-            for code in keyCodes
-                index = codes[i].indexOf code
-                query[i].push index if 0 <= index
+            continue
+        
+        for code in keyCodes
+            index = msg.dimension[dim].code.index[code]
+            query[i].push index if 0 <= index
 
+        # What happens if there are no valid codes for a dimension?
 
-# Applies the date parameters to the codes in the time dimension
-addPeriodsToQuery = (request, periods, query) ->
-    filteredPeriods = []
-
-    for period, i in periods
-        if request.query.startPeriod?
-            startDate = parseDate period, false
-            continue unless request.query.startPeriod <= startDate
-        if request.query.endPeriod?
-            endDate = parseDate period, true
-            continue unless endDate <= request.query.endPeriod
-        filteredPeriods.push i
-
-    query.push filteredPeriods
-
-
-# Recursive function that loops over each query dimension combination
-# and returns all non-missing observation indices
-findMatchingObsIndices = (key, keyPosition, query, dataset, result) ->
-    # Check if we are in the last dimension
-    if keyPosition is query.length - 1
-        obsCount = 0
-
-        # Loop over codes in the last dimension
-        for codeIndex, i in query[keyPosition]
-            # Set the code in the last dimension
-            key[keyPosition] = codeIndex
-
-            # Calculate observation index for the combination of dimension values
-            index = 0
-            for multiplier, j in dataset.indexMultipliers
-                index += key[j] * multiplier
-
-            # Check if we have an observation in the current index
-            if dataset.data[index]?
-                # We have a non-missing observation
-                # Loop over the dimension in the key
-                for codeIndex, j in key
-                    # Store the codes in key
-                    result.codeIndices[j][codeIndex] = 1
-                # Store the index
-                result.obsIndices.push index
-                obsCount += 1
-
-        return
-
-    # We are not yet in the last dimension
-    # Loop over codes in the current dimensions
-    for codeIndex, i in query[keyPosition]
-        key[keyPosition] = codeIndex
-        # Move to next dimension
-        findMatchingObsIndices key, keyPosition+1, query, dataset, result
+    query
 
 
 # Main query function. It finds matching observations, maps
 # dimension code positions and creates the result data and code arrays. 
-query = (dataset, request, response) ->
-    codesInQuery = []
+query = (msg, request, response) ->
+    rslt = response.result
 
-    addCodesToQuery request, response, dataset.codes, codesInQuery
-    addPeriodsToQuery request, dataset.codes[ dataset.codes.length - 1 ], codesInQuery
+    codesInQuery = addCodesToQuery request, response, msg
 
-    firstResult = 
-        codeIndices: []
-        obsIndices: []
+    obsCount = 1
+    msgMultipliers = []
+    for dim in msg.dimension.id.slice().reverse()
+        msgMultipliers.push obsCount
+        obsCount *= msg.dimension[dim].code.size
+    msgMultipliers.reverse()
 
-    for dim in codesInQuery
-        firstResult.codeIndices.push {}
+    # enumerate all keys in the query, algorithm is from stackoverflow
+    keyCount = 1
+    queryMultipliers = []
+    codesWithData = []
+    for codes in codesInQuery
+        queryMultipliers.push keyCount
+        keyCount *= codes.length
+        codesWithData.push {}
 
-    # Find code and data indices for result
-    findMatchingObsIndices [], 0, codesInQuery, dataset, firstResult
-
-    if firstResult.obsIndices.length is 0
+    if keyCount is 0
         response.statusCode = 404
-        response.errors.push 'Observations not found'
+        response.result.error.push 'Observations not found'
         return
 
-    codeIndexMapping = []
+    # magic loop
+    matchingObs = 0
+    for i in [0..keyCount-1]
+        key = []
+        obsIndex = 0
+        for codes, n in codesInQuery
+            index = Math.floor( i / queryMultipliers[n] ) % codes.length
+            key.push codes[ index ]
+            obsIndex += codes[ index ] * msgMultipliers[n]
 
-    # Add codes to result
-    response.result.codes = []
-    for indices, i in firstResult.codeIndices
-        response.result.codes[i] = []
-        codeIndexMapping[i] = []
-        for codeIndex, j in Object.keys(indices).sort()
-            codeIndexMapping[i][codeIndex] = j
-            response.result.codes[i][j] = dataset.codes[i][codeIndex]
+        # check if we have a value for thisi index
+        continue unless msg.measure['OBS_VALUE'].value[obsIndex]?
+
+        # Store codes with observations
+        for pos, j in key
+            codesWithData[j][pos] ?= 0
+            codesWithData[j][pos] += 1
+
+        matchingObs += 1
+
+    if matchingObs is 0
+        response.statusCode = 404
+        response.result.error.push 'Observations not found'
+        return
+
+    # add dimensions for the response
+    rslt.dimension = {}
+    rslt.dimension.id = msg.dimension.id
+    rslt.dimension.size = msg.dimension.id.length
+    for dim, i in msg.dimension.id
+        rslt.dimension[dim] = 
+            code: 
+                id: []
+                index: {}
+                name: {}
+            name: msg.dimension[dim].name
+            role: msg.dimension[dim].role
+
+        for pos, j in Object.keys( codesWithData[i] ).sort()
+            code = msg.dimension[dim].code.id[pos]
+            rslt.dimension[dim].code.id.push code
+            rslt.dimension[dim].code.index[code] = j
+            rslt.dimension[dim].code.name[code] = msg.dimension[dim].code.name[code]
+
+        rslt.dimension[dim].code.size = rslt.dimension[dim].code.id.length
 
     return if request.query.detail is 'nodata'
 
-    resultIndexMultipliers = calculateIndexMultipliers response.result.codes
+    # Build code mapping between codes in the response and codes in the
+    # data set. 
 
-    # Add data to result
-    response.result.data = []
-    for index in firstResult.obsIndices
-        newIndex = 0
-        remainder = index
-        for mult, i in dataset.indexMultipliers
-            codeIndex = Math.floor( remainder / mult )
-            remainder = remainder - ( codeIndex * mult )
-            newIndex += codeIndexMapping[i][codeIndex] * resultIndexMultipliers[i]
-        response.result.data[newIndex] = dataset.data[index]
+    codeMapping = []
+    for dim, n in rslt.dimension.id
+        map = []
+        for code, m in rslt.dimension[dim].code.id
+            map.push msg.dimension[dim].code.index[code]
+        codeMapping.push map
+
+    # Add measures to response
+
+    resultCount = 1 
+    resultMultipliers = []
+    for dim in rslt.dimension.id
+        resultMultipliers.push resultCount
+        resultCount *= rslt.dimension[dim].code.size
+
+    for msr in msg.measure.id
+        rslt.measure ?= id: []
+        rslt.measure.id.push msr
+        rslt.measure[msr] = 
+            size: resultCount
+            value: []
+            name: msg.measure[msr].name
+
+        # magic loop
+        for i in [0..resultCount-1]
+            obsIndex = 0
+            for codes, n in codeMapping
+                index = Math.floor( i / resultMultipliers[n] ) % codes.length
+                obsIndex += codes[index] * msgMultipliers[n]
+            
+            rslt.measure[msr].value[i] = msg.measure[msr].value[obsIndex]
+
+    # Add attributes to response
+    for attr in msg.attribute.id
+        attrCodeMapping = []
+
+        resultCount = 1
+        resultMultipliers = []
+        for dim in msg.attribute[attr].dimension
+            dimPos = msg.dimension.id.indexOf dim
+            attrCodeMapping.push codeMapping[dimPos]
+            resultMultipliers.push resultCount
+            resultCount *= codeMapping[dimPos].length
+
+        msgCount = 1
+        msgMultipliers = []
+        for dim in msg.attribute[attr].dimension.slice().reverse()
+            msgMultipliers.push msgCount
+            msgCount *= msg.dimension[dim].code.size
+        msgMultipliers.reverse()
+        
+        value = []
+        for i in [0..resultCount-1]
+            attrIndex = 0
+            for codes, n in attrCodeMapping
+                index = Math.floor( i / resultMultipliers[n] ) % codes.length
+                attrIndex += codes[index] * msgMultipliers[n]
+
+            continue unless msg.attribute[attr].value[attrIndex]?
+
+            value[i] = msg.attribute[attr].value[attrIndex]
+
+        # filter empty attributes from the response
+        continue if value.length is 0 and msg.attribute[attr].default is null
+
+        rslt.attribute ?= id: []
+        rslt.attribute.id.push attr
+        rslt.attribute[attr] =
+            name: msg.attribute[attr].name
+            mandatory: msg.attribute[attr].mandatory
+            role: msg.attribute[attr].role
+            dimension: msg.attribute[attr].dimension
+            default: msg.attribute[attr].default
+            value: value
+
 
 #-------------------------------------------------------------------------------
 
@@ -465,7 +543,7 @@ validateRequest = (request, response) ->
     if methods.indexOf( request.method ) is -1
         response.statusCode = 405
         response.setHeader 'Allow', methods.join( ',' )
-        response.errors.push 'Supported methods: ' + methods.join(',')
+        response.result.error.push 'Supported methods: ' + methods.join(',')
         return
 
     if request.headers['accept']?
@@ -474,7 +552,7 @@ validateRequest = (request, response) ->
             matches += request.headers['accept'].indexOf(type) + 1
         if matches is 0
             response.statusCode = 406
-            response.errors.push 'Supported media types: ' + mediaTypes.join(',')
+            response.result.error.push 'Supported media types: ' + mediaTypes.join(',')
             return
 
 #-------------------------------------------------------------------------------
@@ -483,15 +561,18 @@ validateRequest = (request, response) ->
 handleRequest = (request, response) ->
     start = new Date()
 
-    response.setHeader 'X-Powered-By', "Node.js/#{process.version}"
-    response.setHeader 'Server', "#{SERVER_NAME}/#{SERVER_VERSION}"
-    response.setHeader 'Cache-Control', 'no-cache, no-store'
-    response.setHeader 'Pragma', 'no-cache'
+    response.setHeader 'X-Powered-By',                "Node.js/#{process.version}"
+    response.setHeader 'Server',                      "#{SERVER_NAME}/#{SERVER_VERSION}"
+    response.setHeader 'Cache-Control',               'no-cache, no-store'
+    response.setHeader 'Pragma',                      'no-cache'
     response.setHeader 'Access-Control-Allow-Origin', '*'
-    response.setHeader 'Content-Type', 'application/json'
-    response.errors = []
-    response.result = {}
+    response.setHeader 'Content-Type',                'application/json'
     response.statusCode = 200
+    response.result = 
+        id: "IREF#{ process.hrtime()[0] }#{ process.hrtime()[1] }"
+        test: true
+        prepared: (new Date()).toISOString()
+        error: []
 
     validateRequest request, response
 
@@ -505,9 +586,12 @@ handleRequest = (request, response) ->
         query dataflow, request, response
 
     if response.statusCode is 200
-        body = JSON.stringify response.result, null, 2
-    else
-        body = JSON.stringify { error: response.errors }, null, 2
+        response.result.name = dataset.name
+        response.result.error = null
+
+    body = JSON.stringify response.result, null, 2
+   #else
+    #    body = JSON.stringify { error: response.errors }, null, 2
 
     response.setHeader 'Content-Length', Buffer.byteLength body
     response.setHeader 'X-Runtime', new Date() - start

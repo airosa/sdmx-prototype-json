@@ -518,7 +518,7 @@ code index in the id array. Example:
 
 ### size
 
-*Number*. Totsl number of codes. Same as the length of the id array. Example:
+*Number*. Total number of codes. Same as the length of the id array. Example:
 
     "size": 4
 
@@ -584,4 +584,20 @@ period. Example:
       "2007-06": "2007-06-30T23:59:59.000Z",
       "2007-12": "2007-12-31T23:59:59.000Z",
       "2008-01": "2008-01-31T23:59:59.000Z"
+    }
+
+### coordinates
+
+*Object* *nullable*. Represents the geographic location of this code (country,
+reference area etc.). The inner coordinates array is formatted as [geoJSON]
+(http://www.geojson.org) (longitude first, then latitude). Example:
+
+    "coordinates": {
+      "FI": {
+        "type":"Point",
+        "coordinates": [
+          62.4302,
+          24.7271
+        ]
+      }
     }
