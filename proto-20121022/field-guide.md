@@ -35,7 +35,8 @@ fields. Example:
       },
       "attribute": {
         # fields for attributes #
-      }
+      },
+      "error": null
     }
 
 ### name
@@ -53,22 +54,22 @@ Example:
 
 ### test
 
-*Boolean*. Allows identification of test messages. False for normal messages.
-Example:
+*Boolean*. Test indicates whether the message is for test purposes or not. False
+for normal messages. Example:
 
     "test": false
 
 ### prepared
 
-*String*. String representation of Date formatted according to the ISO-8601
-standard. Example
+*String*. Prepared is the date the message was prepared. String representation 
+of Date formatted according to the ISO-8601 standard. Example
 
     "prepared": "2012-05-04T03:30:00.000Z"
 
 ### measure
 
 *[Measure](#Measure)* *nullable*. Contains measures with observation values. Normal 
-message contains only one measure but there can be multiple measure or no 
+message contains only one measure but there can be multiple measures or no 
 measures. Example:
 
     "measure": {
@@ -89,7 +90,7 @@ measures. Example:
  
 ### dimension
 
-*[Dimension](#Dimension)*. Contains dimensions related to measures and
+*[Dimension](#Dimension)* *nullable*. Contains dimensions related to measures and
 attributes in the message. Example:
 
     "dimension": {
@@ -174,6 +175,17 @@ the observation values. Example:
         "value": []
       }
     }
+
+### error
+
+*Array* *nullable*. RESTful web services indicates errors using the HTTP status
+codes. In addition, whenever appropriate, the error is also be returned using 
+the error fields. Error is an array of error messages. If there are no errors
+then error is null. Example:
+
+    "error": [
+      "Invalid number of dimensions in parameter key"
+    ] 
 
 ----
 
@@ -448,10 +460,16 @@ values in an *Array*. Example:
       "266230": "Large insurance company changed prices for car insurance products"
     }
 
+*String*. If the attribute does not have dimensions (dimension field is null) then
+the value is a string. Example:
+
+    "value": "Harmonised indices of consumer prices"
+
 ### size
 
-*Number*. The theoretical size of the value array for the attribute. The actual 
-size of the value array can be smaller. Example:
+*Number* *nullable*. The theoretical size of the value array for the attribute. 
+The actual size of the value array can be smaller. If the attribute does not have
+dimensions then the value is null. Example:
 
     "size": 349180
 
@@ -529,4 +547,41 @@ roots. Each code has only one parent. Example:
       "SI": "U2",
       "SK": "U2",
       "U2": "ROOT"
+    }
+
+### start
+
+*Object* *nullable*. Collection of start dates for codes in a time dimension.
+This field is useful only when the codes are time periods for a time dimension
+(dimension role is 'time'). Value is date in ISO format for the beginning of the 
+period. Example:
+
+    "start": {
+      "2007-02": "2007-02-01T00:00:00.000Z",
+      "2007-09": "2007-09-01T00:00:00.000Z",
+      "2008-04": "2008-04-01T00:00:00.000Z",
+      "2008-10": "2008-10-01T00:00:00.000Z",
+      "2007-03": "2007-03-01T00:00:00.000Z",
+      "2008-05": "2008-05-01T00:00:00.000Z",
+      "2008-11": "2008-11-01T00:00:00.000Z",
+      "2007-04": "2007-04-01T00:00:00.000Z"
+    }
+
+### end 
+
+*Object* *nullable*. Collection of end dates for codes in a time dimension.
+This field is useful only when the codes are time periods for a time dimension
+(dimension role is 'time'). Value is date in ISO format for the end of the 
+period. Example:
+
+    "end": {
+      "2007-10": "2007-10-31T23:59:59.000Z",
+      "2008-06": "2008-06-30T23:59:59.000Z",
+      "2008-12": "2008-12-31T23:59:59.000Z",
+      "2007-05": "2007-05-31T23:59:59.000Z",
+      "2007-11": "2007-11-30T23:59:59.000Z",
+      "2008-07": "2008-07-31T23:59:59.000Z",
+      "2007-06": "2007-06-30T23:59:59.000Z",
+      "2007-12": "2007-12-31T23:59:59.000Z",
+      "2008-01": "2008-01-31T23:59:59.000Z"
     }
