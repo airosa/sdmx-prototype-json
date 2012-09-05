@@ -601,3 +601,15 @@ reference area etc.). The inner coordinates array is formatted as [geoJSON]
         ]
       }
     }
+
+### ref
+
+*Object* *nullable*. Reference to the code list.
+
+    “ref”: {
+      “id”: “CL_FREQ”,
+      “agencyId”: “SDMX”,
+      “version”: “1.0”,
+      “urn”: “urn:sdmx:org.sdmx.infomodel.codelist.Codelist=SDMX:CL_FREQ(1.0)”
+      “url”: “http://sdmx.org/codelist/SDMX/CL_FREQ/1.0”
+    }
