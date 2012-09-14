@@ -186,6 +186,11 @@
       "GEO",
       "TIME_PERIOD"
     ],
+    "size": [
+      1,
+      15,
+      12
+    ],
     "FREQ": {
       "id": "FREQ",
       "name": "Frequency",

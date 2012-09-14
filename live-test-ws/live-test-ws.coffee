@@ -436,8 +436,10 @@ query = (msg, request, response) ->
         return
 
     # add dimensions to the response
-    rslt.dimensions = {}
-    rslt.dimensions.id = msg.dimensions.id
+    rslt.dimensions = 
+        id: msg.dimensions.id
+        size: []
+
     for dim, i in msg.dimensions.id
         rslt.dimensions[dim] = 
             codes: 
@@ -459,6 +461,8 @@ query = (msg, request, response) ->
             if msg.dimensions[dim].codes[code].end?
                 rslt.dimensions[dim].codes[code].end = msg.dimensions[dim].codes[code].end
 
+        rslt.dimensions.size[i] = rslt.dimensions[dim].codes.id.length
+        
     return if request.query.detail is 'nodata'
 
     # Build code mapping between codes in the response and codes in the
