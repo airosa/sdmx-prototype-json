@@ -1,0 +1,85 @@
+{
+    "id": "ESMS",
+    "test": false,
+    "prepared": "2010-11-13T08:00:33+08:00",
+    "sender": {
+        "id": "ESTAT"
+    },
+    "dataflows": [
+        {
+            "id": "DEMO_TOT",
+            "agencyId": "ESTAT",
+            "version": "1.0",
+            "name": "Demography totals",
+            "structure": {
+                "id": "DEMOGRAPHY",
+                "agencyId": "ESTAT",
+                "version": "1.0"
+            }
+        }
+    ],
+    "categorySchemes": [
+        {
+            "id": "DATAFLOWS_SCHEME",
+            "agencyId": "ESTAT",
+            "version": "1.0",
+            "name": "ESTAT Dataflows Category Scheme",
+            "categories": [
+                {
+                    "id": "PSC",
+                    "name": "Population and social conditions",
+                    "categories": [
+                        {
+                            "id": "DEM",
+                            "name": "Demography",
+                            "categories": [
+                                {
+                                    "id": "TOT",
+                                    "name": "Total population and demographic events"
+                                },
+                                {
+                                    "id": "POP",
+                                    "name": "Population"
+                                },
+                                {
+                                    "id": "FERT",
+                                    "name": "Fertility"
+                                },
+                                {
+                                    "id": "MORT",
+                                    "name": "Mortality"
+                                },
+                                {
+                                    "id": "MARR",
+                                    "name": "Marriage and divorce"
+                                }                                
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "categorisations": [
+        {
+            "id": "DEMO_TOT",
+            "agencyId": "ESTAT",
+            "version": "1.0",
+            "name": "Demography totals categorisations",
+            "source": {
+                "id": "DEMO_TOT",
+                "agencyId": "ESTAT",
+                "version": "1.0",
+                "class": "Dataflow",
+                "package": "datastructure"
+            },
+            "target": {
+                "id": "PSC.DEM.TOT",
+                "agencyId": "ESTAT",
+                "maintainableParentID": "DATAFLOWS_SCHEME",
+                "maintainableParentVersion": "1.0"
+            }
+        }
+    ],
+    "errors": null
+}

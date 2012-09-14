@@ -378,18 +378,18 @@
   addCodesToQuery = function(request, response, msg) {
     var code, dim, endDate, i, index, j, keyCodes, period, query, startDate, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _len7, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
     query = [];
-    _ref = msg.dimension.id;
+    _ref = msg.dimensions.id;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       dim = _ref[_i];
       query.push([]);
     }
-    _ref1 = msg.dimension.id;
+    _ref1 = msg.dimensions.id;
     for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
       dim = _ref1[i];
-      if (msg.dimension[dim].role !== 'time') {
+      if (msg.dimensions[dim].type !== 'time') {
         continue;
       }
-      _ref2 = msg.dimension[dim].code.id;
+      _ref2 = msg.dimensions[dim].codes.id;
       for (j = _k = 0, _len2 = _ref2.length; _k < _len2; j = ++_k) {
         period = _ref2[j];
         if (request.query.startPeriod != null) {
@@ -409,13 +409,13 @@
       break;
     }
     if (request.query.key === 'all') {
-      _ref3 = msg.dimension.id;
+      _ref3 = msg.dimensions.id;
       for (i = _l = 0, _len3 = _ref3.length; _l < _len3; i = ++_l) {
         dim = _ref3[i];
-        if (msg.dimension[dim].role === 'time') {
+        if (msg.dimensions[dim].type === 'time') {
           continue;
         }
-        _ref4 = msg.dimension[dim].code.id;
+        _ref4 = msg.dimensions[dim].codes.id;
         for (j = _m = 0, _len4 = _ref4.length; _m < _len4; j = ++_m) {
           code = _ref4[j];
           query[i].push(j);
@@ -423,7 +423,7 @@
       }
       return;
     }
-    if (request.query.key.length !== msg.dimension.id.length - 1) {
+    if (request.query.key.length !== msg.dimensions.id.length - 1) {
       response.result.error.push("Invalid number of dimensions in parameter key");
       response.statusCode = 400;
       return;
@@ -431,9 +431,9 @@
     _ref5 = request.query.key;
     for (i = _n = 0, _len5 = _ref5.length; _n < _len5; i = ++_n) {
       keyCodes = _ref5[i];
-      dim = msg.dimension.id[i];
+      dim = msg.dimensions.id[i];
       if (keyCodes.length === 0) {
-        _ref6 = msg.dimension[dim].code.id;
+        _ref6 = msg.dimensions[dim].codes.id;
         for (j = _o = 0, _len6 = _ref6.length; _o < _len6; j = ++_o) {
           code = _ref6[j];
           query[i].push(j);
@@ -442,7 +442,7 @@
       }
       for (_p = 0, _len7 = keyCodes.length; _p < _len7; _p++) {
         code = keyCodes[_p];
-        index = msg.dimension[dim].code.index[code];
+        index = msg.dimensions[dim].codes[code].index;
         if (0 <= index) {
           query[i].push(index);
         }
@@ -452,16 +452,16 @@
   };
 
   query = function(msg, request, response) {
-    var attr, attrCodeMapping, attrIndex, code, codeMap, codes, codesInQuery, codesWithData, dim, dimPos, i, index, j, key, m, map, matchingObs, msgCount, msgMultipliers, msgSize, msr, n, obsIndex, pos, queryMultipliers, querySize, resultCount, resultMultipliers, rslt, value, _base, _i, _j, _k, _l, _len, _len1, _len10, _len11, _len12, _len13, _len14, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _s, _t, _u, _v, _w, _x, _y, _z;
+    var attr, attrCodeMapping, attrIndex, code, codeMap, codes, codesInQuery, codesWithData, dim, dimPos, i, index, j, key, m, map, matchingObs, msgCount, msgMultipliers, msgSize, n, obsIndex, pos, queryMultipliers, querySize, resultCount, resultMultipliers, rslt, value, _base, _i, _j, _k, _l, _len, _len1, _len10, _len11, _len12, _len13, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _s, _t, _u, _v, _w, _x, _y;
     rslt = response.result;
     codesInQuery = addCodesToQuery(request, response, msg);
     msgSize = 1;
     msgMultipliers = [];
-    _ref = msg.dimension.id.slice().reverse();
+    _ref = msg.dimensions.id.slice().reverse();
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       dim = _ref[_i];
       msgMultipliers.push(msgSize);
-      msgSize *= msg.dimension[dim].code.size;
+      msgSize *= msg.dimensions[dim].codes.id.length;
     }
     msgMultipliers.reverse();
     querySize = 1;
@@ -488,7 +488,7 @@
         key.push(codes[index]);
         obsIndex += codes[index] * msgMultipliers[n];
       }
-      if (msg.measure['OBS_VALUE'].value[obsIndex] == null) {
+      if (msg.measure[obsIndex] == null) {
         continue;
       }
       for (j = _m = 0, _len3 = key.length; _m < _len3; j = ++_m) {
@@ -505,130 +505,121 @@
       response.result.error.push('Observations not found');
       return;
     }
-    rslt.dimension = {};
-    rslt.dimension.id = msg.dimension.id;
-    rslt.dimension.size = msg.dimension.id.length;
-    _ref3 = msg.dimension.id;
+    rslt.dimensions = {};
+    rslt.dimensions.id = msg.dimensions.id;
+    _ref3 = msg.dimensions.id;
     for (i = _n = 0, _len4 = _ref3.length; _n < _len4; i = ++_n) {
       dim = _ref3[i];
-      rslt.dimension[dim] = {
-        code: {
-          id: [],
-          index: {},
-          name: {}
+      rslt.dimensions[dim] = {
+        codes: {
+          id: []
         },
-        name: msg.dimension[dim].name,
-        role: msg.dimension[dim].role
+        name: msg.dimensions[dim].name,
+        type: msg.dimensions[dim].type,
+        role: msg.dimensions[dim].role
       };
       _ref4 = Object.keys(codesWithData[i]);
       for (j = _o = 0, _len5 = _ref4.length; _o < _len5; j = ++_o) {
         pos = _ref4[j];
-        code = msg.dimension[dim].code.id[pos];
-        rslt.dimension[dim].code.id.push(code);
-        rslt.dimension[dim].code.index[code] = j;
-        rslt.dimension[dim].code.name[code] = msg.dimension[dim].code.name[code];
+        code = msg.dimensions[dim].codes.id[pos];
+        rslt.dimensions[dim].codes.id.push(code);
+        rslt.dimensions[dim].codes[code] = {
+          index: j,
+          name: msg.dimensions[dim].codes[code].name
+        };
+        if (msg.dimensions[dim].codes[code].start != null) {
+          rslt.dimensions[dim].codes[code].start = msg.dimensions[dim].codes[code].start;
+        }
+        if (msg.dimensions[dim].codes[code].end != null) {
+          rslt.dimensions[dim].codes[code].end = msg.dimensions[dim].codes[code].end;
+        }
       }
-      rslt.dimension[dim].code.size = rslt.dimension[dim].code.id.length;
     }
     if (request.query.detail === 'nodata') {
       return;
     }
     codeMap = [];
-    _ref5 = rslt.dimension.id;
+    _ref5 = rslt.dimensions.id;
     for (n = _p = 0, _len6 = _ref5.length; _p < _len6; n = ++_p) {
       dim = _ref5[n];
       map = [];
-      _ref6 = rslt.dimension[dim].code.id;
+      _ref6 = rslt.dimensions[dim].codes.id;
       for (m = _q = 0, _len7 = _ref6.length; _q < _len7; m = ++_q) {
         code = _ref6[m];
-        map.push(msg.dimension[dim].code.index[code]);
+        map.push(msg.dimensions[dim].codes[code].index);
       }
       codeMap.push(map);
     }
     resultCount = 1;
     resultMultipliers = [];
-    _ref7 = rslt.dimension.id;
+    _ref7 = rslt.dimensions.id;
     for (_r = 0, _len8 = _ref7.length; _r < _len8; _r++) {
       dim = _ref7[_r];
       resultMultipliers.push(resultCount);
-      resultCount *= rslt.dimension[dim].code.size;
-    }
-    _ref8 = msg.measure.id;
-    for (_s = 0, _len9 = _ref8.length; _s < _len9; _s++) {
-      msr = _ref8[_s];
-      if ((_ref9 = rslt.measure) == null) {
-        rslt.measure = {
-          id: []
-        };
-      }
-      rslt.measure.id.push(msr);
-      rslt.measure[msr] = {
-        size: resultCount,
-        value: [],
-        name: msg.measure[msr].name
-      };
-      for (i = _t = 0, _ref10 = resultCount - 1; 0 <= _ref10 ? _t <= _ref10 : _t >= _ref10; i = 0 <= _ref10 ? ++_t : --_t) {
+      resultCount *= rslt.dimensions[dim].codes.id.length;
+      rslt.measure = [];
+      for (i = _s = 0, _ref8 = resultCount - 1; 0 <= _ref8 ? _s <= _ref8 : _s >= _ref8; i = 0 <= _ref8 ? ++_s : --_s) {
         obsIndex = 0;
-        for (n = _u = 0, _len10 = codeMap.length; _u < _len10; n = ++_u) {
+        for (n = _t = 0, _len9 = codeMap.length; _t < _len9; n = ++_t) {
           codes = codeMap[n];
           index = Math.floor(i / resultMultipliers[n]) % codes.length;
           obsIndex += codes[index] * msgMultipliers[n];
         }
-        rslt.measure[msr].value[i] = msg.measure[msr].value[obsIndex];
+        rslt.measure[i] = msg.measure[obsIndex];
       }
     }
-    _ref11 = msg.attribute.id;
+    _ref9 = msg.attributes.id;
     _results = [];
-    for (_v = 0, _len11 = _ref11.length; _v < _len11; _v++) {
-      attr = _ref11[_v];
+    for (_u = 0, _len10 = _ref9.length; _u < _len10; _u++) {
+      attr = _ref9[_u];
       attrCodeMapping = [];
       resultCount = 1;
       resultMultipliers = [];
-      _ref12 = msg.attribute[attr].dimension;
-      for (_w = 0, _len12 = _ref12.length; _w < _len12; _w++) {
-        dim = _ref12[_w];
-        dimPos = msg.dimension.id.indexOf(dim);
+      _ref10 = msg.attributes[attr].dimension;
+      for (_v = 0, _len11 = _ref10.length; _v < _len11; _v++) {
+        dim = _ref10[_v];
+        dimPos = msg.dimensions.id.indexOf(dim);
         attrCodeMapping.push(codeMap[dimPos]);
         resultMultipliers.push(resultCount);
         resultCount *= codeMap[dimPos].length;
       }
       msgCount = 1;
       msgMultipliers = [];
-      _ref13 = msg.attribute[attr].dimension.slice().reverse();
-      for (_x = 0, _len13 = _ref13.length; _x < _len13; _x++) {
-        dim = _ref13[_x];
+      _ref11 = msg.attributes[attr].dimension.slice().reverse();
+      for (_w = 0, _len12 = _ref11.length; _w < _len12; _w++) {
+        dim = _ref11[_w];
         msgMultipliers.push(msgCount);
-        msgCount *= msg.dimension[dim].code.size;
+        msgCount *= msg.dimensions[dim].codes.id.length;
       }
       msgMultipliers.reverse();
       value = [];
-      for (i = _y = 0, _ref14 = resultCount - 1; 0 <= _ref14 ? _y <= _ref14 : _y >= _ref14; i = 0 <= _ref14 ? ++_y : --_y) {
+      for (i = _x = 0, _ref12 = resultCount - 1; 0 <= _ref12 ? _x <= _ref12 : _x >= _ref12; i = 0 <= _ref12 ? ++_x : --_x) {
         attrIndex = 0;
-        for (n = _z = 0, _len14 = attrCodeMapping.length; _z < _len14; n = ++_z) {
+        for (n = _y = 0, _len13 = attrCodeMapping.length; _y < _len13; n = ++_y) {
           codes = attrCodeMapping[n];
           index = Math.floor(i / resultMultipliers[n]) % codes.length;
           attrIndex += codes[index] * msgMultipliers[n];
         }
-        if (msg.attribute[attr].value[attrIndex] == null) {
+        if (msg.attributes[attr].value[attrIndex] == null) {
           continue;
         }
-        value[i] = msg.attribute[attr].value[attrIndex];
+        value[i] = msg.attributes[attr].value[attrIndex];
       }
-      if (value.length === 0 && msg.attribute[attr]["default"] === null) {
+      if (value.length === 0 && msg.attributes[attr]["default"] === null) {
         continue;
       }
-      if ((_ref15 = rslt.attribute) == null) {
-        rslt.attribute = {
+      if ((_ref13 = rslt.attributes) == null) {
+        rslt.attributes = {
           id: []
         };
       }
-      rslt.attribute.id.push(attr);
-      _results.push(rslt.attribute[attr] = {
-        name: msg.attribute[attr].name,
-        mandatory: msg.attribute[attr].mandatory,
-        role: msg.attribute[attr].role,
-        dimension: msg.attribute[attr].dimension,
-        "default": msg.attribute[attr]["default"],
+      rslt.attributes.id.push(attr);
+      _results.push(rslt.attributes[attr] = {
+        name: msg.attributes[attr].name,
+        mandatory: msg.attributes[attr].mandatory,
+        role: msg.attributes[attr].role,
+        dimension: msg.attributes[attr].dimension,
+        "default": msg.attributes[attr]["default"],
         value: value
       });
     }
@@ -667,8 +658,10 @@
     response.setHeader('Pragma', 'no-cache');
     response.setHeader('Access-Control-Allow-Origin', '*');
     response.setHeader('Content-Type', 'application/json');
+    response.setHeader('Content-Language', 'en');
     response.statusCode = 200;
     response.result = {
+      'sdmx-proto-json': dataset['sdmx-proto-json'],
       id: "IREF" + (process.hrtime()[0]) + (process.hrtime()[1]),
       test: true,
       prepared: (new Date()).toISOString(),

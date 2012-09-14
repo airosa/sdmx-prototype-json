@@ -331,13 +331,13 @@ findDataFlow = (request, response) ->
 
 addCodesToQuery = (request, response, msg) ->
     query = []
-    query.push [] for dim in msg.dimension.id
+    query.push [] for dim in msg.dimensions.id
 
     # Applies the date parameters to the codes in the time dimension
-    for dim, i in msg.dimension.id
-        continue unless msg.dimension[dim].role is 'time'
+    for dim, i in msg.dimensions.id
+        continue unless msg.dimensions[dim].type is 'time'
 
-        for period, j in msg.dimension[dim].code.id
+        for period, j in msg.dimensions[dim].codes.id
             if request.query.startPeriod?
                 startDate = parseDate period, false
                 continue unless request.query.startPeriod <= startDate
@@ -350,28 +350,28 @@ addCodesToQuery = (request, response, msg) ->
 
     # Special case, all codes for all dimensions are in
     if request.query.key is 'all'
-        for dim, i in msg.dimension.id
-            continue if msg.dimension[dim].role is 'time' 
-            query[i].push j for code, j in msg.dimension[dim].code.id
+        for dim, i in msg.dimensions.id
+            continue if msg.dimensions[dim].type is 'time' 
+            query[i].push j for code, j in msg.dimensions[dim].codes.id
         return
 
-    if request.query.key.length isnt msg.dimension.id.length - 1
+    if request.query.key.length isnt msg.dimensions.id.length - 1
         response.result.error.push "Invalid number of dimensions in parameter key"
         response.statusCode = 400
         return
 
     # Normal query
     for keyCodes, i in request.query.key
-        dim = msg.dimension.id[i]
+        dim = msg.dimensions.id[i]
 
         # Dimension was wildcarded in the key
         if keyCodes.length is 0
-            for code, j in msg.dimension[dim].code.id
+            for code, j in msg.dimensions[dim].codes.id
                 query[i].push j
             continue
         
         for code in keyCodes
-            index = msg.dimension[dim].code.index[code]
+            index = msg.dimensions[dim].codes[code].index
             query[i].push index if 0 <= index
 
         # What happens if there are no valid codes for a dimension?
@@ -391,9 +391,9 @@ query = (msg, request, response) ->
     # built up multipliers for accesing data in the message
     msgSize = 1
     msgMultipliers = []
-    for dim in msg.dimension.id.slice().reverse()
+    for dim in msg.dimensions.id.slice().reverse()
         msgMultipliers.push msgSize
-        msgSize *= msg.dimension[dim].code.size
+        msgSize *= msg.dimensions[dim].codes.id.length
     msgMultipliers.reverse()
 
     # enumerate all keys in the query, algorithm is from stackoverflow
@@ -421,7 +421,7 @@ query = (msg, request, response) ->
             obsIndex += codes[ index ] * msgMultipliers[n]
 
         # check if we have a value for thisi index
-        continue unless msg.measure['OBS_VALUE'].value[obsIndex]?
+        continue unless msg.measure[obsIndex]?
 
         # Store codes with observations
         for pos, j in key
@@ -436,25 +436,28 @@ query = (msg, request, response) ->
         return
 
     # add dimensions to the response
-    rslt.dimension = {}
-    rslt.dimension.id = msg.dimension.id
-    rslt.dimension.size = msg.dimension.id.length
-    for dim, i in msg.dimension.id
-        rslt.dimension[dim] = 
-            code: 
+    rslt.dimensions = {}
+    rslt.dimensions.id = msg.dimensions.id
+    for dim, i in msg.dimensions.id
+        rslt.dimensions[dim] = 
+            codes: 
                 id: []
-                index: {}
-                name: {}
-            name: msg.dimension[dim].name
-            role: msg.dimension[dim].role
+            name: msg.dimensions[dim].name
+            type: msg.dimensions[dim].type
+            role: msg.dimensions[dim].role
 
         for pos, j in Object.keys codesWithData[i]
-            code = msg.dimension[dim].code.id[pos]
-            rslt.dimension[dim].code.id.push code
-            rslt.dimension[dim].code.index[code] = j
-            rslt.dimension[dim].code.name[code] = msg.dimension[dim].code.name[code]
+            code = msg.dimensions[dim].codes.id[pos]
+            rslt.dimensions[dim].codes.id.push code            
+            rslt.dimensions[dim].codes[code] =
+                index: j
+                name: msg.dimensions[dim].codes[code].name
 
-        rslt.dimension[dim].code.size = rslt.dimension[dim].code.id.length
+            if msg.dimensions[dim].codes[code].start?
+                rslt.dimensions[dim].codes[code].start = msg.dimensions[dim].codes[code].start
+
+            if msg.dimensions[dim].codes[code].end?
+                rslt.dimensions[dim].codes[code].end = msg.dimensions[dim].codes[code].end
 
     return if request.query.detail is 'nodata'
 
@@ -462,27 +465,21 @@ query = (msg, request, response) ->
     # data set. 
 
     codeMap = []
-    for dim, n in rslt.dimension.id
+    for dim, n in rslt.dimensions.id
         map = []
-        for code, m in rslt.dimension[dim].code.id
-            map.push msg.dimension[dim].code.index[code]
+        for code, m in rslt.dimensions[dim].codes.id
+            map.push msg.dimensions[dim].codes[code].index
         codeMap.push map
 
     # Add measures to response
 
     resultCount = 1 
     resultMultipliers = []
-    for dim in rslt.dimension.id
+    for dim in rslt.dimensions.id
         resultMultipliers.push resultCount
-        resultCount *= rslt.dimension[dim].code.size
+        resultCount *= rslt.dimensions[dim].codes.id.length
 
-    for msr in msg.measure.id
-        rslt.measure ?= id: []
-        rslt.measure.id.push msr
-        rslt.measure[msr] = 
-            size: resultCount
-            value: []
-            name: msg.measure[msr].name
+        rslt.measure = []
 
         # magic loop
         for i in [0..resultCount-1]
@@ -491,25 +488,25 @@ query = (msg, request, response) ->
                 index = Math.floor( i / resultMultipliers[n] ) % codes.length
                 obsIndex += codes[index] * msgMultipliers[n]
             
-            rslt.measure[msr].value[i] = msg.measure[msr].value[obsIndex]
+            rslt.measure[i] = msg.measure[obsIndex]
 
     # Add attributes to response
-    for attr in msg.attribute.id
+    for attr in msg.attributes.id
         attrCodeMapping = []
 
         resultCount = 1
         resultMultipliers = []
-        for dim in msg.attribute[attr].dimension
-            dimPos = msg.dimension.id.indexOf dim
+        for dim in msg.attributes[attr].dimension
+            dimPos = msg.dimensions.id.indexOf dim
             attrCodeMapping.push codeMap[dimPos]
             resultMultipliers.push resultCount
             resultCount *= codeMap[dimPos].length
 
         msgCount = 1
         msgMultipliers = []
-        for dim in msg.attribute[attr].dimension.slice().reverse()
+        for dim in msg.attributes[attr].dimension.slice().reverse()
             msgMultipliers.push msgCount
-            msgCount *= msg.dimension[dim].code.size
+            msgCount *= msg.dimensions[dim].codes.id.length
         msgMultipliers.reverse()
         
         value = []
@@ -519,21 +516,21 @@ query = (msg, request, response) ->
                 index = Math.floor( i / resultMultipliers[n] ) % codes.length
                 attrIndex += codes[index] * msgMultipliers[n]
 
-            continue unless msg.attribute[attr].value[attrIndex]?
+            continue unless msg.attributes[attr].value[attrIndex]?
 
-            value[i] = msg.attribute[attr].value[attrIndex]
+            value[i] = msg.attributes[attr].value[attrIndex]
 
         # filter empty attributes from the response
-        continue if value.length is 0 and msg.attribute[attr].default is null
+        continue if value.length is 0 and msg.attributes[attr].default is null
 
-        rslt.attribute ?= id: []
-        rslt.attribute.id.push attr
-        rslt.attribute[attr] =
-            name: msg.attribute[attr].name
-            mandatory: msg.attribute[attr].mandatory
-            role: msg.attribute[attr].role
-            dimension: msg.attribute[attr].dimension
-            default: msg.attribute[attr].default
+        rslt.attributes ?= id: []
+        rslt.attributes.id.push attr
+        rslt.attributes[attr] =
+            name: msg.attributes[attr].name
+            mandatory: msg.attributes[attr].mandatory
+            role: msg.attributes[attr].role
+            dimension: msg.attributes[attr].dimension
+            default: msg.attributes[attr].default
             value: value
 
 
@@ -570,8 +567,10 @@ handleRequest = (request, response) ->
     response.setHeader 'Pragma',                      'no-cache'
     response.setHeader 'Access-Control-Allow-Origin', '*'
     response.setHeader 'Content-Type',                'application/json'
+    response.setHeader 'Content-Language',            'en'
     response.statusCode = 200
     response.result = 
+        'sdmx-proto-json': dataset['sdmx-proto-json']
         id: "IREF#{ process.hrtime()[0] }#{ process.hrtime()[1] }"
         test: true
         prepared: (new Date()).toISOString()

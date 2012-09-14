@@ -1,49 +1,60 @@
 
-# Draft Field Guide to SDMX-JSON Objects
+# Draft Field Guide to SDMX-PROTO-JSON Objects
 
-Use this guide to better understand SDMX-JSON objects.
+**Version 2012-09-13**
+
+Use this guide to better understand SDMX-PROTO-JSON objects.
 
 - [Message](#Message)
-- [Measure](#Measure)
-- [Dimension](#Dimension)
-- [Attribute](#Attribute)
-- [Code](#Code)
+- [Dimensions](#Dimensions)
+- [Attributes](#Attributes)
+- [Codes](#Codes)
 
-Consumers of SDMX-JSON should tolerate the addition of new fields and variance
-in ordering of fields with ease. Not all fields appear in all contexts. It is
-generally safe to consider a nulled field, an empty set, and the absence of a
-field as the same thing.
+New fields may be introduced in later versions of the field guide. Therefore 
+consuming applications should tolerate the addition of new fields with ease.
+
+The ordering of fields in objects is undefined. The fields may appear in any order
+and consuming applications should not rely on any specific ordering. It is safe 
+to consider a nulled field and the absence of a field as the same thing.
+
+Not all fields appear in all contexts. For example response with error messages
+may not containg fields for measure, dimension and attributes.
 
 ----
 
 ## <a name="Message"></a>Message
 
 Message is the response you get back from the RESTful API. Message is the top
-level object and it contains dimensions, attributes, observations and other
+level object and it contains dimensions, attributes and other
 fields. Example:
 
     {
+      "sdmx-proto-json": "2012-09-13",
       "name": "Short-term interest rates: Day-to-day money rates",
       "id": "TEC00034",
       "test": false,
       "prepared": "2012-05-04T03:30:00.000Z",
-      "measure": {
-        # fields for measures #
-      },
-      "dimension": {
+      "measure": [
+        2.9,
+        3.64,
+        2.39,
+        1.96
+      ],
+      "dimensions": {
         # fields for dimensions #
       },
-      "attribute": {
+      "attributes": {
         # fields for attributes #
       },
-      "error": null
+      "errors": null
     }
 
-### name
+### sdmx-proto-json
 
-*String* *nullable*. Brief summary of the message contents. Example:
+*String*. A string specifying the version of the SDMX-PROTO-JSON response. 
+Version string is the same as the version of the field guide. Example:
 
-    "name": "Short-term interest rates: Day-to-day money rates"
+    "sdmx-proto-json": "2012-09-13"
 
 ### id 
 
@@ -51,6 +62,12 @@ fields. Example:
 Example:
 
     "id": "TEC00034"
+
+### name
+
+*String* *nullable*. Brief summary of the message contents. Example:
+
+    "name": "Short-term interest rates: Day-to-day money rates"
 
 ### test
 
@@ -62,62 +79,64 @@ for normal messages. Example:
 ### prepared
 
 *String*. Prepared is the date the message was prepared. String representation 
-of Date formatted according to the ISO-8601 standard. Example
+of Date formatted according to the ISO-8601 standard. Example:
 
     "prepared": "2012-05-04T03:30:00.000Z"
 
 ### measure
 
-*[Measure](#Measure)* *nullable*. Contains measures with observation values. Normal 
-message contains only one measure but there can be multiple measures or no 
-measures. Example:
+*Array*. Array containing observation values. The data type for
+observation value is *Number*. Undefined observation value is *null*. Data type
+for a missing observation value is a *String* with the value "-". 
 
-    "measure": {
-      "id": [
-        "OBS_VALUE"
-      ],
-      "OBS_VALUE": {
-        "name": "Observation value",
-        "value": [
-          2.9,
-          3.64,
-          2.39,
-          1.96
-        ],
-        "size": 4
-      }
-    }
+Nulls may be trimmed from the end of the array. As a special case an empty 
+message that contains no observations has an empty value array (all observations
+are null). Therefore the length of the value array may not be the same as the 
+theoretical number of observations calculated from the dimensions. Example:
+
+    "measure": [
+      86.7,
+      86.9,
+      87.2,
+      null,
+      87.1,
+      null,
+      "-"
+    ]
  
-### dimension
+### dimensions
 
-*[Dimension](#Dimension)* *nullable*. Contains dimensions related to measures and
-attributes in the message. Example:
+*[Dimensions](#Dimensions)* *nullable*. Contains dimensions identifying the measure 
+and attribute values. Example:
 
-    "dimension": {
-        "id": [
-          "ADJUSTMENT"
-        ],
-        "ADJUSTMENT": {
-            "name": "Adjustment indicator",
-            "role": null,
-            "code": {
-              "id": [
-                "N"
-              ],
-              "index": {
-                "N": 0
-              },
-              "name": {
-                "N": "Neither seasonally or working day adjusted"
-              },
-              "size": 1
-            }
-        } 
+    "dimensions": {
+      "id": [
+        "ADJUSTMENT"
+      ],
+      "size": [
+        1
+      ],
+      "ADJUSTMENT": {
+        "id": "ADJUSTMENT",
+        "name": "Adjustment indicator",
+        "type": null,
+        "roles": null,
+        "codes": {
+          "id": [
+            "N"
+          ],
+          "N": {
+            "id": "N",
+            "name": "Neither seasonally or working day adjusted",
+            "index": 0
+          }
+        }
+      } 
     }
 
-### attribute
+### attributes
 
-*[Attribute](#Attribute)* *nullable*. Contains attributes that provide information about
+*[Attributes](#Attributes)* *nullable*. Contains attributes that provide information about
 the observation values. Example:
 
     attribute: {
@@ -126,6 +145,8 @@ the observation values. Example:
         "UNIT_MULT"
       ],
       "OBS_COM": {
+        "id": "OBS_COM",
+        "name": "Observation comment",
         "dimension": [
           "FREQ",
           "REF_AREA",
@@ -135,8 +156,7 @@ the observation values. Example:
           "ICP_SUFFIX",
           "TIME_PERIOD"
         ],
-        "name": "Observation comment",
-        "role": "attribute",
+        "roles": null,
         "code": null,
         "value": {
           "262596": "Sharp decline due to abolition of Radio and TV license fees.",
@@ -144,10 +164,11 @@ the observation values. Example:
           "266230": "Large insurance company changed prices for car insurance products"
         },
         "mandatory": false,
-        "default": null,
-        "size": 349180
+        "default": null
       },
       "UNIT_MULT": {
+        "id": "UNIT_MULT",
+        "name": "Unit multiplier",
         "dimension": [
           "REF_AREA",
           "ADJUSTMENT",
@@ -155,116 +176,52 @@ the observation values. Example:
           "STS_INSTITUTION",
           "ICP_SUFFIX"
         ],
-        "name": "Unit multiplier",
         "mandatory": true,
-        "role": "attribute",
-        "code": {
+        "roles": null,
+        "codes": {
           "id": [
             "0"
           ],
-          "index": {
-            "0": 0
-          },
-          "name": {
-            "0": "Units"
-          },
-          "size": 1
+          "0": {
+            "id": "0",
+            "name": "Units",
+            index": 0
+          }
         },
-        "default": "0",
-        "size": 2210,
+        "default": "0"
         "value": []
       }
     }
 
-### error
+### errors
 
 *Array* *nullable*. RESTful web services indicates errors using the HTTP status
 codes. In addition, whenever appropriate, the error is also be returned using 
 the error fields. Error is an array of error messages. If there are no errors
 then error is null. Example:
 
-    "error": [
+    "errors": [
       "Invalid number of dimensions in parameter key"
     ] 
 
 ----
 
-## <a name="Measure"></a>Measure
-
-Measure is the container for measures with observation values. It contains fields
-common to all measures and individual measures with measure specific fields. 
-Measures are indentified with a id. Measure id is also the field name for the 
-measure. Example:
-
-    "measure": {
-      "id": [
-        "OBS_VALUE",
-        "GROWTH_RATE"
-      ],
-      "OBS_VALUE": {
-        # fields for measure OBS_VALUE #
-      },
-      "GROWTH_RATE": {
-        # fields for measure GROWTH_RATE #        
-      },
-      "size": 2210
-    }
-
-
-### id (measure collection)
-
-*Array*. An array of ids for all measures in message. Example:
-
-    "id": [
-      "OBS_VALUE"
-    ]
-
-### name
-
-*String* *nullable*. Name provides for a human-readable name for the object.
-Example:
-
-    "name": "Observation value"
-
-### value
-
-*Array*. Array containing observation values. The data type for
-observation value is *Number*. Undefined observation value is *null*. Data type
-for a missing observation value is a *String* with the value "-". Example:
-
-    value: [
-      86.7,
-      86.9,
-      87.2,
-      null,
-      87.1,
-      null,
-      "-"
-    ]
-
-### size (measure collection)
-
-*Number*. The size of the value arrays. All measures in the message have same
-size. Size may be larger than thelength of the value array because nulls may be
-trimmed from the end of the array. As a special case an empty message that
-contains no observations has an empty value array (all observations are null)
-and the size is the theoretical size of message. Example:
-
-    "size": 349180
-
-----
-
-## <a name="Dimension"></a>Dimension
+## <a name="Dimensions"></a>Dimensions
 
 Dimension is a container for all dimensions in the message. It contains fields
-common to all dimensions and the indidual dimensions. Dimensions have a common 
+common to all dimensions and the individual dimensions. Dimensions share a common 
 structure. Example:
 
-    "dimension": {
+    "dimensions": {
       "id": [
         "FREQ",
         "REF_AREA",
         "ADJUSTMENT"
+      ],
+      "size": [
+        3,
+        6,
+        2
       ],
       "FREQ": {
         # fields for dimension FREQ #
@@ -274,8 +231,7 @@ structure. Example:
       },
       "ADJUSTMENT": {
         # fields for dimension ADJUSTMENT #        
-      },      
-      "size": 3
+      }
     }
 
 
@@ -296,10 +252,20 @@ dimensions in the array is significant. Example:
 
 ### size (dimension collection)
 
-*Number*. The number of dimensions in the message. Same as the length of the id
-array. Example:
+*Array*. The number of codes for each dimensions in the message. Example:
 
-    "size": 7
+    "size": [
+      3,
+      29,
+      23
+    ]
+
+### id
+
+*String* *nullable*. Identifier for the dimension.
+Example:
+
+    "id": "FREQ"
 
 ### name
 
@@ -308,38 +274,50 @@ Example:
 
     "name": "Reference area"
 
-### role
+### type
 
-*String* *nullable*. Defines a role the dimension serves. Example:
+*String* *nullable*. Defines the dimension type. For normal dimensions the value 
+is null. There are two special dimension types:
 
-    "role": "time"
+- **time**. Time dimension is a special dimension which designates the period in 
+time in which the data identified by the full series key applies.
+- **measure**. Measure dimension is a special type of dimension which defines 
+multiple measures. 
 
-### code
+Example:
 
-*[Code](#Code)*. Collection of codes for the dimension. Example:
+    "type": "time"
 
-    "code": {
+### roles
+
+*Array* *nullable*. Defines roles the dimension serves. Example:
+
+    "roles": [ "GEO" ]
+
+### codes
+
+*[Codes](#Codes)*. Collection of codes for the dimension. Example:
+
+    "codes": {
       "id": [
         "M"
       ],
-      "index": {
-        "M": 0
-      },
-      "name": {
-        "M": "Monthly"
-      },
-      "size": 1
+      "M": {
+        "id": "M",
+        "name": "Monthly",
+        "index": 0
+      }
     }
 
 ---
 
-## <a name="Attribute"></a>Attribute
+## <a name="Attributes"></a>Attributes
 
-Attribute is the container for attributes in the message. Like other containers
+Attributes is the container for attributes in the message. Like other containers
 it contains fields common to all attributes and individual attributes. All
 attributes are identified with an id.
 
-    "attribute": {
+    "attributes": {
       "id": [
         "COLLECTION",
         "DECIMALS",
@@ -378,6 +356,12 @@ attributes are identified with an id.
       "OBS_STATUS"
     ]
 
+### id
+
+*String* *nullable*. Identifier for an attribute. Example:
+
+    "id": "COLLECTION"
+
 ### name
 
 *String* *nullable*. Name provides for a human-readable name for the object.
@@ -408,37 +392,46 @@ attached to other levels have varying number of dimensions. Example:
 
     "mandatory": false
 
-### role
+### roles
 
-*String* *nullable*. Defines a role the attribute serves. Example
+*Array* *nullable*. Defines roles the attribute serves. Example
 
-    "role": "decimals"
+    "roles": [ 
+     "DECIMALS" 
+    ]
 
-### code
+### codes
 
-*[Code](#Code)* *nullable*. Collection of codes for the attribute. Null if the 
+*[Codes](#Codes)* *nullable*. Collection of codes for the attribute. Null if the 
 attribute is not coded. Example:
 
-    "code": {
+    "codes": {
       "id": [
         "A",
         "E",
         "M",
         "P"
       ],
-      "index": {
-        "A": 0,
-        "E": 1,
-        "M": 2,
-        "P": 3
+      "A": {
+        "id": "A",
+        "name": "Normal value",
+        "index": 0
       },
-      "name": {
-        "A": "Normal value",
-        "E": "Estimated value",
-        "M": "Missing value; data cannot exist",
-        "P": "Provisional value"
+      "E": {
+        "id": "E",
+        "name": "Estimated value",
+        "index": 1
       },
-      "size": 4
+      "M": {
+        "id": "M",
+        "name": "Missing value; data cannot exist",
+        "index": 2
+      },
+      "A": {
+        "id": "P",
+        "name": "Provisional value",
+        "index": 3
+      }
     }
 
 ### default
@@ -465,23 +458,32 @@ the value is a string. Example:
 
     "value": "Harmonised indices of consumer prices"
 
-### size
-
-*Number* *nullable*. The theoretical size of the value array for the attribute. 
-The actual size of the value array can be smaller. If the attribute does not have
-dimensions then the value is null. Example:
-
-    "size": 349180
-
 ----
 
-## <a name="Code"></a>Code
+## <a name="Codes"></a>Codes
 
-Code is the container of codes for dimensions and coded attributes. Code
+Codes is the container of codes for dimensions and coded attributes. Code
 contains collections of ids, indices, names and other information for individual
-codes. It also contains the total number of codes. 
+codes. It also contains the total number of codes. Example:
 
-### id
+    "codes": {
+      "id": [
+        "A",
+        "Q",
+        "M"
+      ]
+      "A": {
+        # Fields for code "A"
+      },
+      "Q": {
+        # Fields for code "Q"
+      },
+      "M": {
+        # Fields for code "M"
+      }
+    }
+
+### id (codes collection)
 
 *Array*. Identifiers for individual codes. The order of the codes is significant.
 Example:
@@ -493,98 +495,51 @@ Example:
       "P"
     ]
 
-### index
+### id
 
-*Object*. Collection of array indices for the codes. Index is always same as the
-code index in the id array. Example:
+*String*. Indentifier for a code. Example:
 
-    "index": {
-      "A": 0,
-      "E": 1,
-      "M": 2,
-      "P": 3
-    }
+    "id": "A"
 
 ### name
 
-*Object*. Collection of human-readable names for codes. Example:
+*String*. Human-readable names for a code. Example:
 
-    "name": {
-      "A": "Normal value",
-      "E": "Estimated value",
-      "M": "Missing value; data cannot exist",
-      "P": "Provisional value"
-    }
+    "name": "Missing value; data cannot exist"
 
-### size
+### index
 
-*Number*. Total number of codes. Same as the length of the id array. Example:
+*Object*. Array index for a code. Index is always same as the
+code index in the id array. Example:
 
-    "size": 4
+    "index": 0
 
 ### parent
 
-*Object* *nullable*. Collection of parent codes for code hierarchies. If the 
-code is not in the collection then it does not belong to any hierarchy. Hierarchy
-root codes have special value "ROOT" for the parent. There may be multiple
-roots. Each code has only one parent. Example:
+*Object* *nullable*. Parent codes for code hierarchies. If parent is null then 
+the code does not belong to any hierarchy. Hierarchy root codes have special 
+value "ROOT" for the parent. There may be multiple roots. Each code has only one 
+parent. Example:
 
-    "parent": {
-      "AT": "U2",
-      "BE": "U2",
-      "CY": "U2",
-      "DE": "U2",
-      "ES": "U2",
-      "FI": "U2",
-      "FR": "U2",
-      "GR": "U2",
-      "IE": "U2",
-      "IT": "U2",
-      "LU": "U2",
-      "MT": "U2",
-      "NL": "U2",
-      "PT": "U2",
-      "SI": "U2",
-      "SK": "U2",
-      "U2": "ROOT"
-    }
+    "parent": "U2"
 
 ### start
 
-*Object* *nullable*. Collection of start dates for codes in a time dimension.
+*Object* *nullable*. Start date for a code in a time dimension.
 This field is useful only when the codes are time periods for a time dimension
-(dimension role is 'time'). Value is date in ISO format for the beginning of the 
+(dimension type is 'time'). Value is date in ISO format for the beginning of the 
 period. Example:
 
-    "start": {
-      "2007-02": "2007-02-01T00:00:00.000Z",
-      "2007-09": "2007-09-01T00:00:00.000Z",
-      "2008-04": "2008-04-01T00:00:00.000Z",
-      "2008-10": "2008-10-01T00:00:00.000Z",
-      "2007-03": "2007-03-01T00:00:00.000Z",
-      "2008-05": "2008-05-01T00:00:00.000Z",
-      "2008-11": "2008-11-01T00:00:00.000Z",
-      "2007-04": "2007-04-01T00:00:00.000Z"
-    }
+    "start": "2007-02-01T00:00:00.000Z"
 
 ### end 
 
-*Object* *nullable*. Collection of end dates for codes in a time dimension.
+*Object* *nullable*. End date for a code in a time dimension.
 This field is useful only when the codes are time periods for a time dimension
-(dimension role is 'time'). Value is date in ISO format for the end of the 
+(dimension type is 'time'). Value is date in ISO format for the end of the 
 period. Example:
 
-    "end": {
-      "2007-10": "2007-10-31T23:59:59.000Z",
-      "2008-06": "2008-06-30T23:59:59.000Z",
-      "2008-12": "2008-12-31T23:59:59.000Z",
-      "2007-05": "2007-05-31T23:59:59.000Z",
-      "2007-11": "2007-11-30T23:59:59.000Z",
-      "2008-07": "2008-07-31T23:59:59.000Z",
-      "2007-06": "2007-06-30T23:59:59.000Z",
-      "2007-12": "2007-12-31T23:59:59.000Z",
-      "2008-01": "2008-01-31T23:59:59.000Z"
-    }
+    "end": "2007-10-31T23:59:59.000Z"
 
 ### geometry
 
@@ -593,23 +548,9 @@ reference area etc.). The inner coordinates array is formatted as [geoJSON]
 (http://www.geojson.org) (longitude first, then latitude). Example:
 
     "geometry": {
-      "FI": {
-        "type":"Point",
-        "coordinates": [
-          62.4302,
-          24.7271
-        ]
-      }
-    }
-
-### ref
-
-*Object* *nullable*. Reference to the code list.
-
-    “ref”: {
-      “id”: “CL_FREQ”,
-      “agencyId”: “SDMX”,
-      “version”: “1.0”,
-      “urn”: “urn:sdmx:org.sdmx.infomodel.codelist.Codelist=SDMX:CL_FREQ(1.0)”
-      “url”: “http://sdmx.org/codelist/SDMX/CL_FREQ/1.0”
+      "type": "Point",
+      "coordinates": [
+        62.4302,
+        24.7271
+      ]
     }
