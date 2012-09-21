@@ -247,6 +247,7 @@
   exports.parseQueryParams = parseQueryParams = function(request, response) {
     var date, n, param, parameters, value;
     parameters = url.parse(request.url, true, false).query;
+    request.query.dimensionAtObservation = 'AllDimensions';
     for (param in parameters) {
       value = parameters[param];
       switch (param) {
@@ -270,17 +271,16 @@
           response.statusCode = 501;
           return;
         case 'dimensionAtObservation':
+          request.query[param] = value;
           continue;
         case 'detail':
           switch (value) {
             case 'full':
             case 'dataonly':
             case 'nodata':
-              request.query.detail = value;
-              continue;
             case 'serieskeysonly':
-              response.statusCode = 501;
-              return;
+              request.query[param] = value;
+              continue;
           }
       }
       response.result.error.push("Invalid query parameter " + param + " value " + value);
@@ -421,7 +421,7 @@
           query[i].push(j);
         }
       }
-      return;
+      return query;
     }
     if (request.query.key.length !== msg.dimensions.id.length - 1) {
       response.result.error.push("Invalid number of dimensions in parameter key");
@@ -442,6 +442,9 @@
       }
       for (_p = 0, _len7 = keyCodes.length; _p < _len7; _p++) {
         code = keyCodes[_p];
+        if (msg.dimensions[dim].codes[code] == null) {
+          continue;
+        }
         index = msg.dimensions[dim].codes[code].index;
         if (0 <= index) {
           query[i].push(index);
@@ -452,9 +455,12 @@
   };
 
   query = function(msg, request, response) {
-    var attr, attrCodeMapping, attrIndex, code, codeMap, codes, codesInQuery, codesWithData, dim, dimPos, i, index, j, key, m, map, matchingObs, msgCount, msgMultipliers, msgSize, n, obsIndex, pos, queryMultipliers, querySize, resultCount, resultMultipliers, rslt, value, _base, _i, _j, _k, _l, _len, _len1, _len10, _len11, _len12, _len13, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _s, _t, _u, _v, _w, _x, _y;
+    var attr, attrCodeMapping, attrIndex, code, codeIndex, codeMap, codes, codesInQuery, codesWithData, dim, dimPos, i, index, j, key, length, m, map, matchingObs, msgCount, msgMultipliers, msgSize, n, obsIndex, pivot, pivotCount, pivotDimPos, pivotIndex, pivotMultipliers, pivotSubIndex, pos, queryMultipliers, querySize, resultCodeLengths, resultCount, resultMultipliers, rslt, value, _aa, _ab, _base, _i, _j, _k, _l, _len, _len1, _len10, _len11, _len12, _len13, _len14, _len15, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _s, _t, _u, _v, _w, _x, _y, _z;
     rslt = response.result;
     codesInQuery = addCodesToQuery(request, response, msg);
+    if (response.statusCode !== 200) {
+      return;
+    }
     msgSize = 1;
     msgMultipliers = [];
     _ref = msg.dimensions.id.slice().reverse();
@@ -505,8 +511,18 @@
       response.result.error.push('Observations not found');
       return;
     }
-    rslt.dimensions = {};
-    rslt.dimensions.id = msg.dimensions.id;
+    if (request.query.dimensionAtObservation !== 'AllDimensions') {
+      if (msg.dimensions.id.indexOf(request.query.dimensionAtObservation) === -1) {
+        response.statusCode = 400;
+        response.result.error.push("Invalid value for parameter dimensionAtObservation " + request.query.dimensionAtObservation);
+        return;
+      }
+    }
+    rslt.dimensions = {
+      id: msg.dimensions.id,
+      size: [],
+      dimensionAtObservation: request.query.dimensionAtObservation
+    };
     _ref3 = msg.dimensions.id;
     for (i = _n = 0, _len4 = _ref3.length; _n < _len4; i = ++_n) {
       dim = _ref3[i];
@@ -534,29 +550,32 @@
           rslt.dimensions[dim].codes[code].end = msg.dimensions[dim].codes[code].end;
         }
       }
+      rslt.dimensions.size[i] = rslt.dimensions[dim].codes.id.length;
     }
-    if (request.query.detail === 'nodata') {
+    if (request.query.detail === 'serieskeysonly') {
       return;
     }
-    codeMap = [];
-    _ref5 = rslt.dimensions.id;
-    for (n = _p = 0, _len6 = _ref5.length; _p < _len6; n = ++_p) {
-      dim = _ref5[n];
-      map = [];
-      _ref6 = rslt.dimensions[dim].codes.id;
-      for (m = _q = 0, _len7 = _ref6.length; _q < _len7; m = ++_q) {
-        code = _ref6[m];
-        map.push(msg.dimensions[dim].codes[code].index);
+    if (request.query.detail !== 'nodata') {
+      codeMap = [];
+      _ref5 = msg.dimensions.id;
+      for (n = _p = 0, _len6 = _ref5.length; _p < _len6; n = ++_p) {
+        dim = _ref5[n];
+        map = [];
+        _ref6 = rslt.dimensions[dim].codes.id;
+        for (m = _q = 0, _len7 = _ref6.length; _q < _len7; m = ++_q) {
+          code = _ref6[m];
+          map.push(msg.dimensions[dim].codes[code].index);
+        }
+        codeMap.push(map);
       }
-      codeMap.push(map);
-    }
-    resultCount = 1;
-    resultMultipliers = [];
-    _ref7 = rslt.dimensions.id;
-    for (_r = 0, _len8 = _ref7.length; _r < _len8; _r++) {
-      dim = _ref7[_r];
-      resultMultipliers.push(resultCount);
-      resultCount *= rslt.dimensions[dim].codes.id.length;
+      resultCount = 1;
+      resultMultipliers = [];
+      _ref7 = msg.dimensions.id;
+      for (_r = 0, _len8 = _ref7.length; _r < _len8; _r++) {
+        dim = _ref7[_r];
+        resultMultipliers.push(resultCount);
+        resultCount *= rslt.dimensions[dim].codes.id.length;
+      }
       rslt.measure = [];
       for (i = _s = 0, _ref8 = resultCount - 1; 0 <= _ref8 ? _s <= _ref8 : _s >= _ref8; i = 0 <= _ref8 ? ++_s : --_s) {
         obsIndex = 0;
@@ -568,16 +587,58 @@
         rslt.measure[i] = msg.measure[obsIndex];
       }
     }
-    _ref9 = msg.attributes.id;
+    if (rslt.dimensions.dimensionAtObservation !== 'AllDimensions') {
+      pivot = [];
+      pivotDimPos = rslt.dimensions.id.indexOf(rslt.dimensions.dimensionAtObservation);
+      resultCodeLengths = [];
+      pivotMultipliers = [];
+      pivotCount = 1;
+      _ref9 = rslt.dimensions.id;
+      for (n = _u = 0, _len10 = _ref9.length; _u < _len10; n = ++_u) {
+        dim = _ref9[n];
+        resultCodeLengths.push(rslt.dimensions[dim].codes.id.length);
+        if (n === pivotDimPos) {
+          continue;
+        }
+        pivotMultipliers[n] = pivotCount;
+        pivotCount *= rslt.dimensions[dim].codes.id.length;
+      }
+      for (i = _v = 0, _ref10 = resultCount - 1; 0 <= _ref10 ? _v <= _ref10 : _v >= _ref10; i = 0 <= _ref10 ? ++_v : --_v) {
+        obsIndex = 0;
+        pivotIndex = 0;
+        pivotSubIndex = 0;
+        for (n = _w = 0, _len11 = resultCodeLengths.length; _w < _len11; n = ++_w) {
+          length = resultCodeLengths[n];
+          codeIndex = Math.floor(i / resultMultipliers[n]) % length;
+          obsIndex += codeIndex * resultMultipliers[n];
+          if (n === pivotDimPos) {
+            pivotSubIndex = codeIndex;
+          } else {
+            pivotIndex += codeIndex * pivotMultipliers[n];
+          }
+        }
+        if (msg.measure[obsIndex] != null) {
+          if ((_ref11 = pivot[pivotIndex]) == null) {
+            pivot[pivotIndex] = [];
+          }
+          pivot[pivotIndex][pivotSubIndex] = rslt.measure[obsIndex];
+        }
+      }
+      rslt.measure = pivot;
+    }
+    if (request.query.detail === 'dataonly') {
+      return;
+    }
+    _ref12 = msg.attributes.id;
     _results = [];
-    for (_u = 0, _len10 = _ref9.length; _u < _len10; _u++) {
-      attr = _ref9[_u];
+    for (_x = 0, _len12 = _ref12.length; _x < _len12; _x++) {
+      attr = _ref12[_x];
       attrCodeMapping = [];
       resultCount = 1;
       resultMultipliers = [];
-      _ref10 = msg.attributes[attr].dimension;
-      for (_v = 0, _len11 = _ref10.length; _v < _len11; _v++) {
-        dim = _ref10[_v];
+      _ref13 = msg.attributes[attr].dimension;
+      for (_y = 0, _len13 = _ref13.length; _y < _len13; _y++) {
+        dim = _ref13[_y];
         dimPos = msg.dimensions.id.indexOf(dim);
         attrCodeMapping.push(codeMap[dimPos]);
         resultMultipliers.push(resultCount);
@@ -585,17 +646,17 @@
       }
       msgCount = 1;
       msgMultipliers = [];
-      _ref11 = msg.attributes[attr].dimension.slice().reverse();
-      for (_w = 0, _len12 = _ref11.length; _w < _len12; _w++) {
-        dim = _ref11[_w];
+      _ref14 = msg.attributes[attr].dimension.slice().reverse();
+      for (_z = 0, _len14 = _ref14.length; _z < _len14; _z++) {
+        dim = _ref14[_z];
         msgMultipliers.push(msgCount);
         msgCount *= msg.dimensions[dim].codes.id.length;
       }
       msgMultipliers.reverse();
       value = [];
-      for (i = _x = 0, _ref12 = resultCount - 1; 0 <= _ref12 ? _x <= _ref12 : _x >= _ref12; i = 0 <= _ref12 ? ++_x : --_x) {
+      for (i = _aa = 0, _ref15 = resultCount - 1; 0 <= _ref15 ? _aa <= _ref15 : _aa >= _ref15; i = 0 <= _ref15 ? ++_aa : --_aa) {
         attrIndex = 0;
-        for (n = _y = 0, _len13 = attrCodeMapping.length; _y < _len13; n = ++_y) {
+        for (n = _ab = 0, _len15 = attrCodeMapping.length; _ab < _len15; n = ++_ab) {
           codes = attrCodeMapping[n];
           index = Math.floor(i / resultMultipliers[n]) % codes.length;
           attrIndex += codes[index] * msgMultipliers[n];
@@ -608,7 +669,7 @@
       if (value.length === 0 && msg.attributes[attr]["default"] === null) {
         continue;
       }
-      if ((_ref13 = rslt.attributes) == null) {
+      if ((_ref16 = rslt.attributes) == null) {
         rslt.attributes = {
           id: []
         };

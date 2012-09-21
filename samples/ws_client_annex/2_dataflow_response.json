@@ -14,7 +14,7 @@
                 "agencyID":"ECB",
                 "version":"1.0",
                 "class":"DataStructure"
-            },
+            }
         }
     ],
     "codeLists":[
@@ -80,7 +80,7 @@
                     "name":{
                         "en":"Combined seasonal and calendar factors"
                     }
-                },
+                }
             }
         }
     ],
@@ -105,7 +105,7 @@
                     "name":{
                         "en":"Adjustment detail"
                     }
-                },            
+                }
             }
         }
     ],
@@ -169,7 +169,7 @@
                             "textType":"ObservationalTimePeriod"
                         }
                     }
-                },
+                }
             },
             "groups":{
                 "Group":{
@@ -191,7 +191,7 @@
                    "attributeRelationship":{
                        "dimensions":["REF_AREA","ADJUSTMENT","U_A_SECTOR"]
                    }
-                },
+                }
             },
             "measures":{
                 "OBS_VALUE":{
@@ -202,7 +202,7 @@
                         "agencyID":"ECB",
                         "version":"1.0",
                         "class":"ConceptScheme"
-                    },
+                    }
                 }
             }
         }
@@ -218,7 +218,7 @@
                     "id":"2034423",
                     "agencyID":"ECB",
                     "version":"1.0",
-                    "class":"Dataflow",
+                    "class":"Dataflow"
                 }
             ],
             "cubeRegion":{
@@ -268,7 +268,7 @@
                         "id":"ESA95_SUFFIX",
                         "include":true,
                         "values":["I"]
-                    },
+                    }
                 ]
             }
         }

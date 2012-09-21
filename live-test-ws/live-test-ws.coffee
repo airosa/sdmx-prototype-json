@@ -237,6 +237,8 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
 exports.parseQueryParams = parseQueryParams = (request, response) ->
     parameters = url.parse( request.url, yes, no).query
 
+    request.query.dimensionAtObservation = 'AllDimensions'
+
     for param, value of parameters
         switch param
             when 'startPeriod', 'endPeriod'
@@ -253,15 +255,13 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                 response.statusCode = 501
                 return
             when 'dimensionAtObservation'
+                request.query[param] = value
                 continue
             when 'detail'
                 switch value
-                    when 'full', 'dataonly', 'nodata'
-                        request.query.detail = value
+                    when 'full', 'dataonly', 'nodata', 'serieskeysonly'
+                        request.query[param] = value
                         continue
-                    when 'serieskeysonly'
-                        response.statusCode = 501
-                        return
 
         response.result.error.push "Invalid query parameter #{param} value #{value}"
         response.statusCode = 400  
@@ -353,7 +353,7 @@ addCodesToQuery = (request, response, msg) ->
         for dim, i in msg.dimensions.id
             continue if msg.dimensions[dim].type is 'time' 
             query[i].push j for code, j in msg.dimensions[dim].codes.id
-        return
+        return query
 
     if request.query.key.length isnt msg.dimensions.id.length - 1
         response.result.error.push "Invalid number of dimensions in parameter key"
@@ -371,6 +371,7 @@ addCodesToQuery = (request, response, msg) ->
             continue
         
         for code in keyCodes
+            continue unless msg.dimensions[dim].codes[code]?
             index = msg.dimensions[dim].codes[code].index
             query[i].push index if 0 <= index
 
@@ -387,6 +388,7 @@ query = (msg, request, response) ->
 
     # build an array of codes for the query
     codesInQuery = addCodesToQuery request, response, msg
+    return unless response.statusCode is 200
 
     # built up multipliers for accesing data in the message
     msgSize = 1
@@ -420,7 +422,7 @@ query = (msg, request, response) ->
             key.push codes[ index ]
             obsIndex += codes[ index ] * msgMultipliers[n]
 
-        # check if we have a value for thisi index
+        # check if we have a value for this index
         continue unless msg.measure[obsIndex]?
 
         # Store codes with observations
@@ -435,10 +437,17 @@ query = (msg, request, response) ->
         response.result.error.push 'Observations not found'
         return
 
+    if request.query.dimensionAtObservation isnt 'AllDimensions'
+        if msg.dimensions.id.indexOf(request.query.dimensionAtObservation) is -1
+            response.statusCode = 400
+            response.result.error.push "Invalid value for parameter dimensionAtObservation #{request.query.dimensionAtObservation}"
+            return
+
     # add dimensions to the response
     rslt.dimensions = 
         id: msg.dimensions.id
         size: []
+        dimensionAtObservation: request.query.dimensionAtObservation
 
     for dim, i in msg.dimensions.id
         rslt.dimensions[dim] = 
@@ -463,25 +472,26 @@ query = (msg, request, response) ->
 
         rslt.dimensions.size[i] = rslt.dimensions[dim].codes.id.length
         
-    return if request.query.detail is 'nodata'
+    return if request.query.detail is 'serieskeysonly'
 
-    # Build code mapping between codes in the response and codes in the
-    # data set. 
+    unless request.query.detail is 'nodata'
+        # Build code mapping between codes in the response and codes in the
+        # data set. 
 
-    codeMap = []
-    for dim, n in rslt.dimensions.id
-        map = []
-        for code, m in rslt.dimensions[dim].codes.id
-            map.push msg.dimensions[dim].codes[code].index
-        codeMap.push map
+        codeMap = []
+        for dim, n in msg.dimensions.id
+            map = []
+            for code, m in rslt.dimensions[dim].codes.id
+                map.push msg.dimensions[dim].codes[code].index
+            codeMap.push map
 
-    # Add measures to response
+        # Add measures to response
 
-    resultCount = 1 
-    resultMultipliers = []
-    for dim in rslt.dimensions.id
-        resultMultipliers.push resultCount
-        resultCount *= rslt.dimensions[dim].codes.id.length
+        resultCount = 1 
+        resultMultipliers = []
+        for dim in msg.dimensions.id
+            resultMultipliers.push resultCount
+            resultCount *= rslt.dimensions[dim].codes.id.length
 
         rslt.measure = []
 
@@ -493,6 +503,43 @@ query = (msg, request, response) ->
                 obsIndex += codes[index] * msgMultipliers[n]
             
             rslt.measure[i] = msg.measure[obsIndex]
+
+    if rslt.dimensions.dimensionAtObservation isnt 'AllDimensions'
+        # We need to pivot the measure array into subarrays
+
+        pivot = []
+        pivotDimPos = rslt.dimensions.id.indexOf rslt.dimensions.dimensionAtObservation
+        resultCodeLengths = []
+        pivotMultipliers = []
+        pivotCount = 1
+        for dim, n in rslt.dimensions.id
+            resultCodeLengths.push rslt.dimensions[dim].codes.id.length
+            continue if n is pivotDimPos
+            pivotMultipliers[n] = pivotCount
+            pivotCount *= rslt.dimensions[dim].codes.id.length
+
+        # magic loop
+        for i in [0..resultCount-1]
+            obsIndex = 0
+            pivotIndex = 0
+            pivotSubIndex = 0
+            for length, n in resultCodeLengths
+                codeIndex = Math.floor( i / resultMultipliers[n] ) % length
+                obsIndex += codeIndex * resultMultipliers[n]
+
+                if n is pivotDimPos
+                    pivotSubIndex = codeIndex
+                else
+                    pivotIndex += codeIndex * pivotMultipliers[n]
+            
+            if msg.measure[obsIndex]?
+                pivot[pivotIndex] ?= []
+                pivot[pivotIndex][pivotSubIndex] = rslt.measure[obsIndex]
+
+        rslt.measure = pivot
+
+
+    return if request.query.detail is 'dataonly'
 
     # Add attributes to response
     for attr in msg.attributes.id

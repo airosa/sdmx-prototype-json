@@ -6,7 +6,7 @@
             "table at the series level and third table at the observation level.",
             "Tables contain one row of data for each unique combination of dimension values.",
             "Layout is quite similar to PC-AXIS format with KEYS."
-        ],
+        ]
     },
     [
         {
@@ -22,7 +22,7 @@
         ["CHF", "EUR", "SP00", "E", "ECB reference exchange rate, Swiss franc/Euro"],
         ["GBP", "EUR", "SP00", "E", "ECB reference exchange rate, U.K. Pound sterling /Euro"],
         ["JPY", "EUR", "SP00", "E", "ECB reference exchange rate, Japanese yen/Euro"],
-        ["USD", "EUR", "SP00", "E", "ECB reference exchange rate, U.S. dollar/Euro"], 
+        ["USD", "EUR", "SP00", "E", "ECB reference exchange rate, U.S. dollar/Euro"]
     ],
     [ 
         {
@@ -37,12 +37,12 @@
                 "UNIT_MEASURE", 
                 "UNIT_MULT", 
                 "COLL_METHOD"
-            ],
+            ]
         },
         ["M", "CHF", "EUR", "SP00", "E", "4", "CHF", "0", "Average of observations through period"],
         ["M", "GBP", "EUR", "SP00", "E", "5", "GBP", "0", "Average of observations through period"],
         ["M", "JPY", "EUR", "SP00", "E", "2", "JPY", "0", "Average of observations through period"],
-        ["M", "USD", "EUR", "SP00", "E", "4", "USD", "0", "Average of observations through period"],
+        ["M", "USD", "EUR", "SP00", "E", "4", "USD", "0", "Average of observations through period"]
     ],
     [ 
         {
@@ -57,7 +57,7 @@
                 "OBS_VALUE", 
                 "OBS_STATUS", 
                 "CONF_STATUS_OBS"
-            ],
+            ]
         },
         ["M", "CHF", "EUR", "SP00", "E", "2010-08", 1.3413, "A", "F"],
         ["M", "CHF", "EUR", "SP00", "E", "2010-09", 1.3089, "A", "F"],
@@ -71,5 +71,5 @@
         ["M", "USD", "EUR", "SP00", "E", "2010-08", 1.2894, "A", "F"],
         ["M", "USD", "EUR", "SP00", "E", "2010-09", 1.3067, "A", "F"],
         ["M", "USD", "EUR", "SP00", "E", "2010-10", 1.3898, "A", "F"] 
-    ],
+    ]
 ]

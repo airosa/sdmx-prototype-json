@@ -24,14 +24,14 @@
                             "class":"Category",
                             "name":{
                                 "en":"Key interest rates"
-                            },
+                            }
                         },
                         "2018802":{
                             "id":"2018802",
                             "class":"Category",
                             "name":{
                                 "en":"Minimum reserves and liquidity"
-                            },
+                            }
                         }
                     }
                 },
@@ -54,27 +54,27 @@
                                     "class":"Category",
                                     "name":{
                                         "en":"Consumer price indices"
-                                    },
+                                    }
                                 },
                                 "2120779":{
                                     "id":"2120779",
                                     "class":"Category",
                                     "name":{
                                         "en":"Industrial producer prices"
-                                    },
+                                    }
                                 },
                                 "2120780":{
                                     "id":"2120780",
                                     "class":"Category",
                                     "name":{
                                         "en":"Deflators"
-                                    },
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            },
+            }
         }
     ],
     "categorisations":[
@@ -87,7 +87,7 @@
                 "id":"2136672",
                 "agencyID":"ECB",
                 "version":"1.0",
-                "class":"Dataflow",
+                "class":"Dataflow"
             },
             "target":{
                 "id":"2018801",
@@ -109,7 +109,7 @@
                 "id":"2136673",
                 "agencyID":"ECB",
                 "version":"1.0",
-                "class":"Dataflow",
+                "class":"Dataflow"
             },
             "target":{
                 "id":"2018802",
@@ -131,7 +131,7 @@
                 "id":"2034468",
                 "agencyID":"ECB",
                 "version":"1.0",
-                "class":"Dataflow",
+                "class":"Dataflow"
             },
             "target":{
                 "id":"2018802",

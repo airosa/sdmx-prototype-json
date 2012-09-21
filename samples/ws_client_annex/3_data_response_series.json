@@ -3,7 +3,7 @@
         "annotations":[
             "In this prototype data is arranged in groups and series.",
             "Resulting layout is quite similar to a GenericData message in SDMX-ML."
-        ],
+        ]
     },
     [
         {
@@ -31,7 +31,7 @@
                 "DECIMALS":"4",
                 "UNIT_MEASURE":"CHF",
                 "UNIT_MULT":"0",
-                "COLL_METHOD":"Average of observations through period",
+                "COLL_METHOD":"Average of observations through period"
             },
             "obs":{
                 "TIME_PERIOD":["2010-08","2010-09","2010-10"],
@@ -65,7 +65,7 @@
                 "DECIMALS":"5",
                 "UNIT_MEASURE":"GBP",
                 "UNIT_MULT":"0",
-                "COLL_METHOD":"Average of observations through period",
+                "COLL_METHOD":"Average of observations through period"
             },
             "obs":{
                 "TIME_PERIOD":["2010-08","2010-09","2010-10"],
@@ -99,7 +99,7 @@
                 "DECIMALS":"2",
                 "UNIT_MEASURE":"JPY",
                 "UNIT_MULT":"0",
-                "COLL_METHOD":"Average of observations through period",
+                "COLL_METHOD":"Average of observations through period"
             },
             "obs":{
                 "TIME_PERIOD":["2010-08","2010-09","2010-10"],
@@ -133,7 +133,7 @@
                 "DECIMALS":"4",
                 "UNIT_MEASURE":"USD",
                 "UNIT_MULT":"0",
-                "COLL_METHOD":"Average of observations through period",
+                "COLL_METHOD":"Average of observations through period"
             },
             "obs":{
                 "TIME_PERIOD":["2010-08","2010-09","2010-10"],
@@ -141,6 +141,6 @@
                 "OBS_STATUS":["A", "A", "A"],
                 "CONF_STATUS_OBS":["F", "F", "F"]
             }
-        },
+        }
     ]
 ]

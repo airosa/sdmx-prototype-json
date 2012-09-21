@@ -6,10 +6,10 @@
             "second group is indexed at series level and the third group at observation level",
             "Each data array is indentified with a concept name, e.g. COLL_METHOD",
             "Indexing is based on the order of dimensions and codes. Values for any dimension combination",
-            "can be accessed by calculating the array index with simple arithmetic."
+            "can be accessed by calculating the array index with simple arithmetic.",
             "This layout resembles PC-AXIS format without KEYS and the format",
             "presented at json-stat.org."
-        ],
+        ]
     },
     {
         "class":"group",
@@ -17,10 +17,10 @@
             { "id":"CURRENCY", "codes":[ "CHF", "GBP", "JPY", "USD" ] },
             { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
             { "id":"EXR_TYPE", "codes":[ "SP00" ] },
-            { "id":"EXR_VAR", "codes":[ "E" ] },
+            { "id":"EXR_VAR", "codes":[ "E" ] }
          ],
         "attributes":[
-            { "id":"TITLE" },
+            { "id":"TITLE" }
         ],
         "data":[
             [
@@ -28,7 +28,7 @@
                 "ECB reference exchange rate, U.K. Pound sterling /Euro", 
                 "ECB reference exchange rate, Japanese yen/Euro", 
                 "ECB reference exchange rate, U.S. dollar/Euro" 
-            ],
+            ]
         ]
     },
     {
@@ -38,19 +38,19 @@
             { "id":"CURRENCY", "codes":[ "CHF", "GBP", "JPY", "USD" ] },
             { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
             { "id":"EXR_TYPE", "codes":[ "SP00" ] },
-            { "id":"EXR_VAR", "codes":[ "E" ] },
+            { "id":"EXR_VAR", "codes":[ "E" ] }
          ],
         "attributes":[
             { "id":"DECIMALS" },
             { "id":"UNIT_MEASURE" },
             { "id":"UNIT_MULT" },
-            { "id":"COLL_METHOD" },
+            { "id":"COLL_METHOD" }
         ],
         "data":[
             [ "4", "CHF", "0", "Average of observations through period" ],
             [ "5", "GBP", "0", "Average of observations through period" ],
             [ "2", "JPY", "0", "Average of observations through period" ],
-            [ "4", "USD", "0", "Average of observations through period" ],
+            [ "4", "USD", "0", "Average of observations through period" ]
         ]
     },
     {
@@ -61,12 +61,12 @@
             { "id":"CURRENCY_DENOM", "codes":[ "EUR" ] },
             { "id":"EXR_TYPE", "codes":[ "SP00" ] },
             { "id":"EXR_VAR", "codes":[ "E" ] },
-            { "id":"TIME_PERIOD", "codes":[ "2010-08", "2010-09", "2010-10" ] },
+            { "id":"TIME_PERIOD", "codes":[ "2010-08", "2010-09", "2010-10" ] }
          ],
         "attributes":[
             { "id":"OBS_VALUE" },
             { "id":"OBS_STATUS" },
-            { "id":"CONF_STATUS_OBS" },
+            { "id":"CONF_STATUS_OBS" }
         ],
         "data":[
             [ 1.3413, "A", "F" ],
@@ -80,7 +80,7 @@
             [ 113.67, "A", "F" ],
             [ 1.2894, "A", "F" ],
             [ 1.3067, "A", "F" ],
-            [ 1.3898, "A", "F" ],
+            [ 1.3898, "A", "F" ]
         ]
     }
 ]
