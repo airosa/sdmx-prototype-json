@@ -1,7 +1,7 @@
 
 # Draft Field Guide to SDMX-PROTO-JSON Objects
 
-**Version 2012-09-13**
+**Version 2012-09-21**
 
 Use this guide to better understand SDMX-PROTO-JSON objects.
 
@@ -18,7 +18,7 @@ and consuming applications should not rely on any specific ordering. It is safe
 to consider a nulled field and the absence of a field as the same thing.
 
 Not all fields appear in all contexts. For example response with error messages
-may not containg fields for measure, dimension and attributes.
+may not contain fields for measure, dimension and attributes.
 
 ----
 
@@ -85,9 +85,10 @@ of Date formatted according to the ISO-8601 standard. Example:
 
 ### measure
 
-*Array*. Array containing observation values. The data type for
-observation value is *Number*. Undefined observation value is *null*. Data type
-for a missing observation value is a *String* with the value "-". 
+Either *Array* or *Object*. *Measure* field contains data values. The 
+data type for observation value is *Number*. Undefined observation value is 
+*null*. Data type for a missing observation value is a *String* with the value 
+"-" (HYPHEN). 
 
 Nulls may be trimmed from the end of the array. As a special case an empty 
 message that contains no observations has an empty value array (all observations
@@ -103,7 +104,41 @@ theoretical number of observations calculated from the dimensions. Example:
       null,
       "-"
     ]
- 
+
+Alternatively *measure* field can be on *Object* with array indices as keys.
+This can be used to save space when the *measure* is very sparse with majority
+of values as nulls. In this case *null* and *undefined* are the same thing.
+Also the keys in an *Object* can be in any order. Example:
+
+    "measure": {
+      "0": 86.7,
+      "6": "-",
+      "2": 87.2,
+      "1": 86.9,
+      "4": 87.1
+    }
+
+If the *dimensions* contains a value for field *dimensionAtObservation* then the
+values of the *measure* field are further grouped into *arrays* or *objects*.
+Mixed collections of *arrays* and *objects* are not supported. Examples:
+
+    // dimensionAtObservation defined
+
+    // arrays of arrays
+
+    "measure": [
+      [ 86.7, 86.9, 87.2 ], 
+      [ null, 87.1, null, "-" ]
+    ]
+
+    // objects of objects
+
+    "measure": {
+      "0": {  "0": 86.7, "2": 87.2, "1": 86.9 }, 
+      "1": { "1": 87.1, "3": "-" }
+    }
+
+
 ### dimensions
 
 *[Dimensions](#Dimensions)* *nullable*. Contains dimensions identifying the measure 
@@ -116,6 +151,7 @@ and attribute values. Example:
       "size": [
         1
       ],
+      "dimensionAtObservation": "AllDimensions",
       "ADJUSTMENT": {
         "id": "ADJUSTMENT",
         "name": "Adjustment indicator",
@@ -235,7 +271,7 @@ structure. Example:
     }
 
 
-### id (dimension collection)
+### id (dimensions collection)
 
 *Array*. An array of with identifiers all dimensions in the message. The order of
 dimensions in the array is significant. Example:
@@ -250,7 +286,7 @@ dimensions in the array is significant. Example:
       "TIME_PERIOD"
     ]
 
-### size (dimension collection)
+### size (dimensions collection)
 
 *Array*. The number of codes for each dimensions in the message. Example:
 
@@ -260,19 +296,34 @@ dimensions in the array is significant. Example:
       23
     ]
 
+### dimensionAtObservation (dimensions collection)
+
+*String*. The id of the dimension that is "at observation". 
+*dimensionAtObservation* provides a way to group data values in *measure* field 
+by any dimension in the *dimensions* collection. If the value is "AllDimensions"
+then the measure field is not grouped and it is a flat array or object. Example:
+
+    "dimensionAtObservation": "TIME_PERIOD"
+
 ### id
 
-*String* *nullable*. Identifier for the dimension.
+*String*. Identifier for the dimension.
 Example:
 
     "id": "FREQ"
 
 ### name
 
-*String* *nullable*. Name provides for a human-readable name for the object.
+*String*. Name provides for a human-readable name for the object.
 Example:
 
-    "name": "Reference area"
+    "name": "Frequency"
+
+### description
+
+*String* *nullable*. Provides as description for the object. Example:
+
+    "description": "The time interval at which observations occur over a given time period."
 
 ### type
 
@@ -358,16 +409,22 @@ attributes are identified with an id.
 
 ### id
 
-*String* *nullable*. Identifier for an attribute. Example:
+*String*. Identifier for an attribute. Example:
 
     "id": "COLLECTION"
 
 ### name
 
-*String* *nullable*. Name provides for a human-readable name for the object.
+*String*. Name provides for a human-readable name for the object.
 Example:
 
     "name": "Observation status"
+
+### description
+
+*String* *nullable*. Provides a description for the object. Example:
+
+    "description": "Information on the quality of a value or an unusual or missing value."
 
 ### dimension
 
@@ -497,7 +554,7 @@ Example:
 
 ### id
 
-*String*. Indentifier for a code. Example:
+*String*. Identifier for a code. Example:
 
     "id": "A"
 
@@ -506,6 +563,13 @@ Example:
 *String*. Human-readable names for a code. Example:
 
     "name": "Missing value; data cannot exist"
+
+### description
+
+*String* *nullable*. Description provides a plain text, human-readable 
+description of the code. Example:
+
+    "description": "Provisional value"
 
 ### index
 

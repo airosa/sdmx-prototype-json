@@ -203,7 +203,7 @@
       "codes": [
         {
           "id": "BG",
-          "BG": "Bulgaria",
+          "BG": "Bulgaria"
         },
         {
           "id": "CA",
@@ -215,47 +215,47 @@
         },
         {
           "id": "DK",
-          "DK": "Denmark",
+          "DK": "Denmark"
         },
         {
           "id": "EA",
-          "name": "Euro area (EA11-2000, EA12-2006, EA13-2007, EA15-2008, EA16-2010, EA17)",
+          "name": "Euro area (EA11-2000, EA12-2006, EA13-2007, EA15-2008, EA16-2010, EA17)"
         },
         {
           "id": "HU",
-          "name": "Hungary",
+          "name": "Hungary"
         },
         {
           "id": "JP",
-          "name": "Japan",
+          "name": "Japan"
         },
         {
           "id": "LT",
-          "name": "Lithuania",
+          "name": "Lithuania"
         },
         {
           "id": "LV",
-          "name": "Latvia",
+          "name": "Latvia"
         },
         {
           "id": "PL",
-          "name": "Poland",
+          "name": "Poland"
         },
         {
           "id": "RO",
-          "name": "Romania",
+          "name": "Romania"
         },
         {
           "id": "SE",
-          "name": "Sweden",
+          "name": "Sweden"
         },
         {
           "id": "TR",
-          "name": "Turkey",
+          "name": "Turkey"
         },
         {
           "id": "UK",
-          "name": "United Kingdom",
+          "name": "United Kingdom"
         },
         {
           "id": "US",

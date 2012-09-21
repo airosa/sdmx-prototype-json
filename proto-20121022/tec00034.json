@@ -1,5 +1,5 @@
 {
-  "sdmx-proto-json": "2012-09-13",
+  "sdmx-proto-json": "2012-09-21",
   "name": "Short-term interest rates: Day-to-day money rates",
   "id": "TEC00034",
   "test": false,
@@ -191,6 +191,7 @@
       15,
       12
     ],
+    "dimensionAtObservation": "AllDimensions",
     "FREQ": {
       "id": "FREQ",
       "name": "Frequency",
