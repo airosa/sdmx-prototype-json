@@ -115,7 +115,7 @@ exports.parseDate = parseDate = (value, end) ->
 
 exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     if not flowRefStr? 
-        response.result.error.push 'Mandatory parameter flowRef is missing'
+        response.result.errors.push 'Mandatory parameter flowRef is missing'
         response.statusCode = 400
         return
 
@@ -129,7 +129,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     ///
 
     if not regex.test flowRefStr
-        response.result.error.push "Invalid parameter flowRef #{flowRefStr}"
+        response.result.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
         return        
 
@@ -177,7 +177,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
     ///
 
     if not regex.test keyStr
-        response.result.error.push "Invalid parameter flowRef #{keyStr}"
+        response.result.errors.push "Invalid parameter flowRef #{keyStr}"
         response.statusCode = 400
         return        
 
@@ -192,7 +192,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
             key[i].push code
 
         if -1 < dim.indexOf('+') and key[i].length is 0
-            response.result.error.push "Invalid parameter key #{keyStr}"
+            response.result.errors.push "Invalid parameter key #{keyStr}"
             response.statusCode = 400
             return
 
@@ -209,7 +209,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
     ///
 
     if not regex.test providerRefStr
-        response.result.error.push "Invalid parameter providerRef #{providerRefStr}"
+        response.result.errors.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
         return        
 
@@ -225,7 +225,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
     providerRef[1] = 'all' if not providerRef[1]? or providerRef[1] is ''
 
     if providerRef.length isnt 2
-        response.result.error.push "Invalid parameter providerRef #{providerRefStr}"
+        response.result.errors.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
         return
 
@@ -263,7 +263,7 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                         request.query[param] = value
                         continue
 
-        response.result.error.push "Invalid query parameter #{param} value #{value}"
+        response.result.errors.push "Invalid query parameter #{param} value #{value}"
         response.statusCode = 400  
         return
 
@@ -323,7 +323,7 @@ findDataFlow = (request, response) ->
 
     if not found 
         response.statusCode = 404
-        response.result.error.push "Data flow not found"
+        response.result.errors.push "Data flow not found"
         return
 
     dataset
@@ -356,7 +356,7 @@ addCodesToQuery = (request, response, msg) ->
         return query
 
     if request.query.key.length isnt msg.dimensions.id.length - 1
-        response.result.error.push "Invalid number of dimensions in parameter key"
+        response.result.errors.push "Invalid number of dimensions in parameter key"
         response.statusCode = 400
         return
 
@@ -409,7 +409,7 @@ query = (msg, request, response) ->
 
     if querySize is 0
         response.statusCode = 404
-        response.result.error.push 'Observations not found'
+        response.result.errors.push 'Observations not found'
         return
 
     # magic loop
@@ -434,13 +434,13 @@ query = (msg, request, response) ->
 
     if matchingObs is 0
         response.statusCode = 404
-        response.result.error.push 'Observations not found'
+        response.result.errors.push 'Observations not found'
         return
 
     if request.query.dimensionAtObservation isnt 'AllDimensions'
         if msg.dimensions.id.indexOf(request.query.dimensionAtObservation) is -1
             response.statusCode = 400
-            response.result.error.push "Invalid value for parameter dimensionAtObservation #{request.query.dimensionAtObservation}"
+            response.result.errors.push "Invalid value for parameter dimensionAtObservation #{request.query.dimensionAtObservation}"
             return
 
     # add dimensions to the response
@@ -456,12 +456,14 @@ query = (msg, request, response) ->
             name: msg.dimensions[dim].name
             type: msg.dimensions[dim].type
             role: msg.dimensions[dim].role
+            index: i
 
         for pos, j in Object.keys codesWithData[i]
             code = msg.dimensions[dim].codes.id[pos]
             rslt.dimensions[dim].codes.id.push code            
             rslt.dimensions[dim].codes[code] =
                 index: j
+                id: msg.dimensions[dim].codes[code].id
                 name: msg.dimensions[dim].codes[code].name
 
             if msg.dimensions[dim].codes[code].start?
@@ -583,6 +585,7 @@ query = (msg, request, response) ->
             dimension: msg.attributes[attr].dimension
             default: msg.attributes[attr].default
             value: value
+            codes: msg.attributes[attr].codes
 
 
 #-------------------------------------------------------------------------------
@@ -594,7 +597,7 @@ validateRequest = (request, response) ->
     if methods.indexOf( request.method ) is -1
         response.statusCode = 405
         response.setHeader 'Allow', methods.join( ',' )
-        response.result.error.push 'Supported methods: ' + methods.join(',')
+        response.result.errors.push 'Supported methods: ' + methods.join(',')
         return
 
     if request.headers['accept']?
@@ -603,7 +606,7 @@ validateRequest = (request, response) ->
             matches += request.headers['accept'].indexOf(type) + 1
         if matches is 0
             response.statusCode = 406
-            response.result.error.push 'Supported media types: ' + mediaTypes.join(',')
+            response.result.errors.push 'Supported media types: ' + mediaTypes.join(',')
             return
 
 #-------------------------------------------------------------------------------
@@ -625,7 +628,7 @@ handleRequest = (request, response) ->
         id: "IREF#{ process.hrtime()[0] }#{ process.hrtime()[1] }"
         test: true
         prepared: (new Date()).toISOString()
-        error: []
+        errors: []
 
     validateRequest request, response
 
@@ -640,7 +643,7 @@ handleRequest = (request, response) ->
 
     if response.statusCode is 200
         response.result.name = dataset.name
-        response.result.error = null
+        response.result.errors = null
 
     body = JSON.stringify response.result, null, 2
 

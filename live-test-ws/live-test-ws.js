@@ -147,13 +147,13 @@
   exports.parseFlowRef = parseFlowRef = function(flowRefStr, request, response) {
     var flowRef, regex;
     if (!(flowRefStr != null)) {
-      response.result.error.push('Mandatory parameter flowRef is missing');
+      response.result.errors.push('Mandatory parameter flowRef is missing');
       response.statusCode = 400;
       return;
     }
     regex = /^(([A-z0-9_@$\-]+)|(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*)(\,[A-z0-9_@$\-]+)(\,(latest|([0-9]+(\.[0-9]+)*)))?))$/;
     if (!regex.test(flowRefStr)) {
-      response.result.error.push("Invalid parameter flowRef " + flowRefStr);
+      response.result.errors.push("Invalid parameter flowRef " + flowRefStr);
       response.statusCode = 400;
       return;
     }
@@ -183,7 +183,7 @@
     }
     regex = /^(([A-Za-z0-9_@$\-]+([+][A-Za-z0-9_@$\-]+)*)?([.]([A-Za-z0-9_@$\-]+([+][A-Za-z0-9_@$\-]+)*)?)*)$/;
     if (!regex.test(keyStr)) {
-      response.result.error.push("Invalid parameter flowRef " + keyStr);
+      response.result.errors.push("Invalid parameter flowRef " + keyStr);
       response.statusCode = 400;
       return;
     }
@@ -200,7 +200,7 @@
         }
       }
       if (-1 < dim.indexOf('+') && key[i].length === 0) {
-        response.result.error.push("Invalid parameter key " + keyStr);
+        response.result.errors.push("Invalid parameter key " + keyStr);
         response.statusCode = 400;
         return;
       }
@@ -215,7 +215,7 @@
     }
     regex = /^(([A-z][A-z0-9_\-]*(\.[A-z][A-z0-9_\-]*)*\,)?([A-z0-9_@$\-]+))$/;
     if (!regex.test(providerRefStr)) {
-      response.result.error.push("Invalid parameter providerRef " + providerRefStr);
+      response.result.errors.push("Invalid parameter providerRef " + providerRefStr);
       response.statusCode = 400;
       return;
     }
@@ -234,7 +234,7 @@
       providerRef[1] = 'all';
     }
     if (providerRef.length !== 2) {
-      response.result.error.push("Invalid parameter providerRef " + providerRefStr);
+      response.result.errors.push("Invalid parameter providerRef " + providerRefStr);
       response.statusCode = 400;
       return;
     }
@@ -283,7 +283,7 @@
               continue;
           }
       }
-      response.result.error.push("Invalid query parameter " + param + " value " + value);
+      response.result.errors.push("Invalid query parameter " + param + " value " + value);
       response.statusCode = 400;
       return;
     }
@@ -369,7 +369,7 @@
     })();
     if (!found) {
       response.statusCode = 404;
-      response.result.error.push("Data flow not found");
+      response.result.errors.push("Data flow not found");
       return;
     }
     return dataset;
@@ -424,7 +424,7 @@
       return query;
     }
     if (request.query.key.length !== msg.dimensions.id.length - 1) {
-      response.result.error.push("Invalid number of dimensions in parameter key");
+      response.result.errors.push("Invalid number of dimensions in parameter key");
       response.statusCode = 400;
       return;
     }
@@ -481,7 +481,7 @@
     }
     if (querySize === 0) {
       response.statusCode = 404;
-      response.result.error.push('Observations not found');
+      response.result.errors.push('Observations not found');
       return;
     }
     matchingObs = 0;
@@ -508,13 +508,13 @@
     }
     if (matchingObs === 0) {
       response.statusCode = 404;
-      response.result.error.push('Observations not found');
+      response.result.errors.push('Observations not found');
       return;
     }
     if (request.query.dimensionAtObservation !== 'AllDimensions') {
       if (msg.dimensions.id.indexOf(request.query.dimensionAtObservation) === -1) {
         response.statusCode = 400;
-        response.result.error.push("Invalid value for parameter dimensionAtObservation " + request.query.dimensionAtObservation);
+        response.result.errors.push("Invalid value for parameter dimensionAtObservation " + request.query.dimensionAtObservation);
         return;
       }
     }
@@ -532,7 +532,8 @@
         },
         name: msg.dimensions[dim].name,
         type: msg.dimensions[dim].type,
-        role: msg.dimensions[dim].role
+        role: msg.dimensions[dim].role,
+        index: i
       };
       _ref4 = Object.keys(codesWithData[i]);
       for (j = _o = 0, _len5 = _ref4.length; _o < _len5; j = ++_o) {
@@ -541,6 +542,7 @@
         rslt.dimensions[dim].codes.id.push(code);
         rslt.dimensions[dim].codes[code] = {
           index: j,
+          id: msg.dimensions[dim].codes[code].id,
           name: msg.dimensions[dim].codes[code].name
         };
         if (msg.dimensions[dim].codes[code].start != null) {
@@ -681,7 +683,8 @@
         role: msg.attributes[attr].role,
         dimension: msg.attributes[attr].dimension,
         "default": msg.attributes[attr]["default"],
-        value: value
+        value: value,
+        codes: msg.attributes[attr].codes
       });
     }
     return _results;
@@ -694,7 +697,7 @@
     if (methods.indexOf(request.method) === -1) {
       response.statusCode = 405;
       response.setHeader('Allow', methods.join(','));
-      response.result.error.push('Supported methods: ' + methods.join(','));
+      response.result.errors.push('Supported methods: ' + methods.join(','));
       return;
     }
     if (request.headers['accept'] != null) {
@@ -705,7 +708,7 @@
       }
       if (matches === 0) {
         response.statusCode = 406;
-        response.result.error.push('Supported media types: ' + mediaTypes.join(','));
+        response.result.errors.push('Supported media types: ' + mediaTypes.join(','));
       }
     }
   };
@@ -726,7 +729,7 @@
       id: "IREF" + (process.hrtime()[0]) + (process.hrtime()[1]),
       test: true,
       prepared: (new Date()).toISOString(),
-      error: []
+      errors: []
     };
     validateRequest(request, response);
     if (response.statusCode === 200) {
@@ -740,7 +743,7 @@
     }
     if (response.statusCode === 200) {
       response.result.name = dataset.name;
-      response.result.error = null;
+      response.result.errors = null;
     }
     body = JSON.stringify(response.result, null, 2);
     response.setHeader('Content-Length', Buffer.byteLength(body));
