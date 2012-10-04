@@ -10,7 +10,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS';
 
-  SERVER_VERSION = '0.2.1';
+  SERVER_VERSION = '0.2.5';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -693,12 +693,13 @@
 
   validateRequest = function(request, response) {
     var matches, mediaTypes, methods, type, _i, _len;
-    methods = ['GET', 'HEAD'];
+    methods = ['GET', 'HEAD', 'OPTIONS'];
     mediaTypes = ['application/json', 'application/*', '*/*'];
+    response.setHeader('Allow', methods.join(', '));
+    response.setHeader('Access-Control-Allow-Methods', methods.join(', '));
     if (methods.indexOf(request.method) === -1) {
       response.statusCode = 405;
-      response.setHeader('Allow', methods.join(','));
-      response.result.errors.push('Supported methods: ' + methods.join(','));
+      response.result.errors.push('Supported methods: ' + methods.join(', '));
       return;
     }
     if (request.headers['accept'] != null) {
@@ -710,7 +711,11 @@
       if (matches === 0) {
         response.statusCode = 406;
         response.result.errors.push('Supported media types: ' + mediaTypes.join(','));
+        return;
       }
+    }
+    if (request.headers['access-control-request-headers'] != null) {
+      return response.setHeader('access-control-allow-headers', request.headers['access-control-request-headers']);
     }
   };
 
@@ -739,15 +744,19 @@
     if (response.statusCode === 200) {
       dataflow = findDataFlow(request, response);
     }
-    if (response.statusCode === 200) {
-      query(dataflow, request, response);
+    if (request.method === 'OPTIONS') {
+      response.setHeader('Content-Length', 0);
+    } else {
+      if (response.statusCode === 200) {
+        query(dataflow, request, response);
+      }
+      if (response.statusCode === 200) {
+        response.result.name = dataset.name;
+        response.result.errors = null;
+      }
+      body = JSON.stringify(response.result, null, 2);
+      response.setHeader('Content-Length', Buffer.byteLength(body));
     }
-    if (response.statusCode === 200) {
-      response.result.name = dataset.name;
-      response.result.errors = null;
-    }
-    body = JSON.stringify(response.result, null, 2);
-    response.setHeader('Content-Length', Buffer.byteLength(body));
     response.setHeader('X-Runtime', new Date() - start);
     if (request.method === 'GET') {
       response.end(body);

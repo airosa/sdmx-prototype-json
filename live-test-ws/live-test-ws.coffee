@@ -6,7 +6,7 @@ fs = require 'fs'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.2.2'
+SERVER_VERSION = '0.2.5'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -592,13 +592,14 @@ query = (msg, request, response) ->
 #-------------------------------------------------------------------------------
 
 validateRequest = (request, response) ->
-    methods = [ 'GET', 'HEAD' ]
+    methods = [ 'GET', 'HEAD', 'OPTIONS' ]
     mediaTypes = [ 'application/json', 'application/*', '*/*' ]
+    response.setHeader 'Allow', methods.join( ', ' )
+    response.setHeader 'Access-Control-Allow-Methods', methods.join( ', ' )
 
     if methods.indexOf( request.method ) is -1
         response.statusCode = 405
-        response.setHeader 'Allow', methods.join( ',' )
-        response.result.errors.push 'Supported methods: ' + methods.join(',')
+        response.result.errors.push 'Supported methods: ' + methods.join(', ')
         return
 
     if request.headers['accept']?
@@ -609,6 +610,9 @@ validateRequest = (request, response) ->
             response.statusCode = 406
             response.result.errors.push 'Supported media types: ' + mediaTypes.join(',')
             return
+
+    if request.headers['access-control-request-headers']?
+        response.setHeader 'access-control-allow-headers', request.headers['access-control-request-headers']
 
 #-------------------------------------------------------------------------------
 # Main function for handling HTTP requests
@@ -639,16 +643,20 @@ handleRequest = (request, response) ->
     if response.statusCode is 200
         dataflow = findDataFlow request, response
 
-    if response.statusCode is 200
-        query dataflow, request, response
+    if request.method is 'OPTIONS'
+        response.setHeader 'Content-Length', 0
+    else
+        if response.statusCode is 200
+            query dataflow, request, response
 
-    if response.statusCode is 200
-        response.result.name = dataset.name
-        response.result.errors = null
+        if response.statusCode is 200
+            response.result.name = dataset.name
+            response.result.errors = null
 
-    body = JSON.stringify response.result, null, 2
+        body = JSON.stringify response.result, null, 2
 
-    response.setHeader 'Content-Length', Buffer.byteLength body
+        response.setHeader 'Content-Length', Buffer.byteLength body
+
     response.setHeader 'X-Runtime', new Date() - start
 
     if request.method is 'GET'
