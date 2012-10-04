@@ -6,7 +6,7 @@ fs = require 'fs'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.1'
+SERVER_VERSION = '0.2.2'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -491,9 +491,10 @@ query = (msg, request, response) ->
 
         resultCount = 1 
         resultMultipliers = []
-        for dim in msg.dimensions.id
+        for dim in rslt.dimensions.id.slice().reverse()
             resultMultipliers.push resultCount
             resultCount *= rslt.dimensions[dim].codes.id.length
+        resultMultipliers.reverse()
 
         rslt.measure = []
 

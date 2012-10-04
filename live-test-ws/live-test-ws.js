@@ -10,7 +10,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS';
 
-  SERVER_VERSION = '0.1';
+  SERVER_VERSION = '0.2.1';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -572,12 +572,13 @@
       }
       resultCount = 1;
       resultMultipliers = [];
-      _ref7 = msg.dimensions.id;
+      _ref7 = rslt.dimensions.id.slice().reverse();
       for (_r = 0, _len8 = _ref7.length; _r < _len8; _r++) {
         dim = _ref7[_r];
         resultMultipliers.push(resultCount);
         resultCount *= rslt.dimensions[dim].codes.id.length;
       }
+      resultMultipliers.reverse();
       rslt.measure = [];
       for (i = _s = 0, _ref8 = resultCount - 1; 0 <= _ref8 ? _s <= _ref8 : _s >= _ref8; i = 0 <= _ref8 ? ++_s : --_s) {
         obsIndex = 0;
