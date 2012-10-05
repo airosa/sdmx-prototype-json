@@ -1,4 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
+    $scope.version = '0.1.1'
 
     $scope.state =
         httpError: false
@@ -6,7 +7,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         dataRequestRunning: false
         dimensionRequestRunning: false
 
-    $scope.wsName = 'http://live-test-ws.jit.su'
+    $scope.wsName = 'http://live-test-ws.nodejitsu.com'
     #$scope.wsName = 'http://localhost:8081'
     #$scope.wsName = 'http://46.137.144.117/FusionCube/ws'
 
