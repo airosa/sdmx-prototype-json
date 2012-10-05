@@ -3,6 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var calculateStartAndEndPeriods, createTimeSeries, getObservationAttributes, getTimeSeriesAttributes, getTimeSeriesObservations, onData, onDimensions, onError, onErrorData;
+    $scope.version = '0.1.1';
     $scope.state = {
       httpError: false,
       httpErrorData: false,

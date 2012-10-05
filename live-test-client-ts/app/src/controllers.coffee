@@ -1,4 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
+    $scope.version = '0.1.1'
 
     $scope.state =
         httpError: false
