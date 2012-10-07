@@ -3,7 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var calculateStartAndEndPeriods, createTimeSeries, getObservationAttributes, getTimeSeriesAttributes, getTimeSeriesObservations, onData, onDimensions, onError, onErrorData;
-    $scope.version = '0.1.1';
+    $scope.version = '0.1.2';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -11,6 +11,7 @@
       dimensionRequestRunning: false
     };
     $scope.wsName = 'http://live-test-ws.nodejitsu.com';
+    $scope.wsName = 'http://localhost:8081';
     $scope.dfName = 'ECB_ICP1';
     $scope.key = '';
     $scope.customParams = '';
