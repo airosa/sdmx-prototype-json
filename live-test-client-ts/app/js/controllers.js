@@ -11,7 +11,6 @@
       dimensionRequestRunning: false
     };
     $scope.wsName = 'http://live-test-ws.nodejitsu.com';
-    $scope.wsName = 'http://localhost:8081';
     $scope.dfName = 'ECB_ICP1';
     $scope.key = '';
     $scope.customParams = '';

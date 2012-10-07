@@ -8,7 +8,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         dimensionRequestRunning: false
 
     $scope.wsName = 'http://live-test-ws.nodejitsu.com'
-    $scope.wsName = 'http://localhost:8081'
+    #$scope.wsName = 'http://localhost:8081'
     #$scope.wsName = 'http://46.137.144.117/FusionCube/ws'
 
     $scope.dfName = 'ECB_ICP1'
