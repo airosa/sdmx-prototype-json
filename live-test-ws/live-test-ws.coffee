@@ -1,12 +1,13 @@
 http = require 'http'
 url = require 'url'
 fs = require 'fs'
+zlib = require 'zlib'
 
 #-------------------------------------------------------------------------------
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.2.5'
+SERVER_VERSION = '0.2.6'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -611,14 +612,66 @@ validateRequest = (request, response) ->
             response.result.errors.push 'Supported media types: ' + mediaTypes.join(',')
             return
 
+    encoding = request.headers['accept-encoding']
+    if encoding?
+        if encoding.match /\bdeflate\b/
+            response.setHeader 'Content-Encoding', 'deflate'
+        else if encoding.match /\bgzip\b/
+            response.setHeader 'Content-Encoding', 'gzip'
+
     if request.headers['access-control-request-headers']?
         response.setHeader 'access-control-allow-headers', request.headers['access-control-request-headers']
+
+
+compressResponse = (request, response) ->
+
+    sendResponse = (err, body) ->
+        if err?
+            response.statusCode = 500
+            response.end()
+            return
+
+        response.setHeader 'X-Runtime', new Date() - response.start
+
+        if body?
+            if Buffer.isBuffer body
+                response.setHeader 'Content-Length', body.length
+            else
+                response.setHeader 'Content-Length', Buffer.byteLength body
+
+            if request.method is 'GET'
+                response.end body
+            else
+                response.end()
+        else
+            response.setHeader 'Content-Length', 0
+            response.end()
+
+        encoding = response.getHeader 'Content-Encoding'
+        encoding ?= ''
+        log "#{request.method} #{request.url} #{response.statusCode} #{encoding}"
+        return
+
+
+    switch request.method
+        when 'OPTIONS'
+            sendResponse()
+        when 'GET', 'HEAD'
+            body = JSON.stringify response.result, null, 2
+            switch response.getHeader 'Content-Encoding'
+                when 'deflate'
+                    zlib.deflate body, sendResponse
+                when 'gzip'
+                    zlib.gzip body, sendResponse
+                else
+                    sendResponse undefined, body
+
 
 #-------------------------------------------------------------------------------
 # Main function for handling HTTP requests
 
 handleRequest = (request, response) ->
-    start = new Date()
+    response.start = new Date()
 
     response.setHeader 'X-Powered-By',                "Node.js/#{process.version}"
     response.setHeader 'Server',                      "#{SERVER_NAME}/#{SERVER_VERSION}"
@@ -653,18 +706,7 @@ handleRequest = (request, response) ->
             response.result.name = dataset.name
             response.result.errors = null
 
-        body = JSON.stringify response.result, null, 2
-
-        response.setHeader 'Content-Length', Buffer.byteLength body
-
-    response.setHeader 'X-Runtime', new Date() - start
-
-    if request.method is 'GET'
-        response.end body
-    else # HEAD
-        response.end()
-
-    log "#{request.method} #{request.url} #{response.statusCode}"
+    compressResponse request, response
 
 #-------------------------------------------------------------------------------
 # Initialise and start the server
