@@ -452,6 +452,7 @@ query = (msg, request, response) ->
 
     for dim, i in msg.dimensions.id
         rslt.dimensions[dim] = 
+            id: msg.dimensions[dim].id
             codes: 
                 id: []
             name: msg.dimensions[dim].name
@@ -581,6 +582,7 @@ query = (msg, request, response) ->
         rslt.attributes ?= id: []
         rslt.attributes.id.push attr
         rslt.attributes[attr] =
+            id: msg.attributes[attr].id
             name: msg.attributes[attr].name
             mandatory: msg.attributes[attr].mandatory
             role: msg.attributes[attr].role

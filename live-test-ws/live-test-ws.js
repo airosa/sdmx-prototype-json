@@ -529,6 +529,7 @@
     for (i = _n = 0, _len4 = _ref3.length; _n < _len4; i = ++_n) {
       dim = _ref3[i];
       rslt.dimensions[dim] = {
+        id: msg.dimensions[dim].id,
         codes: {
           id: []
         },
@@ -681,6 +682,7 @@
       }
       rslt.attributes.id.push(attr);
       _results.push(rslt.attributes[attr] = {
+        id: msg.attributes[attr].id,
         name: msg.attributes[attr].name,
         mandatory: msg.attributes[attr].mandatory,
         role: msg.attributes[attr].role,
