@@ -1,0 +1,15 @@
+body {
+  padding-top: 50px;
+}
+
+
+/* Table styles for the pivot table */
+.cell-normal {
+  font-weight: normal;
+  text-align: right;
+}
+
+.cell-special {
+  font-weight: bold;
+  text-align: right;
+}

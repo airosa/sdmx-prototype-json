@@ -1,0 +1,1 @@
+@demoModule = angular.module 'demoApp', []

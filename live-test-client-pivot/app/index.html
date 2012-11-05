@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="demoApp">
+  <head>
+    <meta charset="utf-8">
+    <title>LIVE-TEST-CLIENT-PIVOT</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet">
+    <script src="lib/angular.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/bootstrap-responsive-min.css" rel="stylesheet">
+
+    <!--
+    <script>
+      document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+    </script>
+    -->
+
+  </head>
+  <body ng-controller="MainCtrl">
+
+      <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+          <div class="container">
+            <a class="brand" href="#">Live-Test-Client-Pivot</a>
+            <p class="navbar-text pull-right">Version {{version}}</p>
+          </div>
+        </div>
+      </div>
+    
+    <div class="container">
+
+    <div class="row">
+      <div class="span12">
+        <form class="form-horizontal" ng-submit="getDimensions()">
+          <legend>Web Service</legend>
+
+          <div class="control-group">
+            <label class="control-label" for="inputWSName">Web Service URL</label>
+            <div class="controls">
+              <input type="url" id="inputWSName" ng-model="wsName" ng-change="changeDimUrl()" class="input-xxlarge" placeholder="http://localhost:8081" autofocus></input>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label class="control-label" for="inputDFName">Data Flow Identifier</label>
+            <div class="controls">
+              <input type="text" id="inputDFName" ng-model="dfName" ng-change="changeDimUrl()" placeholder="ECB_ICP1"></input>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="inputKey">Key (optional)</label>
+            <div class="controls">
+              <input type="text" id="inputKey" ng-model="key" ng-change="changeDimUrl()"></input>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label class="control-label" for="inputCustomParameters">Custom Parameters (optional)</label>
+            <div class="controls">
+              <input type="text" id="inputDFName" ng-model="customParams" ng-change="changeDimUrl()"></input>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <div class="controls">
+              <label>{{dimUrl}}</label>
+              <button type="submit" class="btn">Get Dimensions</button>
+            </div>
+          </div>
+        </form>       
+      </div>
+    </div>
+
+    <div class="row" ng-show="state.dimensionRequestRunning">
+      <div class="span12">
+        <div class="alert alert-info">
+          <button type="button" class="close" ng-click="state.dimensionRequestRunning=false">×</button>
+          <h4>Please wait</h4>
+          <p>Requesting dimensions from {{wsName}}.</p>
+          <p ng-repeat="error in response.errors">{{error}}</p>
+        </div>        
+      </div>        
+    </div>        
+    
+    <div class="row" ng-show="state.httpError">
+      <div class="span12">
+        <div class="alert alert-error">
+          <button type="button" class="close" ng-click="state.httpError=false">×</button>
+          <h4>Request failed</h4>
+          <p>Status code: {{response.status}}</p>
+          <p ng-repeat="error in response.errors">{{error}}</p>
+        </div>        
+      </div>        
+    </div>        
+
+    <div class="row">
+      <div class="span12">
+        <form class="form">
+          <legend>Dimensions</legend>
+
+          <div ng-repeat="dim in dimensions.seriesKeyDims">
+          <h5>
+            <button ng-click="dimensions[dim].show = ! dimensions[dim].show">{{showButtonText(dimensions[dim].show)}}</button>
+            {{dimensions[dim].name}} 
+            ( {{dimensions[dim].codes.id.length}} codes
+            / selected codes:
+            <span ng-repeat="code in dimensions[dim].codes.checked">
+              <abbr title="{{dimensions[dim].codes[code].name}}">{{code}}</abbr>&nbsp;
+            </span>
+            )
+          </h5>
+
+          <table class="table table-condensed table-bordered" ng-show="dimensions[dim].show">
+            <thead>
+              <th></th><th>#</th><th>ID</th><th>Name</th>
+            </thead>
+            <tbody>
+              <tr ng-repeat="code in dimensions[dim].codes.id" 
+              ng-class="{success: dimensions[dim].codes[code].checked}">
+                <td><input class="toggle" type="checkbox" ng-model="dimensions[dim].codes[code].checked" ng-change="changeCheckedCodes()"/></td>
+                <td>{{dimensions[dim].codes[code].index}}</td>
+                <td>{{dimensions[dim].codes[code].id}}</td>
+                <td>{{dimensions[dim].codes[code].name}}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          </div>
+          <label>{{dataUrl}}</label>
+
+          <button type="submit" class="btn" ng-click="getData()">Get Data</button>
+          
+        </form>
+      </div>        
+    </div>        
+
+    <div class="row" ng-show="state.dataRequestRunning">
+      <div class="span12">
+        <div class="alert alert-info">
+          <button type="button" class="close" ng-click="state.dataRequestRunning=false">×</button>
+          <h4>Please wait</h4>
+          <p>Requesting data from {{wsName}}.</p>
+          <p ng-repeat="error in response.errors">{{error}}</p>
+        </div>        
+      </div>        
+    </div>        
+
+    <div class="row" ng-show="state.httpErrorData">
+      <div class="span12">
+        <div class="alert alert-error">
+          <button type="button" class="close" ng-click="state.httpErrorData=false">×</button>
+          <h4>Request failed</h4>
+          <p>Status code: {{response.status}}</p>
+          <p ng-repeat="error in response.errors">{{error}}</p>
+        </div>        
+      </div>        
+    </div>        
+
+    <div class="row">
+      <div class="span12">
+        <form class="form">
+          <legend>Data Table</legend>
+
+          <p>
+            Request runtime: {{requestRuntime}} ms
+          </p>
+          <p>
+            Refresh runtime: {{refreshRuntime}} ms
+          </p>
+
+          <p ng-repeat="attr in pivotTable.pageData">
+            <strong>{{attr.name}}</strong>: {{attr.value}}
+          </p>
+
+          <table>
+            <tr>
+              <th>Pivot Columns:</th>
+              <td>
+                <span ng-repeat="dimId in pivotTable.colDims">
+                  <button type="button" ng-click="pivotCol($index)">{{pivotTable.data.dimensions[dimId].name}}</button>
+                </span>
+              <td>
+            </tr>
+            <tr>
+              <th>Pivot Rows:</th>
+              <td>
+                <span ng-repeat="dimId in pivotTable.rowDims">
+                  <button type="button" ng-click="pivotRow($index)">{{pivotTable.data.dimensions[dimId].name}}</button>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <th>Show:</th>
+              <td>
+                <Label class="radio">
+                  <input ng-model="show" value="data" type="radio" name="show-type" ng-click="pivotTable.rebuild()">Data
+                </label>
+                <Label class="radio">
+                  <input ng-model="show" value="dataColors" type="radio" name="show-type" ng-click="pivotTable.rebuild()">Data with Colors
+                </label>
+                <Label class="radio">
+                  <input ng-model="show" value="metadata" type="radio" name="show-type" ng-click="pivotTable.rebuild()">Metadata
+                </label>
+              </td>
+            </tr>
+            <tr><th>&nbsp;</th><td></td></tr>
+          </table>
+
+          <table class="table table-condensed table-bordered"> 
+            <thead>
+              <tr ng-repeat="row in pivotTable.headrows">
+                <th ng-repeat="header in row.headers" colspan="{{header.colspan}}" rowspan="{{header.rowspan}}">
+                  {{header.value}}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="row in pivotTable.bodyrows">
+                <th ng-repeat="header in row.headers" colspan="{{header.colspan}}" rowspan="{{header.rowspan}}">
+                  {{header.value}}
+                </th>
+                <td ng-repeat="cell in row.data" class="{{cell.hclass}}" ng-style="cell.style">
+                  {{cell.value}}
+                <td>
+              </tr>
+            </tbody>
+          </table> 
+        </form>
+      </div>  
+    </div>      
+
+    <script src="lib/jquery-1.8.2.min.js"></script>
+    <script src="lib/bootstrap.min.js"></script>
+  
+    </div>
+  </body>
+</html>
