@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="demoApp">
+  <head>
+    <meta charset="utf-8">
+    <title>PERF-TEST-CLIENT</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/app.css" rel="stylesheet">
+    <script src="lib/angular.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/controllers.js"></script>
+    <script src="js/chart.js"></script>
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
+
+    <!--
+    <script>
+      document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+    </script>
+    -->
+
+  </head>
+  <body ng-controller="MainCtrl">
+
+      <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+          <div class="container">
+            <a class="brand" href="#">Perf-Test-Client</a>
+            <p class="navbar-text pull-right">Version {{version}}</p>
+          </div>
+        </div>
+      </div>
+    
+    <div class="container">
+
+    <div class="row">
+      <div class="span12">
+        <form class="form-horizontal">
+          <legend>Web Service</legend>
+
+          <div class="control-group">
+            <label class="control-label" for="inputWSName">Web Service URL</label>
+            <div class="controls">
+              <input type="url" id="inputWSName" ng-model="wsName" ng-change="changeTestUrl()" class="input-xxlarge" placeholder="http://localhost:8081" autofocus></input>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label class="control-label" for="inputDFName">Data Flow Identifier</label>
+            <div class="controls">
+              <input type="text" id="inputDFName" ng-model="dfName" ng-change="changeTestUrl()" placeholder="ECB_ICP1" class="input-xlarge"></input>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label" for="inputKey">Key (optional)</label>
+            <div class="controls">
+              <input type="text" id="inputKey" ng-model="key" ng-change="changeTestUrl()" class="input-xlarge"></input>
+            </div>
+          </div>
+          
+          <div class="control-group">
+            <label class="control-label" for="inputCustomParameters">Custom Parameters (optional)</label>
+            <div class="controls">
+              <input type="text" id="inputDFName" ng-model="customParams" ng-change="changeDimUrl()" class="input-xlarge"></input>
+            </div>
+          </div>
+          
+        </form>       
+      </div>
+    </div>
+
+    <div class="row" ng-show="state.testRunning">
+      <div class="span12">
+        <div class="alert alert-info">
+          <button type="button" class="close" ng-click="state.testRunning=false">×</button>
+          <h4>Please wait</h4>
+          <p>Running tests from {{wsName}}.</p>
+        </div>        
+      </div>        
+    </div>        
+    
+    <div class="row" ng-show="state.httpError">
+      <div class="span12">
+        <div class="alert alert-error">
+          <button type="button" class="close" ng-click="state.httpError=false">×</button>
+          <h4>Request failed</h4>
+          <p>Status code: {{response.status}}</p>
+          <p ng-repeat="error in response.errors">{{error}}</p>
+        </div>        
+      </div>        
+    </div>        
+
+    <div class="row">
+      <div class="span12">
+        <H2>Tests</H2>
+
+        <dl>
+          <dt>Request</dt>
+          <dd>Time to make the request to the Web Service in ms.</dd>
+          <dt>Response size</dt>
+          <dd>Uncompressed size of the JSON response in KB/MB.</dd>
+          <dt>Parse JSON</dt>
+          <dd>Time to parse the JSON response with JSON.parse() in ms.</dd>
+          <dt>Memory</dt>
+          <dd>Memory allocation (does not currently work).</dd>
+          <dt>Obs count</dt>
+          <dd>Theoretical number of observations in the response. 
+            Calculated by multiplying the number of codes in each dimension.</dd>
+          <dt>Density</dt>
+          <dd>Number of actual non-missing observation divided by the theoretical
+            number of observation above.</dd>
+          <dt>Cube access</dt>
+          <dd>Time to sum all observations. Each observation is accessed with the key.</dd>
+          <dt>Cube checksum</dt>
+          <dd>Checksum for the cube access test. Results from the same query should be equal.</dd>
+          <dt>TS count</dt>
+          <dd>Number of time series in the response.</dd>
+          <dt>TS access</dt>
+          <dd>Time to sum all observations. Observation are accessed via time series keys.</dd>
+          <dt>TS checksum</dt>
+          <dd>Checksum for the time series access test. Results from the same query should be equal.</dd>
+        </dl>
+
+        <p>
+          <span ng-repeat="format in formats">
+            <button type="button" ng-click="runTest(format)">{{format}}</button>
+          </span>
+        </p>
+
+        <p>
+          {{url}}
+        </p>
+
+        <table class="table table-condensed table-bordered">
+          <thead>
+            <tr>
+              <th>Format</th>
+              <th>Request</th>
+              <th>Response size</th>
+              <th>Parse JSON</th>
+              <th>Memory</th>
+              <th>Obs count</th>
+              <th>Density</th>
+              <th>Cube access</th>
+              <th>Cube checksum</th>
+              <th>TS count</th>
+              <th>TS access</th>
+              <th>TS checksum</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="result in results">
+              <td>{{result.format}}</td>
+              <td>{{result.requestTime}}</td>
+              <td>{{result.size}}</td>
+              <td>{{result.parseTime}}</td>
+              <td>{{result.memory}}</td>
+              <td>{{result.obsCount}}</td>
+              <td>{{result.density}}</td>
+              <td>{{result.cubeAccessTime}}</td>
+              <td>{{result.cubeChecksum}}</td>
+              <td>{{result.tsCount}}</td>
+              <td>{{result.tsAccessTime}}</td>
+              <td>{{result.tsChecksum}}</td>
+            </tr>
+          </tbody>
+        </table>          
+      </div>        
+    </div>        
+
+    <script src="lib/jquery-1.8.2.min.js"></script>
+    <script src="lib/bootstrap.min.js"></script>
+  
+    </div>
+  </body>
+</html>

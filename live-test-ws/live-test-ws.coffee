@@ -1,12 +1,13 @@
 http = require 'http'
 url = require 'url'
 fs = require 'fs'
+zlib = require 'zlib'
 
 #-------------------------------------------------------------------------------
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.2.2'
+SERVER_VERSION = '0.2.6'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -451,6 +452,7 @@ query = (msg, request, response) ->
 
     for dim, i in msg.dimensions.id
         rslt.dimensions[dim] = 
+            id: msg.dimensions[dim].id
             codes: 
                 id: []
             name: msg.dimensions[dim].name
@@ -546,15 +548,18 @@ query = (msg, request, response) ->
 
     # Add attributes to response
     for attr in msg.attributes.id
-        attrCodeMapping = []
 
-        resultCount = 1
-        resultMultipliers = []
+        attrCodeMapping = []
         for dim in msg.attributes[attr].dimension
             dimPos = msg.dimensions.id.indexOf dim
             attrCodeMapping.push codeMap[dimPos]
+
+        resultCount = 1 
+        resultMultipliers = []
+        for dim in msg.attributes[attr].dimension.slice().reverse()
             resultMultipliers.push resultCount
-            resultCount *= codeMap[dimPos].length
+            resultCount *= rslt.dimensions[dim].codes.id.length
+        resultMultipliers.reverse()
 
         msgCount = 1
         msgMultipliers = []
@@ -580,6 +585,7 @@ query = (msg, request, response) ->
         rslt.attributes ?= id: []
         rslt.attributes.id.push attr
         rslt.attributes[attr] =
+            id: msg.attributes[attr].id
             name: msg.attributes[attr].name
             mandatory: msg.attributes[attr].mandatory
             role: msg.attributes[attr].role
@@ -592,13 +598,14 @@ query = (msg, request, response) ->
 #-------------------------------------------------------------------------------
 
 validateRequest = (request, response) ->
-    methods = [ 'GET', 'HEAD' ]
+    methods = [ 'GET', 'HEAD', 'OPTIONS' ]
     mediaTypes = [ 'application/json', 'application/*', '*/*' ]
+    response.setHeader 'Allow', methods.join( ', ' )
+    response.setHeader 'Access-Control-Allow-Methods', methods.join( ', ' )
 
     if methods.indexOf( request.method ) is -1
         response.statusCode = 405
-        response.setHeader 'Allow', methods.join( ',' )
-        response.result.errors.push 'Supported methods: ' + methods.join(',')
+        response.result.errors.push 'Supported methods: ' + methods.join(', ')
         return
 
     if request.headers['accept']?
@@ -610,11 +617,66 @@ validateRequest = (request, response) ->
             response.result.errors.push 'Supported media types: ' + mediaTypes.join(',')
             return
 
+    encoding = request.headers['accept-encoding']
+    if encoding?
+        if encoding.match /\bdeflate\b/
+            response.setHeader 'Content-Encoding', 'deflate'
+        else if encoding.match /\bgzip\b/
+            response.setHeader 'Content-Encoding', 'gzip'
+
+    if request.headers['access-control-request-headers']?
+        response.setHeader 'access-control-allow-headers', request.headers['access-control-request-headers']
+
+
+compressResponse = (request, response) ->
+
+    sendResponse = (err, body) ->
+        if err?
+            response.statusCode = 500
+            response.end()
+            return
+
+        response.setHeader 'X-Runtime', new Date() - response.start
+
+        if body?
+            if Buffer.isBuffer body
+                response.setHeader 'Content-Length', body.length
+            else
+                response.setHeader 'Content-Length', Buffer.byteLength body
+
+            if request.method is 'GET'
+                response.end body
+            else
+                response.end()
+        else
+            response.setHeader 'Content-Length', 0
+            response.end()
+
+        encoding = response.getHeader 'Content-Encoding'
+        encoding ?= ''
+        log "#{request.method} #{request.url} #{response.statusCode} #{encoding}"
+        return
+
+
+    switch request.method
+        when 'OPTIONS'
+            sendResponse()
+        when 'GET', 'HEAD'
+            body = JSON.stringify response.result, null, 2
+            switch response.getHeader 'Content-Encoding'
+                when 'deflate'
+                    zlib.deflate body, sendResponse
+                when 'gzip'
+                    zlib.gzip body, sendResponse
+                else
+                    sendResponse undefined, body
+
+
 #-------------------------------------------------------------------------------
 # Main function for handling HTTP requests
 
 handleRequest = (request, response) ->
-    start = new Date()
+    response.start = new Date()
 
     response.setHeader 'X-Powered-By',                "Node.js/#{process.version}"
     response.setHeader 'Server',                      "#{SERVER_NAME}/#{SERVER_VERSION}"
@@ -639,24 +701,17 @@ handleRequest = (request, response) ->
     if response.statusCode is 200
         dataflow = findDataFlow request, response
 
-    if response.statusCode is 200
-        query dataflow, request, response
+    if request.method is 'OPTIONS'
+        response.setHeader 'Content-Length', 0
+    else
+        if response.statusCode is 200
+            query dataflow, request, response
 
-    if response.statusCode is 200
-        response.result.name = dataset.name
-        response.result.errors = null
+        if response.statusCode is 200
+            response.result.name = dataset.name
+            response.result.errors = null
 
-    body = JSON.stringify response.result, null, 2
-
-    response.setHeader 'Content-Length', Buffer.byteLength body
-    response.setHeader 'X-Runtime', new Date() - start
-
-    if request.method is 'GET'
-        response.end body
-    else # HEAD
-        response.end()
-
-    log "#{request.method} #{request.url} #{response.statusCode}"
+    compressResponse request, response
 
 #-------------------------------------------------------------------------------
 # Initialise and start the server

@@ -1,0 +1,11 @@
+body {
+  padding-top: 50px;
+}
+
+/* Tables */
+table th, table td {
+    text-align: right;
+}
+
+
+.tr { text-align: right }

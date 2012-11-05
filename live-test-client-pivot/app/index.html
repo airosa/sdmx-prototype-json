@@ -2,30 +2,29 @@
 <html lang="en" ng-app="demoApp">
   <head>
     <meta charset="utf-8">
-    <title>LIVE-TEST-CLIENT-TS</title>
+    <title>LIVE-TEST-CLIENT-PIVOT</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet">
     <script src="lib/angular.min.js"></script>
-    <script src="lib/d3.v2.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
-    <script src="js/chart.js"></script>
   
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="css/bootstrap-responsive-min.css" rel="stylesheet">
 
-    <!--  
+    <!--
     <script>
       document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
     </script>
     -->
+
   </head>
   <body ng-controller="MainCtrl">
 
       <div class="navbar navbar-fixed-top">
         <div class="navbar-inner">
           <div class="container">
-            <a class="brand" href="#">Live-Test-Client-Ts</a>
+            <a class="brand" href="#">Live-Test-Client-Pivot</a>
             <p class="navbar-text pull-right">Version {{version}}</p>
           </div>
         </div>
@@ -164,57 +163,75 @@
     <div class="row">
       <div class="span12">
         <form class="form">
-          <legend>Time Series</legend>
+          <legend>Data Table</legend>
 
           <p>
-            Runtime: {{requestRuntime}} ms, time series: {{data.timeseries.length}}
+            Request runtime: {{requestRuntime}} ms
+          </p>
+          <p>
+            Refresh runtime: {{refreshRuntime}} ms
           </p>
 
-          <p ng-repeat="attr in data.commonDimensions">
+          <p ng-repeat="attr in pivotTable.pageData">
             <strong>{{attr.name}}</strong>: {{attr.value}}
           </p>
 
-          <table class="table table-condensed">
+          <table>
+            <tr>
+              <th>Pivot Columns:</th>
+              <td>
+                <span ng-repeat="dimId in pivotTable.colDims">
+                  <button type="button" ng-click="pivotCol($index)">{{pivotTable.data.dimensions[dimId].name}}</button>
+                </span>
+              <td>
+            </tr>
+            <tr>
+              <th>Pivot Rows:</th>
+              <td>
+                <span ng-repeat="dimId in pivotTable.rowDims">
+                  <button type="button" ng-click="pivotRow($index)">{{pivotTable.data.dimensions[dimId].name}}</button>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <th>Show:</th>
+              <td>
+                <Label class="radio">
+                  <input ng-model="show" value="data" type="radio" name="show-type" ng-click="pivotTable.rebuild()">Data
+                </label>
+                <Label class="radio">
+                  <input ng-model="show" value="dataColors" type="radio" name="show-type" ng-click="pivotTable.rebuild()">Data with Colors
+                </label>
+                <Label class="radio">
+                  <input ng-model="show" value="metadata" type="radio" name="show-type" ng-click="pivotTable.rebuild()">Metadata
+                </label>
+              </td>
+            </tr>
+            <tr><th>&nbsp;</th><td></td></tr>
+          </table>
+
+          <table class="table table-condensed table-bordered"> 
+            <thead>
+              <tr ng-repeat="row in pivotTable.headrows">
+                <th ng-repeat="header in row.headers" colspan="{{header.colspan}}" rowspan="{{header.rowspan}}">
+                  {{header.value}}
+                </th>
+              </tr>
+            </thead>
             <tbody>
-              <tr ng-repeat="series in data.timeseries">
+              <tr ng-repeat="row in pivotTable.bodyrows">
+                <th ng-repeat="header in row.headers" colspan="{{header.colspan}}" rowspan="{{header.rowspan}}">
+                  {{header.value}}
+                </th>
+                <td ng-repeat="cell in row.data" class="{{cell.hclass}}" ng-style="cell.style">
+                  {{cell.value}}
                 <td>
-                  <table>
-                    <tr>
-                      <td rowspan="3">
-                          <button ng-click="series.show = ! series.show">
-                          {{showButtonText(series.show)}}
-                          </button>
-                      </td>
-                      <td>
-                        <p ng-repeat="code in series.keynames">
-                          <strong>{{code.name}}</strong>: {{code.value}}
-                        </p>
-                      </td>
-                      <td>{{series.keycodes.join(".")}}</td>
-                    </tr>
-                    <tr>
-                      <td colspan="2">
-                        <gh-chart data="series.observations"></gh-chart>
-                      </td>
-                    </tr>
-                    <tr ng-show="series.show">
-                      <td colspan="2">
-                        <p ng-repeat="attr in series.attributes">
-                          <strong>{{attr.name}}</strong>: {{attr.value}}
-                        </p>
-                      </td>
-                      <td></td>
-                    </tr>
-                  </table>
-                </td>
               </tr>
             </tbody>
-          </table>          
+          </table> 
         </form>
-      </div>        
-    </div>        
-
-
+      </div>  
+    </div>      
 
     <script src="lib/jquery-1.8.2.min.js"></script>
     <script src="lib/bootstrap.min.js"></script>
