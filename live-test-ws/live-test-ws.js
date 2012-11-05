@@ -457,7 +457,7 @@
   };
 
   query = function(msg, request, response) {
-    var attr, attrCodeMapping, attrIndex, code, codeIndex, codeMap, codes, codesInQuery, codesWithData, dim, dimPos, i, index, j, key, length, m, map, matchingObs, msgCount, msgMultipliers, msgSize, n, obsIndex, pivot, pivotCount, pivotDimPos, pivotIndex, pivotMultipliers, pivotSubIndex, pos, queryMultipliers, querySize, resultCodeLengths, resultCount, resultMultipliers, rslt, value, _aa, _ab, _base, _i, _j, _k, _l, _len, _len1, _len10, _len11, _len12, _len13, _len14, _len15, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _s, _t, _u, _v, _w, _x, _y, _z;
+    var attr, attrCodeMapping, attrIndex, code, codeIndex, codeMap, codes, codesInQuery, codesWithData, dim, dimPos, i, index, j, key, length, m, map, matchingObs, msgCount, msgMultipliers, msgSize, n, obsIndex, pivot, pivotCount, pivotDimPos, pivotIndex, pivotMultipliers, pivotSubIndex, pos, queryMultipliers, querySize, resultCodeLengths, resultCount, resultMultipliers, rslt, value, _aa, _ab, _ac, _base, _i, _j, _k, _l, _len, _len1, _len10, _len11, _len12, _len13, _len14, _len15, _len16, _len2, _len3, _len4, _len5, _len6, _len7, _len8, _len9, _m, _n, _o, _p, _q, _r, _ref, _ref1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref16, _ref17, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results, _s, _t, _u, _v, _w, _x, _y, _z;
     rslt = response.result;
     codesInQuery = addCodesToQuery(request, response, msg);
     if (response.statusCode !== 200) {
@@ -640,29 +640,34 @@
     for (_x = 0, _len12 = _ref12.length; _x < _len12; _x++) {
       attr = _ref12[_x];
       attrCodeMapping = [];
-      resultCount = 1;
-      resultMultipliers = [];
       _ref13 = msg.attributes[attr].dimension;
       for (_y = 0, _len13 = _ref13.length; _y < _len13; _y++) {
         dim = _ref13[_y];
         dimPos = msg.dimensions.id.indexOf(dim);
         attrCodeMapping.push(codeMap[dimPos]);
-        resultMultipliers.push(resultCount);
-        resultCount *= codeMap[dimPos].length;
       }
-      msgCount = 1;
-      msgMultipliers = [];
+      resultCount = 1;
+      resultMultipliers = [];
       _ref14 = msg.attributes[attr].dimension.slice().reverse();
       for (_z = 0, _len14 = _ref14.length; _z < _len14; _z++) {
         dim = _ref14[_z];
+        resultMultipliers.push(resultCount);
+        resultCount *= rslt.dimensions[dim].codes.id.length;
+      }
+      resultMultipliers.reverse();
+      msgCount = 1;
+      msgMultipliers = [];
+      _ref15 = msg.attributes[attr].dimension.slice().reverse();
+      for (_aa = 0, _len15 = _ref15.length; _aa < _len15; _aa++) {
+        dim = _ref15[_aa];
         msgMultipliers.push(msgCount);
         msgCount *= msg.dimensions[dim].codes.id.length;
       }
       msgMultipliers.reverse();
       value = [];
-      for (i = _aa = 0, _ref15 = resultCount - 1; 0 <= _ref15 ? _aa <= _ref15 : _aa >= _ref15; i = 0 <= _ref15 ? ++_aa : --_aa) {
+      for (i = _ab = 0, _ref16 = resultCount - 1; 0 <= _ref16 ? _ab <= _ref16 : _ab >= _ref16; i = 0 <= _ref16 ? ++_ab : --_ab) {
         attrIndex = 0;
-        for (n = _ab = 0, _len15 = attrCodeMapping.length; _ab < _len15; n = ++_ab) {
+        for (n = _ac = 0, _len16 = attrCodeMapping.length; _ac < _len16; n = ++_ac) {
           codes = attrCodeMapping[n];
           index = Math.floor(i / resultMultipliers[n]) % codes.length;
           attrIndex += codes[index] * msgMultipliers[n];
@@ -675,7 +680,7 @@
       if (value.length === 0 && msg.attributes[attr]["default"] === null) {
         continue;
       }
-      if ((_ref16 = rslt.attributes) == null) {
+      if ((_ref17 = rslt.attributes) == null) {
         rslt.attributes = {
           id: []
         };

@@ -548,15 +548,18 @@ query = (msg, request, response) ->
 
     # Add attributes to response
     for attr in msg.attributes.id
-        attrCodeMapping = []
 
-        resultCount = 1
-        resultMultipliers = []
+        attrCodeMapping = []
         for dim in msg.attributes[attr].dimension
             dimPos = msg.dimensions.id.indexOf dim
             attrCodeMapping.push codeMap[dimPos]
+
+        resultCount = 1 
+        resultMultipliers = []
+        for dim in msg.attributes[attr].dimension.slice().reverse()
             resultMultipliers.push resultCount
-            resultCount *= codeMap[dimPos].length
+            resultCount *= rslt.dimensions[dim].codes.id.length
+        resultMultipliers.reverse()
 
         msgCount = 1
         msgMultipliers = []
