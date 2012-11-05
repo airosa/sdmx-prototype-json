@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.1'
+    $scope.version = '0.1.2'
 
     $scope.state =
         httpError: false
@@ -12,12 +12,12 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.wsName = 'http://46.137.144.117/FusionCube/ws'
 
     #$scope.dfName = 'ECB_ICP1'
-    #$scope.dfName = 'IMF,PGI,1.0'
-    $scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
+    $scope.dfName = 'IMF,PGI,1.0'
+    #$scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
 
     #$scope.key = ''
-    $scope.key = '....'
-    #$scope.key = '....A'
+    #$scope.key = '....'
+    $scope.key = '....A'
     #$scope.key = '...GB'
 
     $scope.customParams = ''
@@ -29,24 +29,24 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 # Setup test formats
 
     $scope.results = []
-    for format in ['jsonseries','jsonseries2','jsonindex','jsonarray']
-        result = 
-            format: format
-        $scope.results.push result
+    $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonindex','jsonarray']
     
 
 #-------------------------------------------------------------------------------
 # Code for making requests to the WS
 
-    $scope.runTest = (index) ->
+    $scope.runTest = (format) ->
         start = (new Date).getTime()
         if window?.performance?.memory?
             startMem = window.performance.memory
 
+        result = 
+            format: format
+        $scope.results.push result
+
         transformResponse = (data) -> data
 
         onResults = (data, status, headers, config) ->
-            result = $scope.results[index]
             $scope.state.testRunning = false
             $scope.state.httpError = false
 
@@ -67,6 +67,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 when 'jsonindex' then new JSONIndexCube json
                 when 'jsonseries' then new JSONSeriesCube json
                 when 'jsonseries2' then new JSONSeries2Cube json
+                when 'jsonseries3' then new JSONSeries3Cube json
 
             stringKey = switch result.format
                 when 'jsonarray', 'jsonindex' then false
@@ -98,14 +99,10 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             $scope.response =
                 status: status
                 errors: data.errors
-            
-
-        $scope.results[index] =
-            format: $scope.results[index].format
 
         config = 
             method: 'GET'
-            url: getTestUrl $scope.results[index].format
+            url: getTestUrl format
             transformResponse: transformResponse
             cache: false
 
@@ -141,7 +138,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             for codeIndex, j in key
                 index += codeIndex * @multipliers[j]
             return undefined unless @msg.measure[0]?[index]?
-            +@msg.measure[0][index]
+            @msg.measure[0][index]
 
         timeSeries: (key) ->
             series = 
@@ -212,7 +209,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             keyString = key.slice(0,-1).join(':')
 
             obs = @msg.measure[keyString]?.observations[timePeriod]?[0]
-            if obs? then +obs else undefined
+            if obs? then obs else undefined
 
         timeSeries: (key) ->
             #console.log key
@@ -228,7 +225,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             for timePeriod in Object.keys series.observations
                 obs = series.observations[timePeriod]
                 continue unless obs?
-                newSeries.observations.push { value: +obs[0] }
+                newSeries.observations.push { value: obs[0] }
 
             newSeries
 
@@ -253,7 +250,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             return undefined unless obsIndex? and -1 < obsIndex 
 
             obs = @msg.measure[keyString].observations.values[obsIndex]
-            if obs? then +obs else undefined
+            if obs? then obs else undefined
 
         timeSeries: (key) ->
             keyString = key.join ':'
@@ -267,7 +264,44 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             for obs in series.observations.values
                 continue unless obs?
-                newSeries.observations.push { value: +obs }
+                newSeries.observations.push { value: obs }
+
+            newSeries
+
+
+    class JSONSeries3Cube 
+        constructor: (@msg) ->
+            @dimCodes = []
+            for dimId in @dimensions()
+                @dimCodes.push @codes(dimId)
+
+        dimensions: () ->
+            Object.keys @msg.dimensions
+
+        codes: (dimension) ->
+            Object.keys @msg.dimensions[dimension].codes
+
+        observation: (key) ->
+            timePeriod = key[key.length-1]
+            keyString = key.slice(0,-1).join(':')
+
+            obs = @msg.measure[keyString].observations[timePeriod]
+            if obs? then obs.value else undefined
+
+        timeSeries: (key) ->
+            keyString = key.join ':'
+
+            newSeries = 
+                observations: []
+
+            series = @msg.measure[keyString]
+
+            return newSeries unless series?
+
+            for timePeriod in Object.keys(series.observations).sort()
+                obs = series.observations[timePeriod]
+                continue unless obs?
+                newSeries.observations.push { value: obs.value }
 
             newSeries
 

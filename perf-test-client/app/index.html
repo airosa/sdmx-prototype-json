@@ -13,9 +13,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
 
+    <!--
     <script>
       document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
     </script>
+    -->
 
   </head>
   <body ng-controller="MainCtrl">
@@ -23,14 +25,9 @@
       <div class="navbar navbar-fixed-top">
         <div class="navbar-inner">
           <div class="container">
-          <a class="brand" href="#">Perf-Test-Client</a>
-          <p class="navbar-text pull-right">Version {{version}}</p>
-<!--           <ul class="nav">
-            <li class="active"><a href="#">Web Service</a></li>
-            <li><a href="#">Dimensions</a></li>
-            <li><a href="#">Series</a></li>
-          </ul>
- -->        </div>
+            <a class="brand" href="#">Perf-Test-Client</a>
+            <p class="navbar-text pull-right">Version {{version}}</p>
+          </div>
         </div>
       </div>
     
@@ -98,6 +95,39 @@
       <div class="span12">
         <H2>Tests</H2>
 
+        <dl>
+          <dt>Request</dt>
+          <dd>Time to make the request to the Web Service in ms.</dd>
+          <dt>Response size</dt>
+          <dd>Uncompressed size of the JSON response in KB/MB.</dd>
+          <dt>Parse JSON</dt>
+          <dd>Time to parse the JSON response with JSON.parse() in ms.</dd>
+          <dt>Memory</dt>
+          <dd>Memory allocation (does not currently work).</dd>
+          <dt>Obs count</dt>
+          <dd>Theoretical number of observations in the response. 
+            Calculated by multiplying the number of codes in each dimension.</dd>
+          <dt>Density</dt>
+          <dd>Number of actual non-missing observation divided by the theoretical
+            number of observation above.</dd>
+          <dt>Cube access</dt>
+          <dd>Time to sum all observations. Each observation is accessed with the key.</dd>
+          <dt>Cube checksum</dt>
+          <dd>Checksum for the cube access test. Results from the same query should be equal.</dd>
+          <dt>TS count</dt>
+          <dd>Number of time series in the response.</dd>
+          <dt>TS access</dt>
+          <dd>Time to sum all observations. Observation are accessed via time series keys.</dd>
+          <dt>TS checksum</dt>
+          <dd>Checksum for the time series access test. Results from the same query should be equal.</dd>
+        </dl>
+
+        <p>
+          <span ng-repeat="format in formats">
+            <button type="button" ng-click="runTest(format)">{{format}}</button>
+          </span>
+        </p>
+
         <p>
           {{url}}
         </p>
@@ -106,8 +136,8 @@
           <thead>
             <tr>
               <th>Format</th>
-              <th>Make request</th>
-              <th>Response</th>
+              <th>Request</th>
+              <th>Response size</th>
               <th>Parse JSON</th>
               <th>Memory</th>
               <th>Obs count</th>
@@ -121,9 +151,7 @@
           </thead>
           <tbody>
             <tr ng-repeat="result in results">
-              <td>
-                <button type="button" ng-click="runTest($index)">{{result.format}}</button>
-              </td>
+              <td>{{result.format}}</td>
               <td>{{result.requestTime}}</td>
               <td>{{result.size}}</td>
               <td>{{result.parseTime}}</td>

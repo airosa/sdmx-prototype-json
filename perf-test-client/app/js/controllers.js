@@ -2,8 +2,8 @@
 (function() {
 
   demoModule.controller('MainCtrl', function($scope, $http) {
-    var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeriesCube, bytesToSize, format, getTestUrl, result, testCube, testTimeSeries, _i, _len, _ref;
-    $scope.version = '0.1.1';
+    var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeries3Cube, JSONSeriesCube, bytesToSize, getTestUrl, testCube, testTimeSeries;
+    $scope.version = '0.1.2';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -11,31 +11,27 @@
       dimensionRequestRunning: false
     };
     $scope.wsName = 'http://46.137.144.117/FusionCube/ws';
-    $scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0';
-    $scope.key = '....';
+    $scope.dfName = 'IMF,PGI,1.0';
+    $scope.key = '....A';
     $scope.customParams = '';
     $scope.customParams = 'outputdates=true';
     $scope.results = [];
-    _ref = ['jsonseries', 'jsonseries2', 'jsonindex', 'jsonarray'];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      format = _ref[_i];
+    $scope.formats = ['jsonseries', 'jsonseries2', 'jsonseries3', 'jsonindex', 'jsonarray'];
+    $scope.runTest = function(format) {
+      var config, onError, onResults, result, start, startMem, transformResponse, _ref;
+      start = (new Date).getTime();
+      if ((typeof window !== "undefined" && window !== null ? (_ref = window.performance) != null ? _ref.memory : void 0 : void 0) != null) {
+        startMem = window.performance.memory;
+      }
       result = {
         format: format
       };
       $scope.results.push(result);
-    }
-    $scope.runTest = function(index) {
-      var config, onError, onResults, start, startMem, transformResponse, _ref1;
-      start = (new Date).getTime();
-      if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
-        startMem = window.performance.memory;
-      }
       transformResponse = function(data) {
         return data;
       };
       onResults = function(data, status, headers, config) {
-        var calibration, cube, json, stringKey, _ref2;
-        result = $scope.results[index];
+        var calibration, cube, json, stringKey, _ref1;
         $scope.state.testRunning = false;
         $scope.state.httpError = false;
         $scope.response = {
@@ -45,7 +41,7 @@
         result.size = bytesToSize(unescape(encodeURIComponent(data.length)), 2);
         start = (new Date).getTime();
         json = JSON.parse(data);
-        if ((typeof window !== "undefined" && window !== null ? (_ref2 = window.performance) != null ? _ref2.memory : void 0 : void 0) != null) {
+        if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
           result.memory = window.performance.memory - startMem;
         }
         cube = (function() {
@@ -58,6 +54,8 @@
               return new JSONSeriesCube(json);
             case 'jsonseries2':
               return new JSONSeries2Cube(json);
+            case 'jsonseries3':
+              return new JSONSeries3Cube(json);
           }
         })();
         stringKey = (function() {
@@ -91,12 +89,9 @@
           errors: data.errors
         };
       };
-      $scope.results[index] = {
-        format: $scope.results[index].format
-      };
       config = {
         method: 'GET',
-        url: getTestUrl($scope.results[index].format),
+        url: getTestUrl(format),
         transformResponse: transformResponse,
         cache: false
       };
@@ -107,13 +102,13 @@
     JSONArrayCube = (function() {
 
       function JSONArrayCube(msg) {
-        var dimId, dims, prev, _j, _len1, _ref1;
+        var dimId, dims, prev, _i, _len, _ref;
         this.msg = msg;
         this.multipliers = [];
         prev = 1;
-        _ref1 = this.dimensions().reverse();
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          dimId = _ref1[_j];
+        _ref = this.dimensions().reverse();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
           this.multipliers.push(prev);
           prev *= this.codes(dimId).length;
         }
@@ -134,27 +129,27 @@
       };
 
       JSONArrayCube.prototype.observation = function(key) {
-        var codeIndex, index, j, _j, _len1, _ref1;
+        var codeIndex, index, j, _i, _len, _ref;
         index = 0;
-        for (j = _j = 0, _len1 = key.length; _j < _len1; j = ++_j) {
+        for (j = _i = 0, _len = key.length; _i < _len; j = ++_i) {
           codeIndex = key[j];
           index += codeIndex * this.multipliers[j];
         }
-        if (((_ref1 = this.msg.measure[0]) != null ? _ref1[index] : void 0) == null) {
+        if (((_ref = this.msg.measure[0]) != null ? _ref[index] : void 0) == null) {
           return void 0;
         }
-        return +this.msg.measure[0][index];
+        return this.msg.measure[0][index];
       };
 
       JSONArrayCube.prototype.timeSeries = function(key) {
-        var i, last, obs, series, timePeriod, _j, _len1, _ref1;
+        var i, last, obs, series, timePeriod, _i, _len, _ref;
         series = {
           observations: []
         };
         last = key.length;
-        _ref1 = this.timeDimensionCodes;
-        for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
-          timePeriod = _ref1[i];
+        _ref = this.timeDimensionCodes;
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          timePeriod = _ref[i];
           key[last] = i;
           obs = this.observation(key);
           if (obs == null) {
@@ -173,13 +168,13 @@
     JSONIndexCube = (function() {
 
       function JSONIndexCube(msg) {
-        var dimId, dims, prev, _j, _len1, _ref1;
+        var dimId, dims, prev, _i, _len, _ref;
         this.msg = msg;
         this.multipliers = [];
         prev = 1;
-        _ref1 = this.dimensions().reverse();
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          dimId = _ref1[_j];
+        _ref = this.dimensions().reverse();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
           this.multipliers.push(prev);
           prev *= this.codes(dimId).length;
         }
@@ -197,24 +192,24 @@
       };
 
       JSONIndexCube.prototype.observation = function(key) {
-        var codeIndex, index, j, _j, _len1, _ref1;
+        var codeIndex, index, j, _i, _len, _ref;
         index = 0;
-        for (j = _j = 0, _len1 = key.length; _j < _len1; j = ++_j) {
+        for (j = _i = 0, _len = key.length; _i < _len; j = ++_i) {
           codeIndex = key[j];
           index += codeIndex * this.multipliers[j];
         }
-        return (_ref1 = this.msg.measure[index]) != null ? _ref1[0] : void 0;
+        return (_ref = this.msg.measure[index]) != null ? _ref[0] : void 0;
       };
 
       JSONIndexCube.prototype.timeSeries = function(key) {
-        var i, last, obs, series, timePeriod, _j, _len1, _ref1;
+        var i, last, obs, series, timePeriod, _i, _len, _ref;
         series = {
           observations: []
         };
         last = key.length;
-        _ref1 = this.timeDimensionCodes;
-        for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
-          timePeriod = _ref1[i];
+        _ref = this.timeDimensionCodes;
+        for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
+          timePeriod = _ref[i];
           key[last] = i;
           obs = this.observation(key);
           if (obs == null) {
@@ -233,12 +228,12 @@
     JSONSeriesCube = (function() {
 
       function JSONSeriesCube(msg) {
-        var dimId, _j, _len1, _ref1;
+        var dimId, _i, _len, _ref;
         this.msg = msg;
         this.dimCodes = [];
-        _ref1 = this.dimensions();
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          dimId = _ref1[_j];
+        _ref = this.dimensions();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
           this.dimCodes.push(this.codes(dimId));
         }
       }
@@ -252,19 +247,19 @@
       };
 
       JSONSeriesCube.prototype.observation = function(key) {
-        var keyString, obs, timePeriod, _ref1, _ref2;
+        var keyString, obs, timePeriod, _ref, _ref1;
         timePeriod = key[key.length - 1];
         keyString = key.slice(0, -1).join(':');
-        obs = (_ref1 = this.msg.measure[keyString]) != null ? (_ref2 = _ref1.observations[timePeriod]) != null ? _ref2[0] : void 0 : void 0;
+        obs = (_ref = this.msg.measure[keyString]) != null ? (_ref1 = _ref.observations[timePeriod]) != null ? _ref1[0] : void 0 : void 0;
         if (obs != null) {
-          return +obs;
+          return obs;
         } else {
           return void 0;
         }
       };
 
       JSONSeriesCube.prototype.timeSeries = function(key) {
-        var keyString, newSeries, obs, series, timePeriod, _j, _len1, _ref1;
+        var keyString, newSeries, obs, series, timePeriod, _i, _len, _ref;
         keyString = key.join(':');
         newSeries = {
           observations: []
@@ -273,15 +268,15 @@
         if (series == null) {
           return newSeries;
         }
-        _ref1 = Object.keys(series.observations);
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          timePeriod = _ref1[_j];
+        _ref = Object.keys(series.observations);
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          timePeriod = _ref[_i];
           obs = series.observations[timePeriod];
           if (obs == null) {
             continue;
           }
           newSeries.observations.push({
-            value: +obs[0]
+            value: obs[0]
           });
         }
         return newSeries;
@@ -293,12 +288,12 @@
     JSONSeries2Cube = (function() {
 
       function JSONSeries2Cube(msg) {
-        var dimId, _j, _len1, _ref1;
+        var dimId, _i, _len, _ref;
         this.msg = msg;
         this.dimCodes = [];
-        _ref1 = this.dimensions();
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          dimId = _ref1[_j];
+        _ref = this.dimensions();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
           this.dimCodes.push(this.codes(dimId));
         }
       }
@@ -312,23 +307,23 @@
       };
 
       JSONSeries2Cube.prototype.observation = function(key) {
-        var keyString, obs, obsIndex, timePeriod, _ref1, _ref2;
+        var keyString, obs, obsIndex, timePeriod, _ref, _ref1;
         timePeriod = key[key.length - 1];
         keyString = key.slice(0, -1).join(':');
-        obsIndex = (_ref1 = this.msg.measure[keyString]) != null ? (_ref2 = _ref1.observations) != null ? _ref2.TIME_PERIOD.indexOf(timePeriod) : void 0 : void 0;
+        obsIndex = (_ref = this.msg.measure[keyString]) != null ? (_ref1 = _ref.observations) != null ? _ref1.TIME_PERIOD.indexOf(timePeriod) : void 0 : void 0;
         if (!((obsIndex != null) && -1 < obsIndex)) {
           return void 0;
         }
         obs = this.msg.measure[keyString].observations.values[obsIndex];
         if (obs != null) {
-          return +obs;
+          return obs;
         } else {
           return void 0;
         }
       };
 
       JSONSeries2Cube.prototype.timeSeries = function(key) {
-        var keyString, newSeries, obs, series, _j, _len1, _ref1;
+        var keyString, newSeries, obs, series, _i, _len, _ref;
         keyString = key.join(':');
         newSeries = {
           observations: []
@@ -337,14 +332,14 @@
         if (series == null) {
           return newSeries;
         }
-        _ref1 = series.observations.values;
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          obs = _ref1[_j];
+        _ref = series.observations.values;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          obs = _ref[_i];
           if (obs == null) {
             continue;
           }
           newSeries.observations.push({
-            value: +obs
+            value: obs
           });
         }
         return newSeries;
@@ -353,17 +348,77 @@
       return JSONSeries2Cube;
 
     })();
+    JSONSeries3Cube = (function() {
+
+      function JSONSeries3Cube(msg) {
+        var dimId, _i, _len, _ref;
+        this.msg = msg;
+        this.dimCodes = [];
+        _ref = this.dimensions();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
+          this.dimCodes.push(this.codes(dimId));
+        }
+      }
+
+      JSONSeries3Cube.prototype.dimensions = function() {
+        return Object.keys(this.msg.dimensions);
+      };
+
+      JSONSeries3Cube.prototype.codes = function(dimension) {
+        return Object.keys(this.msg.dimensions[dimension].codes);
+      };
+
+      JSONSeries3Cube.prototype.observation = function(key) {
+        var keyString, obs, timePeriod;
+        timePeriod = key[key.length - 1];
+        keyString = key.slice(0, -1).join(':');
+        obs = this.msg.measure[keyString].observations[timePeriod];
+        if (obs != null) {
+          return obs.value;
+        } else {
+          return void 0;
+        }
+      };
+
+      JSONSeries3Cube.prototype.timeSeries = function(key) {
+        var keyString, newSeries, obs, series, timePeriod, _i, _len, _ref;
+        keyString = key.join(':');
+        newSeries = {
+          observations: []
+        };
+        series = this.msg.measure[keyString];
+        if (series == null) {
+          return newSeries;
+        }
+        _ref = Object.keys(series.observations).sort();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          timePeriod = _ref[_i];
+          obs = series.observations[timePeriod];
+          if (obs == null) {
+            continue;
+          }
+          newSeries.observations.push({
+            value: obs.value
+          });
+        }
+        return newSeries;
+      };
+
+      return JSONSeries3Cube;
+
+    })();
     testCube = function(cube, result, calibrate, stringKey) {
-      var checkSum, codeIndex, codeLengths, codePos, codes, dimCodes, dimId, dimensions, i, j, key, length, missing, multipliers, obs, obsCount, prev, _j, _k, _l, _len1, _len2, _len3, _m, _ref1, _ref2;
+      var checkSum, codeIndex, codeLengths, codePos, codes, dimCodes, dimId, dimensions, i, j, key, length, missing, multipliers, obs, obsCount, prev, _i, _j, _k, _l, _len, _len1, _len2, _ref, _ref1;
       dimensions = cube.dimensions();
       codes = [];
       obsCount = 1;
       multipliers = [];
       codeLengths = [];
       prev = 1;
-      _ref1 = dimensions.slice().reverse();
-      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-        dimId = _ref1[_j];
+      _ref = dimensions.slice().reverse();
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        dimId = _ref[_i];
         multipliers.push(prev);
         dimCodes = cube.codes(dimId);
         codes.push(dimCodes);
@@ -377,15 +432,15 @@
       result.obsCount = obsCount;
       checkSum = 0;
       missing = 0;
-      for (i = _k = 0, _ref2 = obsCount - 1; 0 <= _ref2 ? _k <= _ref2 : _k >= _ref2; i = 0 <= _ref2 ? ++_k : --_k) {
+      for (i = _j = 0, _ref1 = obsCount - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
         key = [];
-        for (j = _l = 0, _len2 = codeLengths.length; _l < _len2; j = ++_l) {
+        for (j = _k = 0, _len1 = codeLengths.length; _k < _len1; j = ++_k) {
           length = codeLengths[j];
           codeIndex = Math.floor(i / multipliers[j]) % length;
           key.push(codeIndex);
         }
         if (stringKey) {
-          for (j = _m = 0, _len3 = key.length; _m < _len3; j = ++_m) {
+          for (j = _l = 0, _len2 = key.length; _l < _len2; j = ++_l) {
             codePos = key[j];
             key[j] = codes[j][codePos];
           }
@@ -403,8 +458,8 @@
       return checkSum;
     };
     testTimeSeries = function(cube, result, calibrate, stringKey) {
-      var checkSum, codeIndex, codeLengths, codePos, codes, dimCodes, dimId, dimensions, i, j, key, length, multipliers, obs, prev, series, seriesCount, startMem, timeSeries, _j, _k, _l, _len1, _len2, _len3, _len4, _len5, _m, _n, _o, _ref1, _ref2, _ref3, _ref4, _ref5;
-      if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
+      var checkSum, codeIndex, codeLengths, codePos, codes, dimCodes, dimId, dimensions, i, j, key, length, multipliers, obs, prev, series, seriesCount, startMem, timeSeries, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4;
+      if ((typeof window !== "undefined" && window !== null ? (_ref = window.performance) != null ? _ref.memory : void 0 : void 0) != null) {
         startMem = window.performance.memory;
       }
       timeSeries = [];
@@ -415,9 +470,9 @@
       codeLengths = [];
       codes = [];
       prev = 1;
-      _ref2 = dimensions.reverse();
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        dimId = _ref2[_j];
+      _ref1 = dimensions.reverse();
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        dimId = _ref1[_i];
         multipliers.push(prev);
         dimCodes = cube.codes(dimId);
         codes.push(dimCodes);
@@ -430,15 +485,15 @@
       codes.reverse();
       result.tsCount = seriesCount;
       checkSum = 0;
-      for (i = _k = 0, _ref3 = seriesCount - 1; 0 <= _ref3 ? _k <= _ref3 : _k >= _ref3; i = 0 <= _ref3 ? ++_k : --_k) {
+      for (i = _j = 0, _ref2 = seriesCount - 1; 0 <= _ref2 ? _j <= _ref2 : _j >= _ref2; i = 0 <= _ref2 ? ++_j : --_j) {
         key = [];
-        for (j = _l = 0, _len2 = codeLengths.length; _l < _len2; j = ++_l) {
+        for (j = _k = 0, _len1 = codeLengths.length; _k < _len1; j = ++_k) {
           length = codeLengths[j];
           codeIndex = Math.floor(i / multipliers[j]) % length;
           key.push(codeIndex);
         }
         if (stringKey) {
-          for (j = _m = 0, _len3 = key.length; _m < _len3; j = ++_m) {
+          for (j = _l = 0, _len2 = key.length; _l < _len2; j = ++_l) {
             codePos = key[j];
             key[j] = codes[j][codePos];
           }
@@ -451,18 +506,18 @@
         }
         timeSeries.push(series);
       }
-      for (_n = 0, _len4 = timeSeries.length; _n < _len4; _n++) {
-        series = timeSeries[_n];
-        _ref4 = series.observations;
-        for (_o = 0, _len5 = _ref4.length; _o < _len5; _o++) {
-          obs = _ref4[_o];
+      for (_m = 0, _len3 = timeSeries.length; _m < _len3; _m++) {
+        series = timeSeries[_m];
+        _ref3 = series.observations;
+        for (_n = 0, _len4 = _ref3.length; _n < _len4; _n++) {
+          obs = _ref3[_n];
           if (obs.value == null) {
             continue;
           }
           checkSum += obs.value;
         }
       }
-      if ((typeof window !== "undefined" && window !== null ? (_ref5 = window.performance) != null ? _ref5.memory : void 0 : void 0) != null) {
+      if ((typeof window !== "undefined" && window !== null ? (_ref4 = window.performance) != null ? _ref4.memory : void 0 : void 0) != null) {
         result.tsMemory = window.performance.memory - startMem;
       }
       return checkSum;
