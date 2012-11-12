@@ -3,7 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var calculateStartAndEndPeriods, createTimeSeries, getObservationAttributes, getTimeSeriesAttributes, getTimeSeriesObservations, onData, onDimensions, onError, onErrorData;
-    $scope.version = '0.1.2';
+    $scope.version = '0.1.3';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -17,13 +17,17 @@
     $scope.getDimensions = function() {
       $scope.state.httpError = false;
       $scope.state.dimensionRequestRunning = true;
-      return $http.get($scope.dimUrl).success(onDimensions).error(onError);
+      return $http.get($scope.dimUrl, {
+        withCredentials: true
+      }).success(onDimensions).error(onError);
     };
     $scope.getData = function() {
       $scope.startRequest = new Date();
       $scope.state.httpErrorData = false;
       $scope.state.dataRequestRunning = true;
-      return $http.get($scope.dataUrl).success(onData).error(onErrorData);
+      return $http.get($scope.dataUrl, {
+        withCredentials: true
+      }).success(onData).error(onErrorData);
     };
     onDimensions = function(data, status, headers, config) {
       var code, codeId, dim, dimId, dimensions, _i, _j, _len, _len1, _ref, _ref1;

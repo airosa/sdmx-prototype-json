@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.2'
+    $scope.version = '0.1.3'
 
     $scope.state =
         httpError: false
@@ -26,14 +26,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.getDimensions = () ->
         $scope.state.httpError = false
         $scope.state.dimensionRequestRunning = true
-        $http.get($scope.dimUrl).success(onDimensions).error(onError)
+        $http.get( $scope.dimUrl, { withCredentials: true } ).success(onDimensions).error(onError)
 
 
     $scope.getData = () ->
         $scope.startRequest = new Date()
         $scope.state.httpErrorData = false
         $scope.state.dataRequestRunning = true
-        $http.get($scope.dataUrl).success(onData).error(onErrorData)
+        $http.get( $scope.dataUrl, { withCredentials: true } ).success(onData).error(onErrorData)
 
 #-------------------------------------------------------------------------------
 # Code for handling responses to requests
