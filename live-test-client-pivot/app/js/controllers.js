@@ -3,7 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var JSONArrayCube, PivotTable, calculateStartAndEndPeriods, onData, onDimensions, onError, onErrorData;
-    $scope.version = '0.1.3';
+    $scope.version = '0.1.4';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -19,32 +19,32 @@
     $scope.refreshRuntime = null;
     JSONArrayCube = (function() {
 
-      function JSONArrayCube(msg) {
+      function JSONArrayCube(_msg) {
         var attr, attrId, dimId, prev, _i, _j, _len, _len1, _ref, _ref1;
-        this.msg = msg;
-        this.multipliers = [];
+        this._msg = _msg;
+        this.dimensions = this._msg.dimensions;
+        this.obsAttributes = [];
+        this._multipliers = [];
         prev = 1;
-        _ref = this.msg.dimensions.id.slice().reverse();
+        _ref = this.dimensions.id.slice().reverse();
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           dimId = _ref[_i];
-          this.multipliers.push(prev);
-          prev *= this.msg.dimensions[dimId].codes.id.length;
+          this._multipliers.push(prev);
+          prev *= this.dimensions[dimId].codes.id.length;
         }
-        this.multipliers.reverse();
-        this.dimensions = this.msg.dimensions;
-        this.obsAttributes = [];
-        _ref1 = this.msg.attributes.id;
+        this._multipliers.reverse();
+        _ref1 = this._msg.attributes.id;
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
           attrId = _ref1[_j];
-          attr = this.msg.attributes[attrId];
-          if (attr.dimension.length === this.msg.dimensions.id.length) {
+          attr = this._msg.attributes[attrId];
+          if (attr.dimension.length === this.dimensions.id.length) {
             this.obsAttributes.push(attrId);
           }
         }
       }
 
       JSONArrayCube.prototype.attribute = function(id) {
-        return this.msg.attributes[id];
+        return this._msg.attributes[id];
       };
 
       JSONArrayCube.prototype.observationValue = function(key) {
@@ -52,17 +52,16 @@
         index = 0;
         for (j = _i = 0, _len = key.length; _i < _len; j = ++_i) {
           codeIndex = key[j];
-          index += codeIndex * this.multipliers[j];
+          index += codeIndex * this._multipliers[j];
         }
-        return this.msg.measure[index];
+        return this._msg.measure[index];
       };
 
       JSONArrayCube.prototype.attributeValue = function(id, key) {
-        var attr, attrVal, attributes, dim, dimensions, index, j, _i, _len, _ref, _ref1;
+        var attr, attrVal, attributes, dim, index, j, _i, _len, _ref, _ref1;
         attrVal = {};
-        attributes = this.msg.attributes;
-        dimensions = this.msg.dimensions;
-        attr = this.msg.attributes[id];
+        attributes = this._msg.attributes;
+        attr = this._msg.attributes[id];
         if (attr == null) {
           return void 0;
         }
@@ -70,7 +69,7 @@
         _ref = attr.dimension;
         for (j = _i = 0, _len = _ref.length; _i < _len; j = ++_i) {
           dim = _ref[j];
-          index += key[this.msg.dimensions[dim].index] * attr.multipliers[j];
+          index += key[this.dimensions[dim].index] * attr.multipliers[j];
         }
         attrVal.value = attr.value[index];
         if ((_ref1 = attrVal.value) == null) {
@@ -394,13 +393,21 @@
     $scope.getDimensions = function() {
       $scope.state.httpError = false;
       $scope.state.dimensionRequestRunning = true;
-      return $http.get($scope.dimUrl).success(onDimensions).error(onError);
+      return $http.get($scope.dimUrl, {
+        withCredentials: true
+      }).success(onDimensions).error(onError);
     };
     $scope.getData = function() {
+      var headers;
+      headers = {
+        headers: {}
+      };
       $scope.startRequest = new Date();
       $scope.state.httpErrorData = false;
       $scope.state.dataRequestRunning = true;
-      return $http.get($scope.dataUrl).success(onData).error(onErrorData);
+      return $http.get($scope.dataUrl, {
+        withCredentials: true
+      }).success(onData).error(onErrorData);
     };
     onDimensions = function(data, status, headers, config) {
       var code, codeId, dim, dimId, dimensions, _i, _j, _len, _len1, _ref, _ref1;

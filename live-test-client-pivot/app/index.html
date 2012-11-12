@@ -12,12 +12,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="css/bootstrap-responsive-min.css" rel="stylesheet">
 
-    <!--
+    
     <script>
       document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
     </script>
-    -->
-
+  
   </head>
   <body ng-controller="MainCtrl">
 
@@ -61,7 +60,7 @@
           <div class="control-group">
             <label class="control-label" for="inputCustomParameters">Custom Parameters (optional)</label>
             <div class="controls">
-              <input type="text" id="inputDFName" ng-model="customParams" ng-change="changeDimUrl()"></input>
+              <input type="text" id="inputCustomParams" ng-model="customParams" ng-change="changeDimUrl()"></input>
             </div>
           </div>
           
