@@ -7,7 +7,7 @@ zlib = require 'zlib'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.2.10'
+SERVER_VERSION = '0.2.12'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -604,6 +604,12 @@ validateRequest = (request, response) ->
     mediaTypes = [ 'application/json', 'application/*', '*/*' ]
     response.setHeader 'Allow', methods.join( ', ' )
     response.setHeader 'Access-Control-Allow-Methods', methods.join( ', ' )
+    response.setHeader 'Access-Control-Allow-Credentials', 'true'
+
+    if request.headers['origin']?
+        response.setHeader 'Access-Control-Allow-Origin', request.headers['origin']
+    else
+        response.setHeader 'Access-Control-Allow-Origin', '*'
 
     if methods.indexOf( request.method ) is -1
         response.statusCode = 405
@@ -627,23 +633,24 @@ validateRequest = (request, response) ->
             response.setHeader 'Content-Encoding', 'gzip'
 
     if request.headers['access-control-request-headers']?
-        response.setHeader 'access-control-allow-headers', request.headers['access-control-request-headers']
+        response.setHeader 'Access-Control-Allow-Headers', request.headers['access-control-request-headers']
 
-    path = url.parse( request.url, no, no).pathname.split '/'
-    if path[1] is 'auth'
-        # Following code is from stackoverflow
-        header = request.headers['authorization'] or ''
-        token = header.split(/\s+/).pop() or ''
-        auth = new Buffer(token, 'base64').toString()
-        parts = auth.split /:/
-        username = parts[0]
-        password = parts[1]
+    if request.method is 'GET'
+        path = url.parse( request.url, no, no).pathname.split '/'
+        if path[1] is 'auth'
+            # Following code is from stackoverflow
+            header = request.headers['authorization'] or ''
+            token = header.split(/\s+/).pop() or ''
+            auth = new Buffer(token, 'base64').toString()
+            parts = auth.split /:/
+            username = parts[0]
+            password = parts[1]
 
-        if username isnt 'test' or password isnt 'test'
-            response.setHeader 'WWW-Authenticate', 'BASIC realm="data/ECB,ECB_ICP1"'
-            response.statusCode = 401
-            response.result.errors.push 'authorization required'
-            return
+            if username isnt 'test' or password isnt 'test'
+                response.setHeader 'WWW-Authenticate', 'BASIC realm="data/ECB,ECB_ICP1"'
+                response.statusCode = 401
+                response.result.errors.push 'authorization required'
+                return
 
 
 compressResponse = (request, response) ->
@@ -700,7 +707,6 @@ handleRequest = (request, response) ->
     response.setHeader 'Server',                      "#{SERVER_NAME}/#{SERVER_VERSION}"
     response.setHeader 'Cache-Control',               'no-cache, no-store'
     response.setHeader 'Pragma',                      'no-cache'
-    response.setHeader 'Access-Control-Allow-Origin', '*'
     response.setHeader 'Content-Type',                'application/json'
     response.setHeader 'Content-Language',            'en'
     response.statusCode = 200
