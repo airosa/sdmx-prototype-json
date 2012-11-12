@@ -7,7 +7,7 @@ zlib = require 'zlib'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.2.6'
+SERVER_VERSION = '0.2.10'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -287,6 +287,8 @@ parseDataQuery = (path, request, response) ->
 parse = (request, response) ->
     request.query = {} 
     path = url.parse( request.url, no, no).pathname.split '/'
+
+    path.shift() if path[1] is 'auth'
     
     request.query.resource = path[1]
     switch request.query.resource
@@ -626,6 +628,22 @@ validateRequest = (request, response) ->
 
     if request.headers['access-control-request-headers']?
         response.setHeader 'access-control-allow-headers', request.headers['access-control-request-headers']
+
+    path = url.parse( request.url, no, no).pathname.split '/'
+    if path[1] is 'auth'
+        # Following code is from stackoverflow
+        header = request.headers['authorization'] or ''
+        token = header.split(/\s+/).pop() or ''
+        auth = new Buffer(token, 'base64').toString()
+        parts = auth.split /:/
+        username = parts[0]
+        password = parts[1]
+
+        if username isnt 'test' or password isnt 'test'
+            response.setHeader 'WWW-Authenticate', 'BASIC realm="data/ECB,ECB_ICP1"'
+            response.statusCode = 401
+            response.result.errors.push 'authorization required'
+            return
 
 
 compressResponse = (request, response) ->

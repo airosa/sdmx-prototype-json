@@ -12,7 +12,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS';
 
-  SERVER_VERSION = '0.2.6';
+  SERVER_VERSION = '0.2.10';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -314,6 +314,9 @@
     var path;
     request.query = {};
     path = url.parse(request.url, false, false).pathname.split('/');
+    if (path[1] === 'auth') {
+      path.shift();
+    }
     request.query.resource = path[1];
     switch (request.query.resource) {
       case 'data':
@@ -701,7 +704,7 @@
   };
 
   validateRequest = function(request, response) {
-    var encoding, matches, mediaTypes, methods, type, _i, _len;
+    var auth, encoding, header, matches, mediaTypes, methods, parts, password, path, token, type, username, _i, _len;
     methods = ['GET', 'HEAD', 'OPTIONS'];
     mediaTypes = ['application/json', 'application/*', '*/*'];
     response.setHeader('Allow', methods.join(', '));
@@ -732,7 +735,21 @@
       }
     }
     if (request.headers['access-control-request-headers'] != null) {
-      return response.setHeader('access-control-allow-headers', request.headers['access-control-request-headers']);
+      response.setHeader('access-control-allow-headers', request.headers['access-control-request-headers']);
+    }
+    path = url.parse(request.url, false, false).pathname.split('/');
+    if (path[1] === 'auth') {
+      header = request.headers['authorization'] || '';
+      token = header.split(/\s+/).pop() || '';
+      auth = new Buffer(token, 'base64').toString();
+      parts = auth.split(/:/);
+      username = parts[0];
+      password = parts[1];
+      if (username !== 'test' || password !== 'test') {
+        response.setHeader('WWW-Authenticate', 'BASIC realm="data/ECB,ECB_ICP1"');
+        response.statusCode = 401;
+        response.result.errors.push('authorization required');
+      }
     }
   };
 

@@ -21,7 +21,7 @@ describe 'live-test-ws parsing functions', ->
 
         for f in testData
             req = { query: {} }
-            res = { statusCode: 200, errors:[] }
+            res = { statusCode: 200, result: errors:[] }
             ws.parseFlowRef f[0], req, res
             res.statusCode.should.equal f[2]
             if f[1]?
@@ -44,7 +44,7 @@ describe 'live-test-ws parsing functions', ->
 
         for f in testData
             req = { query: {} }
-            res = { statusCode: 200, errors:[] }
+            res = { statusCode: 200, result: errors:[] }
             ws.parseProviderRef f[0], req, res
             res.statusCode.should.equal f[2]
             if f[1]?
@@ -71,7 +71,7 @@ describe 'live-test-ws parsing functions', ->
 
         for k in testData
             req = { query: {} }
-            res = { statusCode: 200, errors:[] }
+            res = { statusCode: 200, result: errors:[] }
             ws.parseKey k[0], req, res
             res.statusCode.should.equal k[2]
             if k[1]?
@@ -82,9 +82,9 @@ describe 'live-test-ws parsing functions', ->
 
     it 'parses query parameters', ->
         testData = [
-            [ '?startPeriod=2012-09', { startPeriod: new Date '2012-09-01' }        , 200 ]
-            [ '?endPeriod=2012-09',   { endPeriod: new Date '2012-09-30T23:59:59' } , 200 ]
-            [ '?detail=nodata',       { detail: 'nodata' }                          , 200 ]
+            [ '?startPeriod=2012-09', { dimensionAtObservation: 'AllDimensions', startPeriod: new Date '2012-09-01' }        , 200 ]
+            [ '?endPeriod=2012-09',   { dimensionAtObservation: 'AllDimensions', endPeriod: new Date '2012-09-30T23:59:59' } , 200 ]
+            [ '?detail=nodata',       { dimensionAtObservation: 'AllDimensions', detail: 'nodata' }                          , 200 ]
         ]
 
         for p in testData
