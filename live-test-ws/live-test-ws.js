@@ -12,7 +12,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS';
 
-  SERVER_VERSION = '0.2.6';
+  SERVER_VERSION = '0.2.11';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -314,6 +314,9 @@
     var path;
     request.query = {};
     path = url.parse(request.url, false, false).pathname.split('/');
+    if (path[1] === 'auth') {
+      path.shift();
+    }
     request.query.resource = path[1];
     switch (request.query.resource) {
       case 'data':
@@ -701,11 +704,17 @@
   };
 
   validateRequest = function(request, response) {
-    var encoding, matches, mediaTypes, methods, type, _i, _len;
+    var auth, encoding, header, matches, mediaTypes, methods, parts, password, path, token, type, username, _i, _len;
     methods = ['GET', 'HEAD', 'OPTIONS'];
     mediaTypes = ['application/json', 'application/*', '*/*'];
     response.setHeader('Allow', methods.join(', '));
     response.setHeader('Access-Control-Allow-Methods', methods.join(', '));
+    response.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (request.headers['origin'] != null) {
+      response.setHeader('Access-Control-Allow-Origin', request.headers['origin']);
+    } else {
+      response.setHeader('Access-Control-Allow-Origin', '*');
+    }
     if (methods.indexOf(request.method) === -1) {
       response.statusCode = 405;
       response.result.errors.push('Supported methods: ' + methods.join(', '));
@@ -732,7 +741,23 @@
       }
     }
     if (request.headers['access-control-request-headers'] != null) {
-      return response.setHeader('access-control-allow-headers', request.headers['access-control-request-headers']);
+      response.setHeader('Access-Control-Allow-Headers', request.headers['access-control-request-headers']);
+    }
+    if (request.method === 'GET') {
+      path = url.parse(request.url, false, false).pathname.split('/');
+      if (path[1] === 'auth') {
+        header = request.headers['authorization'] || '';
+        token = header.split(/\s+/).pop() || '';
+        auth = new Buffer(token, 'base64').toString();
+        parts = auth.split(/:/);
+        username = parts[0];
+        password = parts[1];
+        if (username !== 'test' || password !== 'test') {
+          response.setHeader('WWW-Authenticate', 'BASIC realm="data/ECB,ECB_ICP1"');
+          response.statusCode = 401;
+          response.result.errors.push('authorization required');
+        }
+      }
     }
   };
 
@@ -791,7 +816,6 @@
     response.setHeader('Server', "" + SERVER_NAME + "/" + SERVER_VERSION);
     response.setHeader('Cache-Control', 'no-cache, no-store');
     response.setHeader('Pragma', 'no-cache');
-    response.setHeader('Access-Control-Allow-Origin', '*');
     response.setHeader('Content-Type', 'application/json');
     response.setHeader('Content-Language', 'en');
     response.statusCode = 200;

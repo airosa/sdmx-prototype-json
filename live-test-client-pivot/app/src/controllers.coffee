@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.3'
+    $scope.version = '0.1.4'
 
     $scope.state =
         httpError: false
@@ -29,41 +29,41 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 #-------------------------------------------------------------------------------
 
     class JSONArrayCube 
-        constructor: (@msg) ->
-            @multipliers = []
-            prev = 1
-            for dimId in @msg.dimensions.id.slice().reverse()
-                @multipliers.push prev
-                prev *= @msg.dimensions[dimId].codes.id.length
-            @multipliers.reverse()
-            @dimensions = @msg.dimensions
+        constructor: (@_msg) ->
+            @dimensions = @_msg.dimensions
+            @obsAttributes = []            
+            @_multipliers = []
 
-            @obsAttributes = []
-            for attrId in @msg.attributes.id
-                attr = @msg.attributes[attrId]
-                if attr.dimension.length is @msg.dimensions.id.length
+            prev = 1
+            for dimId in @dimensions.id.slice().reverse()
+                @_multipliers.push prev
+                prev *= @dimensions[dimId].codes.id.length
+            @_multipliers.reverse()
+
+            for attrId in @_msg.attributes.id
+                attr = @_msg.attributes[attrId]
+                if attr.dimension.length is @dimensions.id.length
                     @obsAttributes.push attrId
 
         attribute: (id) ->
-            @msg.attributes[id]
+            @_msg.attributes[id]
  
         observationValue: (key) ->
             index = 0
             for codeIndex, j in key
-                index += codeIndex * @multipliers[j]
-            @msg.measure[index]
+                index += codeIndex * @_multipliers[j]
+            @_msg.measure[index]
 
         attributeValue: (id, key) ->
             attrVal = {}
-            attributes = @msg.attributes
-            dimensions = @msg.dimensions
+            attributes = @_msg.attributes
 
-            attr = @msg.attributes[id]
+            attr = @_msg.attributes[id]
             return undefined unless attr?
 
             index = 0
             for dim, j in attr.dimension
-                index += key[@msg.dimensions[dim].index] * attr.multipliers[j]
+                index += key[@dimensions[dim].index] * attr.multipliers[j]
             attrVal.value = attr.value[index]
             attrVal.value ?= attr.default
             attrVal.name = attr.codes[attrVal.value].name if attr.codes?
@@ -303,14 +303,15 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.getDimensions = () ->
         $scope.state.httpError = false
         $scope.state.dimensionRequestRunning = true
-        $http.get($scope.dimUrl).success(onDimensions).error(onError)
+        $http.get( $scope.dimUrl, { withCredentials: true } ).success(onDimensions).error(onError)
 
 
     $scope.getData = () ->
+        headers = headers: {}
         $scope.startRequest = new Date()
         $scope.state.httpErrorData = false
         $scope.state.dataRequestRunning = true
-        $http.get($scope.dataUrl).success(onData).error(onErrorData)
+        $http.get( $scope.dataUrl, { withCredentials: true } ).success(onData).error(onErrorData)
 
 #-------------------------------------------------------------------------------
 # Code for handling responses to requests

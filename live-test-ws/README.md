@@ -11,6 +11,7 @@ Experimental SDMX RESTful web service for testing and development. Written in Co
 - Nothing to install, just copy files to a directory
 - No settings
 - Start and stop the server from the command line
+- Supports HTTP basic authorization scheme
 
 ## Benefits
 
@@ -56,6 +57,16 @@ Following are some sample queries:
 
 For more information about the SDMX RESTful web API see the SDMX standard section 7 "Guidelines for the Use of Web Services". Please note that server supports only data queries. Queries for other resources in guidelines are currently not supported.
 
+## Authentication
+
+Server supports HTTP basic authorization scheme for testing client authentication.
+Just add 'auth' to the URL between the hostname and pathname. Server will then 
+request authentication with the basic authorization scheme. Username and password
+are both 'test'. For example:
+
+- Following query works without authentication http://localhost:8081/data/ECB_ICP1/M.FI+DE.N..4.INX?startPeriod=2007-01
+- Server requests authentication for the following query
+http://localhost:8081/auth/data/ECB_ICP1/M.FI+DE.N..4.INX?startPeriod=2007-01
 
 
 
