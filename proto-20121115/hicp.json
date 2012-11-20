@@ -1,0 +1,506 @@
+{
+  "sdmx-proto-json": "2012-11-15",
+  "id": "IREF22192010574950",
+  "test": true,
+  "prepared": "2012-11-19T11:08:26.093Z",
+  "errors": null,
+  "dimensions": {
+    "id": [
+      "FREQ",
+      "REF_AREA",
+      "ADJUSTMENT",
+      "ICP_ITEM",
+      "STS_INSTITUTION",
+      "ICP_SUFFIX",
+      "TIME_PERIOD"
+    ],
+    "dimensionAtObservation": "TIME_PERIOD",
+    "FREQ": {
+      "id": "FREQ",
+      "codes": [
+        {
+          "index": 0,
+          "id": "M",
+          "name": "Monthly",
+          "order": "0"
+        }
+      ],
+      "name": "Frequency",
+      "type": null,
+      "index": 0
+    },
+    "REF_AREA": {
+      "id": "REF_AREA",
+      "codes": [
+        {
+          "index": 0,
+          "id": "AT",
+          "name": "Austria",
+          "order": "0"
+        }
+      ],
+      "name": "Reference area",
+      "type": null,
+      "index": 1
+    },
+    "ADJUSTMENT": {
+      "id": "ADJUSTMENT",
+      "codes": [
+        {
+          "index": 0,
+          "id": "N",
+          "name": "Neither seasonally or working day adjusted",
+          "order": "0"
+        }
+      ],
+      "name": "Adjustment indicator",
+      "type": null,
+      "index": 2
+    },
+    "ICP_ITEM": {
+      "id": "ICP_ITEM",
+      "codes": [
+        {
+          "index": 0,
+          "id": "000000",
+          "name": "HICP - Overall index",
+          "order": "0"
+        }
+      ],
+      "name": "Classification - ICP context",
+      "type": null,
+      "index": 3
+    },
+    "STS_INSTITUTION": {
+      "id": "STS_INSTITUTION",
+      "codes": [
+        {
+          "index": 0,
+          "id": "4",
+          "name": "Eurostat",
+          "order": "0"
+        }
+      ],
+      "name": "Institution originating the data flow",
+      "type": null,
+      "index": 4
+    },
+    "ICP_SUFFIX": {
+      "id": "ICP_SUFFIX",
+      "codes": [
+        {
+          "index": 0,
+          "id": "INX",
+          "name": "Monthly Index",
+          "order": "0"
+        }
+      ],
+      "name": "Series variation - ICP context",
+      "type": null,
+      "index": 5
+    },
+    "TIME_PERIOD": {
+      "id": "TIME_PERIOD",
+      "codes": [
+        {
+          "index": 0,
+          "id": "2008-01",
+          "name": "2008-01",
+          "order": "144",
+          "start": "2008-01-01T00:00:00.000Z",
+          "end": "2008-01-31T23:59:59.000Z"
+        },
+        {
+          "index": 1,
+          "id": "2008-02",
+          "name": "2008-02",
+          "order": "145",
+          "start": "2008-02-01T00:00:00.000Z",
+          "end": "2008-02-29T23:59:59.000Z"
+        },
+        {
+          "index": 2,
+          "id": "2008-03",
+          "name": "2008-03",
+          "order": "146",
+          "start": "2008-03-01T00:00:00.000Z",
+          "end": "2008-03-31T23:59:59.000Z"
+        },
+        {
+          "index": 3,
+          "id": "2008-04",
+          "name": "2008-04",
+          "order": "147",
+          "start": "2008-04-01T00:00:00.000Z",
+          "end": "2008-04-30T23:59:59.000Z"
+        },
+        {
+          "index": 4,
+          "id": "2008-05",
+          "name": "2008-05",
+          "order": "148",
+          "start": "2008-05-01T00:00:00.000Z",
+          "end": "2008-05-31T23:59:59.000Z"
+        },
+        {
+          "index": 5,
+          "id": "2008-06",
+          "name": "2008-06",
+          "order": "149",
+          "start": "2008-06-01T00:00:00.000Z",
+          "end": "2008-06-30T23:59:59.000Z"
+        },
+        {
+          "index": 6,
+          "id": "2008-07",
+          "name": "2008-07",
+          "order": "150",
+          "start": "2008-07-01T00:00:00.000Z",
+          "end": "2008-07-31T23:59:59.000Z"
+        },
+        {
+          "index": 7,
+          "id": "2008-08",
+          "name": "2008-08",
+          "order": "151",
+          "start": "2008-08-01T00:00:00.000Z",
+          "end": "2008-08-31T23:59:59.000Z"
+        },
+        {
+          "index": 8,
+          "id": "2008-09",
+          "name": "2008-09",
+          "order": "152",
+          "start": "2008-09-01T00:00:00.000Z",
+          "end": "2008-09-30T23:59:59.000Z"
+        },
+        {
+          "index": 9,
+          "id": "2008-10",
+          "name": "2008-10",
+          "order": "153",
+          "start": "2008-10-01T00:00:00.000Z",
+          "end": "2008-10-31T23:59:59.000Z"
+        },
+        {
+          "index": 10,
+          "id": "2008-11",
+          "name": "2008-11",
+          "order": "154",
+          "start": "2008-11-01T00:00:00.000Z",
+          "end": "2008-11-30T23:59:59.000Z"
+        },
+        {
+          "index": 11,
+          "id": "2008-12",
+          "name": "2008-12",
+          "order": "155",
+          "start": "2008-12-01T00:00:00.000Z",
+          "end": "2008-12-31T23:59:59.000Z"
+        },
+        {
+          "index": 12,
+          "id": "2009-01",
+          "name": "2009-01",
+          "order": "156",
+          "start": "2009-01-01T00:00:00.000Z",
+          "end": "2009-01-31T23:59:59.000Z"
+        },
+        {
+          "index": 13,
+          "id": "2009-02",
+          "name": "2009-02",
+          "order": "157",
+          "start": "2009-02-01T00:00:00.000Z",
+          "end": "2009-02-28T23:59:59.000Z"
+        }
+      ],
+      "name": "Time period or range",
+      "type": "time",
+      "index": 6
+    }
+  },
+  "data": [
+    {
+      "dimensions": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "attributes": {
+        "TIME_FORMAT": "P1M",
+        "COLLECTION": "A",
+        "UNIT_INDEX_BASE": "2005 = 100",
+        "DOM_SER_IDS": "Eurostat code: VAL.IDX05.AUT.00",
+        "PUBL_PUBLIC": "SPB.T1101",
+        "PUBL_MU": "ORB.T040104; ORB.T061200"
+      },
+      "observations": [
+        [
+          0,
+          105.6
+        ],
+        [
+          1,
+          105.9
+        ],
+        [
+          2,
+          106.9
+        ],
+        [
+          3,
+          107.2
+        ],
+        [
+          4,
+          107.7
+        ],
+        [
+          5,
+          108
+        ],
+        [
+          6,
+          107.7
+        ],
+        [
+          7,
+          107.5
+        ],
+        [
+          8,
+          107.9
+        ],
+        [
+          9,
+          107.9
+        ],
+        [
+          10,
+          107.6
+        ],
+        [
+          11,
+          107.4
+        ],
+        [
+          12,
+          106.8
+        ],
+        [
+          13,
+          107.3,
+          "P"
+        ]
+      ]
+    },
+    {
+      "dimensions": [
+        null,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "attributes": {
+        "UNIT": "PURE_NUMB",
+        "UNIT_MULT": "0",
+        "DECIMALS": "1",
+        "TITLE_COMPL": "Austria - HICP - Overall index, Monthly Index, Eurostat, Neither seasonally nor working day adjusted"
+      }
+    }
+  ],
+  "attributes": {
+    "id": [
+      "TIME_FORMAT",
+      "COLLECTION",
+      "UNIT_INDEX_BASE",
+      "DOM_SER_IDS",
+      "PUBL_PUBLIC",
+      "PUBL_MU",
+      "UNIT",
+      "UNIT_MULT",
+      "DECIMALS",
+      "TITLE_COMPL",
+      "OBS_STATUS",
+      "OBS_CONF",
+      "OBS_COM"
+    ],
+    "obsAttributes": [
+      "OBS_STATUS",
+      "OBS_CONF",
+      "OBS_COM"
+    ],
+    "TIME_FORMAT": {
+      "id": "TIME_FORMAT",
+      "name": "Time format code",
+      "mandatory": true,
+      "default": null
+    },
+    "COLLECTION": {
+      "id": "COLLECTION",
+      "name": "Collection indicator",
+      "mandatory": true,
+      "default": null,
+      "codes": {
+        "id": [
+          "A"
+        ],
+        "A": {
+          "id": "A",
+          "index": 0,
+          "name": "Average of observations through period",
+          "order": 0
+        }
+      }
+    },
+    "UNIT_INDEX_BASE": {
+      "id": "UNIT_INDEX_BASE",
+      "name": "Unit index base",
+      "mandatory": false,
+      "default": null
+    },
+    "DOM_SER_IDS": {
+      "id": "DOM_SER_IDS",
+      "name": "Domestic series ids",
+      "mandatory": false,
+      "default": null
+    },
+    "PUBL_PUBLIC": {
+      "id": "PUBL_PUBLIC",
+      "name": "Source publication (public)",
+      "mandatory": false,
+      "default": null
+    },
+    "PUBL_MU": {
+      "id": "PUBL_MU",
+      "name": "Source publication (Euro area only)",
+      "mandatory": false,
+      "default": null
+    },
+    "UNIT": {
+      "id": "UNIT",
+      "name": "Unit",
+      "mandatory": true,
+      "default": null,
+      "codes": {
+        "id": [
+          "PURE_NUMB"
+        ],
+        "PURE_NUMB": {
+          "id": "PURE_NUMB",
+          "index": 0,
+          "name": "Pure number",
+          "order": 0
+        }
+      }
+    },
+    "UNIT_MULT": {
+      "id": "UNIT_MULT",
+      "name": "Unit multiplier",
+      "mandatory": true,
+      "default": null,
+      "codes": {
+        "0": {
+          "id": "0",
+          "index": 0,
+          "name": "Units",
+          "order": 0
+        },
+        "id": [
+          "0"
+        ]
+      }
+    },
+    "DECIMALS": {
+      "id": "DECIMALS",
+      "name": "Decimals",
+      "mandatory": true,
+      "default": null,
+      "codes": {
+        "1": {
+          "id": "1",
+          "index": 0,
+          "name": "One",
+          "order": 0
+        },
+        "id": [
+          "1"
+        ]
+      }
+    },
+    "TITLE_COMPL": {
+      "id": "TITLE_COMPL",
+      "name": "Title complement",
+      "mandatory": true,
+      "default": null
+    },
+    "OBS_STATUS": {
+      "id": "OBS_STATUS",
+      "name": "Observation status",
+      "mandatory": true,
+      "default": "A",
+      "codes": {
+        "id": [
+          "A",
+          "P",
+          "M",
+          "E"
+        ],
+        "A": {
+          "id": "A",
+          "index": 0,
+          "name": "Normal value",
+          "order": 0
+        },
+        "P": {
+          "id": "P",
+          "index": 1,
+          "name": "Provisional value",
+          "order": 1
+        },
+        "M": {
+          "id": "M",
+          "index": 2,
+          "name": "Missing value; data cannot exist",
+          "order": 2
+        },
+        "E": {
+          "id": "E",
+          "index": 3,
+          "name": "Estimated value",
+          "order": 3
+        }
+      }
+    },
+    "OBS_CONF": {
+      "id": "OBS_CONF",
+      "name": "Observation confidentiality",
+      "mandatory": true,
+      "default": "F",
+      "codes": {
+        "id": [
+          "F"
+        ],
+        "F": {
+          "id": "F",
+          "index": 0,
+          "name": "Free",
+          "order": 0
+        }
+      }
+    },
+    "OBS_COM": {
+      "id": "OBS_COM",
+      "name": "Observation comment",
+      "mandatory": false,
+      "default": null
+    }
+  },
+  "name": "Harmonised indices of consumer prices, breakdown by purpose of consumption"
+}
