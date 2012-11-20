@@ -3,7 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeries3Cube, JSONSeriesCube, bytesToSize, getTestUrl, testCube, testTimeSeries;
-    $scope.version = '0.1.2';
+    $scope.version = '0.1.3';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -21,7 +21,7 @@
       var config, onError, onResults, result, start, startMem, transformResponse, _ref;
       start = (new Date).getTime();
       if ((typeof window !== "undefined" && window !== null ? (_ref = window.performance) != null ? _ref.memory : void 0 : void 0) != null) {
-        startMem = window.performance.memory;
+        startMem = window.performance.memory.usedJSHeapSize;
       }
       result = {
         format: format
@@ -42,7 +42,7 @@
         start = (new Date).getTime();
         json = JSON.parse(data);
         if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
-          result.memory = window.performance.memory - startMem;
+          result.memory = window.performance.memory.usedJSHeapSize - startMem;
         }
         cube = (function() {
           switch (result.format) {
@@ -72,6 +72,7 @@
         testCube(cube, result, true, stringKey);
         calibration = (new Date).getTime() - start;
         start = (new Date).getTime();
+        result.dataChecksum = cube.checkSum();
         result.cubeChecksum = testCube(cube, result, false, stringKey);
         result.cubeAccessTime = ((new Date).getTime() - start - calibration) + ' ms';
         start = (new Date).getTime();
@@ -162,6 +163,17 @@
         return series;
       };
 
+      JSONArrayCube.prototype.checkSum = function() {
+        var obs, sum, _i, _len, _ref;
+        sum = 0;
+        _ref = this.msg.measure[0];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          obs = _ref[_i];
+          sum += +obs;
+        }
+        return sum;
+      };
+
       return JSONArrayCube;
 
     })();
@@ -222,6 +234,17 @@
         return series;
       };
 
+      JSONIndexCube.prototype.checkSum = function() {
+        var key, sum, val, _ref;
+        sum = 0;
+        _ref = this.msg.measure;
+        for (key in _ref) {
+          val = _ref[key];
+          sum += +val[0];
+        }
+        return sum;
+      };
+
       return JSONIndexCube;
 
     })();
@@ -280,6 +303,24 @@
           });
         }
         return newSeries;
+      };
+
+      JSONSeriesCube.prototype.checkSum = function() {
+        var key, key2, sum, val, val2, _ref, _ref1;
+        sum = 0;
+        _ref = this.msg.measure;
+        for (key in _ref) {
+          val = _ref[key];
+          if (val.observations == null) {
+            continue;
+          }
+          _ref1 = val.observations;
+          for (key2 in _ref1) {
+            val2 = _ref1[key2];
+            sum += +val2[0];
+          }
+        }
+        return sum;
       };
 
       return JSONSeriesCube;
@@ -345,6 +386,24 @@
         return newSeries;
       };
 
+      JSONSeries2Cube.prototype.checkSum = function() {
+        var obj, obs, sum, val, _i, _len, _ref, _ref1;
+        sum = 0;
+        _ref = this.msg.measure;
+        for (obj in _ref) {
+          val = _ref[obj];
+          if (val.observations == null) {
+            continue;
+          }
+          _ref1 = val.observations.values;
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            obs = _ref1[_i];
+            sum += +obs;
+          }
+        }
+        return sum;
+      };
+
       return JSONSeries2Cube;
 
     })();
@@ -403,6 +462,24 @@
           });
         }
         return newSeries;
+      };
+
+      JSONSeries3Cube.prototype.checkSum = function() {
+        var key, key2, sum, val, val2, _ref, _ref1;
+        sum = 0;
+        _ref = this.msg.measure;
+        for (key in _ref) {
+          val = _ref[key];
+          if (val.observations == null) {
+            continue;
+          }
+          _ref1 = val.observations;
+          for (key2 in _ref1) {
+            val2 = _ref1[key2];
+            sum += +val2.value;
+          }
+        }
+        return sum;
       };
 
       return JSONSeries3Cube;

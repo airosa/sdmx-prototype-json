@@ -9,7 +9,7 @@
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
     <script src="js/chart.js"></script>
-  
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
 
@@ -30,7 +30,7 @@
           </div>
         </div>
       </div>
-    
+
     <div class="container">
 
     <div class="row">
@@ -44,7 +44,7 @@
               <input type="url" id="inputWSName" ng-model="wsName" ng-change="changeTestUrl()" class="input-xxlarge" placeholder="http://localhost:8081" autofocus></input>
             </div>
           </div>
-          
+
           <div class="control-group">
             <label class="control-label" for="inputDFName">Data Flow Identifier</label>
             <div class="controls">
@@ -58,15 +58,15 @@
               <input type="text" id="inputKey" ng-model="key" ng-change="changeTestUrl()" class="input-xlarge"></input>
             </div>
           </div>
-          
+
           <div class="control-group">
             <label class="control-label" for="inputCustomParameters">Custom Parameters (optional)</label>
             <div class="controls">
               <input type="text" id="inputDFName" ng-model="customParams" ng-change="changeDimUrl()" class="input-xlarge"></input>
             </div>
           </div>
-          
-        </form>       
+
+        </form>
       </div>
     </div>
 
@@ -76,10 +76,10 @@
           <button type="button" class="close" ng-click="state.testRunning=false">×</button>
           <h4>Please wait</h4>
           <p>Running tests from {{wsName}}.</p>
-        </div>        
-      </div>        
-    </div>        
-    
+        </div>
+      </div>
+    </div>
+
     <div class="row" ng-show="state.httpError">
       <div class="span12">
         <div class="alert alert-error">
@@ -87,9 +87,9 @@
           <h4>Request failed</h4>
           <p>Status code: {{response.status}}</p>
           <p ng-repeat="error in response.errors">{{error}}</p>
-        </div>        
-      </div>        
-    </div>        
+        </div>
+      </div>
+    </div>
 
     <div class="row">
       <div class="span12">
@@ -105,11 +105,13 @@
           <dt>Memory</dt>
           <dd>Memory allocation (does not currently work).</dd>
           <dt>Obs count</dt>
-          <dd>Theoretical number of observations in the response. 
+          <dd>Theoretical number of observations in the response.
             Calculated by multiplying the number of codes in each dimension.</dd>
           <dt>Density</dt>
           <dd>Number of actual non-missing observation divided by the theoretical
             number of observation above.</dd>
+          <dt>Data checksum</dt>
+          <dd>Checksum calculated from the observations in response.</dd>
           <dt>Cube access</dt>
           <dd>Time to sum all observations. Each observation is accessed with the key.</dd>
           <dt>Cube checksum</dt>
@@ -142,6 +144,7 @@
               <th>Memory</th>
               <th>Obs count</th>
               <th>Density</th>
+              <th>Data checksum</th>
               <th>Cube access</th>
               <th>Cube checksum</th>
               <th>TS count</th>
@@ -158,6 +161,7 @@
               <td>{{result.memory}}</td>
               <td>{{result.obsCount}}</td>
               <td>{{result.density}}</td>
+              <td>{{result.dataChecksum}}</td>
               <td>{{result.cubeAccessTime}}</td>
               <td>{{result.cubeChecksum}}</td>
               <td>{{result.tsCount}}</td>
@@ -165,13 +169,13 @@
               <td>{{result.tsChecksum}}</td>
             </tr>
           </tbody>
-        </table>          
-      </div>        
-    </div>        
+        </table>
+      </div>
+    </div>
 
     <script src="lib/jquery-1.8.2.min.js"></script>
     <script src="lib/bootstrap.min.js"></script>
-  
+
     </div>
   </body>
 </html>

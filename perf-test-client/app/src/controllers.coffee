@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.2'
+    $scope.version = '0.1.3'
 
     $scope.state =
         httpError: false
@@ -30,7 +30,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     $scope.results = []
     $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonindex','jsonarray']
-    
+
 
 #-------------------------------------------------------------------------------
 # Code for making requests to the WS
@@ -38,9 +38,9 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.runTest = (format) ->
         start = (new Date).getTime()
         if window?.performance?.memory?
-            startMem = window.performance.memory
+            startMem = window.performance.memory.usedJSHeapSize
 
-        result = 
+        result =
             format: format
         $scope.results.push result
 
@@ -55,12 +55,12 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             result.requestTime = ((new Date).getTime() - start) + ' ms'
             result.size = bytesToSize unescape(encodeURIComponent(data.length)), 2
-            
+
             start = (new Date).getTime()
             json = JSON.parse data
 
             if window?.performance?.memory?
-                result.memory = window.performance.memory - startMem
+                result.memory = window.performance.memory.usedJSHeapSize - startMem
 
             cube = switch result.format
                 when 'jsonarray' then new JSONArrayCube json
@@ -80,6 +80,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             calibration = ((new Date).getTime() - start)
 
             start = (new Date).getTime()
+            result.dataChecksum = cube.checkSum()
             result.cubeChecksum = testCube cube, result, false, stringKey
             result.cubeAccessTime = ((new Date).getTime() - start - calibration) + ' ms'
 
@@ -95,12 +96,12 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         onError = (data, status, headers, config) ->
             $scope.state.testRunning = false
             $scope.state.httpError = true
-            
+
             $scope.response =
                 status: status
                 errors: data.errors
 
-        config = 
+        config =
             method: 'GET'
             url: getTestUrl format
             transformResponse: transformResponse
@@ -113,7 +114,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 #-------------------------------------------------------------------------------
 # Objects for the different formats
 
-    class JSONArrayCube 
+    class JSONArrayCube
         constructor: (@msg) ->
             @multipliers = []
             prev = 1
@@ -124,7 +125,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             dims = @dimensions()
             @timeDimensionCodes = @codes( dims[ dims.length - 1 ] )
- 
+
         dimensions: () ->
             dims = @msg.dimensions.id.slice()
             dims.push 'TIME_PERIOD'
@@ -141,7 +142,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             @msg.measure[0][index]
 
         timeSeries: (key) ->
-            series = 
+            series =
                 observations: []
             last = key.length
 
@@ -153,8 +154,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             series
 
+        checkSum: ()->
+            sum = 0
+            for obs in @msg.measure[0]
+                sum += +obs
+            sum
 
-    class JSONIndexCube 
+
+    class JSONIndexCube
         constructor: (@msg) ->
             @multipliers = []
             prev = 1
@@ -165,7 +172,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             dims = @dimensions()
             @timeDimensionCodes = @codes( dims[ dims.length - 1 ] )
-  
+
         dimensions: () ->
             @msg.dimensions.id.slice()
 
@@ -179,7 +186,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             @msg.measure[index]?[0]
 
         timeSeries: (key) ->
-            series = 
+            series =
                 observations: []
             last = key.length
 
@@ -191,8 +198,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             series
 
+        checkSum: () ->
+            sum = 0
+            for key, val of @msg.measure
+                sum += +val[0]
+            sum
 
-    class JSONSeriesCube 
+
+    class JSONSeriesCube
         constructor: (@msg) ->
             @dimCodes = []
             for dimId in @dimensions()
@@ -212,10 +225,9 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             if obs? then obs else undefined
 
         timeSeries: (key) ->
-            #console.log key
             keyString = key.join ':'
 
-            newSeries = 
+            newSeries =
                 observations: []
 
             series = @msg.measure[keyString]
@@ -229,8 +241,16 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             newSeries
 
+        checkSum: () ->
+            sum = 0
+            for key, val of @msg.measure
+                continue unless val.observations?
+                for key2, val2 of val.observations
+                    sum += +val2[0]
+            sum
 
-    class JSONSeries2Cube 
+
+    class JSONSeries2Cube
         constructor: (@msg) ->
             @dimCodes = []
             for dimId in @dimensions()
@@ -247,7 +267,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             keyString = key.slice(0,-1).join(':')
 
             obsIndex = @msg.measure[keyString]?.observations?.TIME_PERIOD.indexOf timePeriod
-            return undefined unless obsIndex? and -1 < obsIndex 
+            return undefined unless obsIndex? and -1 < obsIndex
 
             obs = @msg.measure[keyString].observations.values[obsIndex]
             if obs? then obs else undefined
@@ -255,7 +275,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         timeSeries: (key) ->
             keyString = key.join ':'
 
-            newSeries = 
+            newSeries =
                 observations: []
 
             series = @msg.measure[keyString]
@@ -268,8 +288,16 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             newSeries
 
+        checkSum: () ->
+            sum = 0
+            for obj, val of @msg.measure
+                continue unless val.observations?
+                for obs in val.observations.values
+                    sum += +obs
+            sum
 
-    class JSONSeries3Cube 
+
+    class JSONSeries3Cube
         constructor: (@msg) ->
             @dimCodes = []
             for dimId in @dimensions()
@@ -291,7 +319,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         timeSeries: (key) ->
             keyString = key.join ':'
 
-            newSeries = 
+            newSeries =
                 observations: []
 
             series = @msg.measure[keyString]
@@ -304,6 +332,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 newSeries.observations.push { value: obs.value }
 
             newSeries
+
+        checkSum: () ->
+            sum = 0
+            for key, val of @msg.measure
+                continue unless val.observations?
+                for key2, val2 of val.observations
+                    sum += +val2.value
+            sum
 
 #-------------------------------------------------------------------------------
 # Tests for cube access
@@ -344,7 +380,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             if not obs?
                 missing += 1
-                continue    
+                continue
 
             checkSum += obs
 
@@ -416,22 +452,22 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         megabyte = kilobyte * 1024
         gigabyte = megabyte * 1024
         terabyte = gigabyte * 1024
-       
+
         if bytes >= 0 and bytes < kilobyte
             return bytes + ' B'
-     
+
         else if bytes >= kilobyte and bytes < megabyte
             return (bytes / kilobyte).toFixed(precision) + ' KB'
-     
+
         else if bytes >= megabyte and bytes < gigabyte
             return (bytes / megabyte).toFixed(precision) + ' MB'
-     
+
         else if bytes >= gigabyte and bytes < terabyte
             return (bytes / gigabyte).toFixed(precision) + ' GB'
-     
+
         else if bytes >= terabyte
             return (bytes / terabyte).toFixed(precision) + ' TB'
-     
+
         else
             return bytes + ' B'
 
@@ -442,7 +478,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     getTestUrl = (format) ->
         testUrl = "#{$scope.wsName}/data/#{$scope.dfName}"
-        
+
         if $scope.key.length
             testUrl += "/#{$scope.key}"
 
