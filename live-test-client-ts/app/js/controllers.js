@@ -2,20 +2,21 @@
 (function() {
 
   demoModule.controller('MainCtrl', function($scope, $http) {
-    var calculateStartAndEndPeriods, createTimeSeries, getObservationAttributes, getTimeSeriesAttributes, getTimeSeriesObservations, onData, onDimensions, onError, onErrorData;
-    $scope.version = '0.1.3';
+    var calculateStartAndEndPeriods, createTimeSeries, getAttributeValue, getObservationAttributes, getTimeSeriesAttributes, getTimeSeriesObservations, onData, onData1, onData2, onDimensions, onError, onErrorData;
+    $scope.version = '0.2.0';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
       dataRequestRunning: false,
       dimensionRequestRunning: false
     };
-    $scope.wsName = 'http://live-test-ws.nodejitsu.com';
+    $scope.wsName = 'http://live-test-ws-2.nodejitsu.com';
     $scope.dfName = 'ECB_ICP1';
     $scope.key = '';
     $scope.customParams = '';
+    $scope.responseVersion = null;
     $scope.getDimensions = function() {
-      $scope.state.httpError = false;
+      $scope.state.dimensionError = false;
       $scope.state.dimensionRequestRunning = true;
       return $http.get($scope.dimUrl, {
         withCredentials: true
@@ -23,50 +24,87 @@
     };
     $scope.getData = function() {
       $scope.startRequest = new Date();
-      $scope.state.httpErrorData = false;
+      $scope.state.dataError = false;
       $scope.state.dataRequestRunning = true;
       return $http.get($scope.dataUrl, {
         withCredentials: true
       }).success(onData).error(onErrorData);
     };
     onDimensions = function(data, status, headers, config) {
-      var code, codeId, dim, dimId, dimensions, _i, _j, _len, _len1, _ref, _ref1;
+      var code, codeId, codes, dim, dimId, dimensions, i, _i, _j, _k, _l, _len, _len1, _len2, _len3, _ref, _ref1, _ref2, _ref3;
       $scope.state.dimensionRequestRunning = false;
-      $scope.state.httpError = false;
+      $scope.state.dimensionError = false;
       $scope.response = {
         status: status,
-        headers: headers
+        headers: headers,
+        errors: []
       };
+      $scope.responseVersion = data['sdmx-proto-json'];
       dimensions = $scope.dimensions = data.dimensions;
       dimensions.seriesKeyDims = [];
-      _ref = dimensions.id;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        dimId = _ref[_i];
-        dim = dimensions[dimId];
-        if (dim.type === 'time') {
-          dimensions.timeDimension = dim;
-        } else {
-          dimensions.seriesKeyDims.push(dimId);
-        }
-        _ref1 = dim.codes.id;
-        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          codeId = _ref1[_j];
-          code = dim.codes[codeId];
-          code.checked = false;
-          if (dim.type === 'time') {
-            code.start = new Date(code.start);
-            code.end = new Date(code.end);
+      switch (data['sdmx-proto-json']) {
+        case '2012-09-13':
+          _ref = dimensions.id;
+          for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+            dimId = _ref[_i];
+            dim = dimensions[dimId];
+            if (dim.type === 'time') {
+              dimensions.timeDimension = dim;
+            } else {
+              dimensions.seriesKeyDims.push(dimId);
+            }
+            codes = [];
+            _ref1 = dim.codes.id;
+            for (i = _j = 0, _len1 = _ref1.length; _j < _len1; i = ++_j) {
+              codeId = _ref1[i];
+              code = dim.codes[codeId];
+              code.checked = false;
+              code.order = i;
+              if (dim.type === 'time') {
+                code.start = new Date(code.start);
+                code.end = new Date(code.end);
+              }
+              codes.push(code);
+            }
+            dim.codes = codes;
+            dim.codes[0].checked = true;
+            dim.show = false;
           }
-        }
-        dim.codes[dim.codes.id[0]].checked = true;
-        dim.show = false;
+          break;
+        case '2012-11-15':
+          _ref2 = dimensions.id;
+          for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+            dimId = _ref2[_k];
+            dim = dimensions[dimId];
+            if (dim.type === 'time') {
+              dimensions.timeDimension = dim;
+            } else {
+              dimensions.seriesKeyDims.push(dimId);
+            }
+            _ref3 = dim.codes;
+            for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+              code = _ref3[_l];
+              code.checked = false;
+              if (dim.type === 'time') {
+                code.start = new Date(code.start);
+                code.end = new Date(code.end);
+              }
+            }
+            dim.codes[0].checked = true;
+            dim.show = false;
+          }
+          break;
+        default:
+          $scope.state.dimensionError = true;
+          $scope.response.errors.push("Unsupported response version " + data['sdmx-proto-json']);
       }
       return $scope.changeCheckedCodes();
     };
     onData = function(data, status, headers, config) {
-      var attr, attrId, code, codeId, codeIndex, codeLengths, dim, dimId, i, j, key, length, multipliers, prev, seriesCount, seriesKeyDims, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _results;
+      var start;
       $scope.requestRuntime = new Date() - $scope.startRequest;
-      $scope.state.httpErrorData = false;
+      start = new Date();
+      $scope.state.dataError = false;
       $scope.state.dataRequestRunning = false;
       $scope.response = {
         status: status,
@@ -74,6 +112,156 @@
       };
       $scope.data = data;
       data.commonDimensions = [];
+      switch (data['sdmx-proto-json']) {
+        case '2012-09-13':
+          onData1(data);
+          break;
+        case '2012-11-15':
+          onData2(data);
+          break;
+        default:
+          $scope.state.dataError = true;
+          $scope.response.errors.push("Unsupported response version " + data['sdmx-proto-json']);
+      }
+      return $scope.displayRuntime = new Date() - start;
+    };
+    getAttributeValue = function(attribute, value) {
+      if (value == null) {
+        value = attribute["default"];
+      }
+      if (attribute.codes != null) {
+        value = attribute.codes[value].name;
+      }
+      return value;
+    };
+    onData2 = function(data) {
+      var attrId, code, dim, dimId, dimensions, i, match, obj, obj2, obs, obsAttrs, series, seriesKeyDims, timePeriods, val, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9, _results;
+      seriesKeyDims = data.dimensions.seriesKeyDims = [];
+      _ref = data.dimensions.id;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        dimId = _ref[_i];
+        dim = data.dimensions[dimId];
+        if (dim.type === 'time') {
+          data.dimensions.timeDimension = dim;
+          _ref1 = dim.codes;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            code = _ref1[_j];
+            code.start = new Date(code.start);
+            code.end = new Date(code.end);
+          }
+          continue;
+        }
+        seriesKeyDims.push(dimId);
+        if (dim.codes.length === 1) {
+          data.commonDimensions.push({
+            name: dim.name,
+            value: dim.codes[0].name
+          });
+        }
+      }
+      data.timeseries = [];
+      _ref2 = data.data;
+      _results = [];
+      for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+        obj = _ref2[_k];
+        if (!((obj.observations != null) && (obj.dimensions != null))) {
+          continue;
+        }
+        series = {
+          key: obj.dimensions,
+          show: false,
+          keycodes: [],
+          keynames: [],
+          attributes: [],
+          observations: []
+        };
+        dimensions = $scope.data.dimensions;
+        _ref3 = dimensions.seriesKeyDims;
+        for (i = _l = 0, _len3 = _ref3.length; _l < _len3; i = ++_l) {
+          dimId = _ref3[i];
+          dim = dimensions[dimId];
+          code = dim.codes[obj.dimensions[i]];
+          series.keycodes.push(code.id);
+          if (dim.codes.length === 1) {
+            continue;
+          }
+          series.keynames.push({
+            name: dim.name,
+            value: code.name
+          });
+        }
+        timePeriods = dimensions.timeDimension.codes;
+        _ref4 = obj.observations;
+        for (_m = 0, _len4 = _ref4.length; _m < _len4; _m++) {
+          obs = _ref4[_m];
+          if (obs[1] == null) {
+            continue;
+          }
+          obsAttrs = [];
+          _ref5 = obs.attributes;
+          for (attrId in _ref5) {
+            val = _ref5[attrId];
+            obsAttrs.push({
+              name: data.attributes[attrId].name,
+              value: val
+            });
+          }
+          series.observations.push({
+            date: timePeriods[obs[0]].end,
+            value: obs[1],
+            attributes: obsAttrs
+          });
+        }
+        _ref6 = obj.attributes;
+        for (attrId in _ref6) {
+          val = _ref6[attrId];
+          series.attributes.push({
+            name: data.attributes[attrId].name,
+            value: getAttributeValue(data.attributes[attrId], val)
+          });
+        }
+        _ref7 = data.data;
+        for (_n = 0, _len5 = _ref7.length; _n < _len5; _n++) {
+          obj2 = _ref7[_n];
+          if (obj2.observations != null) {
+            continue;
+          }
+          if (!((obj2.attributes != null) && (obj2.dimensions != null))) {
+            continue;
+          }
+          if (obj2.dimensions.length === 0) {
+            continue;
+          }
+          match = true;
+          _ref8 = obj.dimensions;
+          for (i = _o = 0, _len6 = _ref8.length; _o < _len6; i = ++_o) {
+            code = _ref8[i];
+            if (obj2.dimensions[i] == null) {
+              continue;
+            }
+            if (code === obj2.dimensions[i]) {
+              continue;
+            }
+            match = false;
+            break;
+          }
+          if (match) {
+            _ref9 = obj2.attributes;
+            for (attrId in _ref9) {
+              val = _ref9[attrId];
+              series.attributes.push({
+                name: data.attributes[attrId].name,
+                value: getAttributeValue(data.attributes[attrId], val)
+              });
+            }
+          }
+        }
+        _results.push(data.timeseries.push(series));
+      }
+      return _results;
+    };
+    onData1 = function(data) {
+      var attr, attrId, code, codeId, codeIndex, codeLengths, dim, dimId, i, j, key, length, multipliers, prev, seriesCount, seriesKeyDims, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _p, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _results;
       seriesKeyDims = data.dimensions.seriesKeyDims = [];
       _ref = data.dimensions.id;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -270,7 +458,7 @@
     };
     onError = function(data, status, headers, config) {
       $scope.state.dimensionRequestRunning = false;
-      $scope.state.httpError = true;
+      $scope.state.dimensionError = true;
       return $scope.response = {
         status: status,
         headers: headers,
@@ -279,7 +467,7 @@
     };
     onErrorData = function(data, status, headers, config) {
       $scope.state.dataRequestRunning = false;
-      $scope.state.httpErrorData = true;
+      $scope.state.dataError = true;
       return $scope.response = {
         status: status,
         headers: headers,
@@ -310,17 +498,16 @@
     };
     $scope.changeDimUrl();
     $scope.changeCheckedCodes = function() {
-      var code, codeId, dim, dimId, dimensions, _i, _j, _len, _len1, _ref, _ref1;
+      var code, dim, dimId, dimensions, _i, _j, _len, _len1, _ref, _ref1;
       dimensions = $scope.dimensions;
       _ref = dimensions.id;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         dimId = _ref[_i];
         dim = dimensions[dimId];
         dim.codes.checked = [];
-        _ref1 = dim.codes.id;
+        _ref1 = dim.codes;
         for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-          codeId = _ref1[_j];
-          code = dim.codes[codeId];
+          code = _ref1[_j];
           if (code.checked) {
             dim.codes.checked.push(code.id);
           }
@@ -348,7 +535,13 @@
       }
       $scope.dataUrl += '/' + key.join('.');
       params = [];
-      params.push("dimensionAtObservation=AllDimensions");
+      switch ($scope.responseVersion) {
+        case '2012-11-15':
+          params.push("dimensionAtObservation=TIME_PERIOD");
+          break;
+        default:
+          params.push("dimensionAtObservation=AllDimensions");
+      }
       if ($scope.customParams.length) {
         params.push($scope.customParams);
       }

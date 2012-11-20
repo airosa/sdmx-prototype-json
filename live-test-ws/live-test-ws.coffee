@@ -742,6 +742,10 @@ handleRequest = (request, response) ->
 
 log 'starting'
 
+process.on 'uncaughtException', (err) ->
+    log err
+    process.exit()
+
 # Load data set from file
 dataset = loadDataset DATA_FILE
 

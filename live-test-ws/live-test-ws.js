@@ -12,7 +12,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS';
 
-  SERVER_VERSION = '0.2.11';
+  SERVER_VERSION = '0.2.12';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -848,6 +848,11 @@
   };
 
   log('starting');
+
+  process.on('uncaughtException', function(err) {
+    log(err);
+    return process.exit();
+  });
 
   dataset = loadDataset(DATA_FILE);
 

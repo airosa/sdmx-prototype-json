@@ -1,6 +1,6 @@
 # Draft Programmer's Guide to SDMX-PROTO-JSON Objects
 
-**Version 2012-09-21**
+**Version 2012-11-13**
 
 This guide covers programming topics related to SDMX-PROTO-JSON objects.
 
@@ -11,6 +11,7 @@ This guide covers programming topics related to SDMX-PROTO-JSON objects.
     3.  [Restrict the amount of information](#23)
     4.  [Provide faster transmission speeds](#24)
     5.  [Group data values](#25)
+    6.  [Access resources from a different domain in a browser](#26)
 3. Consuming responses
     1.  [Check compatibility](#31)
     2.  [Display dimensions](#32)
@@ -142,6 +143,29 @@ dimension. Example:
 
 Easiest is to always specify "AllDimensions" for the request unless there is a 
 specific need for grouping the data values in the response. 
+
+
+### <a name="26">2.6</a> Access resources from a different domain in a browser
+
+Cross-Origin Resource Sharing [CORS](http://www.w3.org/TR/cors/) is a web 
+standard that defines a mechanism that enables client-side cross-origin requests.
+Browsers commonly prevent a client-side Web applications running from one origin 
+from obtaining data retrieved from another origin. This would restrict applications
+making requests only to SDMX Web Services from the same origin. 
+
+CORS is supported by the browser so the client-side Web applications do not
+have to be modified to support it. However CORS is supported only in [newer browser
+versions](http://caniuse.com/cors) so Web applications should check that CORS 
+support is available.
+
+SDMX Web Services guidelines recommend using HTTP basic authentication mechanism
+for client authentication. However browsers do not generally support HTTP basic 
+authentication in cross-origin requests.
+
+CORS requires also support from the Web Service. Web Services must provide 
+HTTP response headers defined in the CORS specification otherwise the browser
+does not allow cross-origin requests.
+
 
 ----
 
