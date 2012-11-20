@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.4'
+    $scope.version = '0.2.0'
 
     $scope.state =
         httpError: false
@@ -7,7 +7,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         dataRequestRunning: false
         dimensionRequestRunning: false
 
-    $scope.wsName = 'http://live-test-ws.nodejitsu.com'
+    $scope.wsName = 'http://live-test-ws-2.nodejitsu.com'
     #$scope.wsName = 'http://localhost:8081'
     #$scope.wsName = 'http://46.137.144.117/FusionCube/ws'
 
@@ -26,18 +26,144 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     $scope.refreshRuntime = null
 
+    $scope.responseVersion = null
+
+
 #-------------------------------------------------------------------------------
 
-    class JSONArrayCube 
+    class JSONSeriesCube
         constructor: (@_msg) ->
             @dimensions = @_msg.dimensions
-            @obsAttributes = []            
+            @obsAttributes = @_msg.attributes.obsAttributes
+
+            for attrId, i in @obsAttributes
+                @_msg.attributes[attrId].obsAttributesIndex = i
+
+            # sort the data array in place
+            @_msg.data.sort @dataObjectOrder
+            for obj in @_msg.data
+                continue unless obj.observations?
+                obj.observations.sort @observationOrder
+
+        observationOrder: (a, b) ->
+            return -1 if a[0] < b[0]
+            return 1 if b[0] < a[0]
+            0
+
+        objectKeyOrder: (a, b) ->
+            for val, i in a
+                continue if a[i] is b[i]
+                return -1 if a[i] is null
+                return 1 if b[i] is null
+                return -1 if a[i] < b[i]
+                return 1
+            0
+
+        dataObjectOrder: (a, b) =>
+            return -1 if not a.dimensions? and b.dimensions?
+            return 1 if a.dimensions? and not b.dimensions?
+            return 0 if not a.dimensions? and not b.dimensions?
+            @objectKeyOrder a.dimensions, b.dimensions
+
+        dataObjectBinarySearch: (key) ->
+            startIndex  = 0
+            stopIndex = @_msg.data.length - 1
+            middleIndex = Math.floor( (stopIndex + startIndex) / 2 )
+            order = null
+
+            while startIndex <= stopIndex
+                order = @objectKeyOrder key, @_msg.data[middleIndex].dimensions
+                if order < 0
+                    stopIndex = middleIndex - 1
+                else if 0 < order
+                    startIndex = middleIndex + 1
+                else
+                    return @_msg.data[middleIndex]
+                middleIndex = Math.floor((stopIndex + startIndex)/2)
+
+            undefined
+
+        observationBinarySearch: (observations, period) ->
+            startIndex  = 0
+            stopIndex = observations.length - 1
+            middleIndex = Math.floor( (stopIndex + startIndex) / 2 )
+
+            while startIndex <= stopIndex
+                if period < observations[middleIndex][0]
+                    stopIndex = middleIndex - 1
+                else if observations[middleIndex][0] < period
+                    startIndex = middleIndex + 1
+                else
+                    return observations[middleIndex]
+                middleIndex = Math.floor((stopIndex + startIndex)/2)
+
+            undefined
+
+        attribute: (id) ->
+            @_msg.attributes[id]
+
+        observationSearch: (key) ->
+            obj = @dataObjectBinarySearch key[0...-1]
+            return undefined unless obj?
+            return undefined unless obj.observations?
+            period = key[ key.length - 1 ]
+            observation = @observationBinarySearch obj.observations, period
+
+        observationValue: (key) ->
+            observation = @observationSearch key
+            return undefined unless observation?
+            observation[1]
+
+        attributeValue: (id, key) ->
+            attrVal = {}
+            attr = @_msg.attributes[id]
+
+            if attr.obsAttributesIndex?
+                #observation level attribute
+                observation = @observationSearch key
+                return undefined unless observation?
+                attrVal.value = observation[attr.obsAttributesIndex + 2]
+            else
+                #series level attribute
+                obj = @dataObjectBinarySearch key[0...-1]
+                return undefined unless obj? and obj.attributes?
+                attrVal.value = obj.attributes[id]
+
+            attrVal.value ?= attr.default
+            return undefined unless attrVal.value?
+            attrVal.name = attr.codes[attrVal.value].name if attr.codes?
+            attrVal
+
+#-------------------------------------------------------------------------------
+
+    class JSONArrayCube
+        constructor: (@_msg) ->
+            @dimensions = @_msg.dimensions
+            @obsAttributes = []
             @_multipliers = []
+
+            # calculate and store multipliers for measure index calculations
+            @_msg.dimensions.multipliers = []
+            prev = 1
+            for dim in @_msg.dimensions.id.slice().reverse()
+                @_msg.dimensions.multipliers.push prev
+                prev *= @_msg.dimensions[dim].codes.length
+            @_msg.dimensions.multipliers.reverse()
+
+            # calculate and store multipliers for attribute value index calculations
+            for attrId in @_msg.attributes.id
+                attr = @_msg.attributes[attrId]
+                attr.multipliers = []
+                prev = 1
+                for dim in attr.dimension.slice().reverse()
+                    attr.multipliers.push prev
+                    prev *= @_msg.dimensions[dim].codes.length
+                attr.multipliers.reverse()
 
             prev = 1
             for dimId in @dimensions.id.slice().reverse()
                 @_multipliers.push prev
-                prev *= @dimensions[dimId].codes.id.length
+                prev *= @dimensions[dimId].codes.length
             @_multipliers.reverse()
 
             for attrId in @_msg.attributes.id
@@ -47,14 +173,16 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
         attribute: (id) ->
             @_msg.attributes[id]
- 
+
         observationValue: (key) ->
+            #return key
             index = 0
             for codeIndex, j in key
                 index += codeIndex * @_multipliers[j]
             @_msg.measure[index]
 
         attributeValue: (id, key) ->
+            #return undefined
             attrVal = {}
             attributes = @_msg.attributes
 
@@ -97,10 +225,10 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
 
         addDataCell: (key) ->
-            val = 
+            val =
                 decimals: @data.attributeValue 'DECIMALS', key
                 obsVal: @data.observationValue key
-                style: 
+                style:
                     'text-align': 'right'
                 key: key.join ':'
                 metadata: ''
@@ -108,9 +236,9 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 attributes: []
 
             if val.obsVal?
-                if val.decimals?
-                    val.data = val.obsVal.toFixed val.decimals.value 
-                else 
+                if val.decimals? and val.obsVal isnt '-'
+                    val.data = val.obsVal.toFixed val.decimals.value
+                else
                     val.data = val.obsVal
 
             for attrId in @data.obsAttributes
@@ -164,13 +292,13 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
                 rowPos = @rowDims.indexOf dim.id
                 colPos = @colDims.indexOf dim.id
-                
+
                 # if a dimension has only one value store in separately for display
-                if dim.codes.id.length is 1
+                if dim.codes.length is 1
                     @pageDims.push dim.id
                     @pageData.push {
                         name: dim.name
-                        value: dim.codes[dim.codes.id[0]].name
+                        value: dim.codes[0].name
                     }
 
                     @rowDims.splice rowPos, 1 if -1 < rowPos
@@ -225,7 +353,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             colCount = 1
             for dimId in @colDims.slice().reverse()
                 colSteps.push colCount
-                length = @data.dimensions[dimId].codes.id.length
+                length = @data.dimensions[dimId].codes.length
                 colCount *= length
                 colLengths.push length
             colSteps.reverse()
@@ -236,7 +364,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             rowCount = 1
             for dimId in @rowDims.slice().reverse()
                 rowSteps.push rowCount
-                length = @data.dimensions[dimId].codes.id.length
+                length = @data.dimensions[dimId].codes.length
                 rowCount *= length
                 rowLengths.push length
             rowSteps.reverse()
@@ -251,8 +379,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 for dimId, i in @colDims
                     repeat = if i is 0 then 1 else colLengths[i-1]
                     for j in [0...repeat]
-                        for id in @data.dimensions[dimId].codes.id
-                            @addHeaderCell @data.dimensions[dimId].codes[id].name, 1, colSteps[i]
+                        for code in @data.dimensions[dimId].codes
+                            @addHeaderCell code.name, 1, colSteps[i]
                     @addHeadRow()
 
             cellkey = []
@@ -277,8 +405,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                         cellkey[dim.index] = codeIndex
 
                         if codeIndex isnt codeIndexPrev
-                            code = @data.dimensions[dimId].codes.id[codeIndex]
-                            @addHeaderCell @data.dimensions[dimId].codes[code].name, rowSteps[j], 1
+                            code = @data.dimensions[dimId].codes[codeIndex]
+                            @addHeaderCell code.name, rowSteps[j], 1
 
                     for j in [0...colCount]
                         for dimId, k in @colDims
@@ -318,7 +446,9 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     onDimensions = (data, status, headers, config) ->
         $scope.state.dimensionRequestRunning = false
-        $scope.state.httpError = false        
+        $scope.state.httpError = false
+
+        $scope.responseVersion = data['sdmx-proto-json']
 
         $scope.pivotTable = new PivotTable()
 
@@ -329,25 +459,33 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         dimensions = $scope.dimensions = data.dimensions
 
         dimensions.seriesKeyDims = []
+        if data['sdmx-proto-json'] is '2012-09-13'
+            for dimId in dimensions.id
+                dim = dimensions[dimId]
+                codes = []
+                for codeId, i in dim.codes.id
+                    code = dim.codes[codeId]
+                    code.order = i
+                    codes.push code
+                dim.codes = codes
+
         for dimId in dimensions.id
             dim = dimensions[dimId]
-            
             dimensions.seriesKeyDims.push dimId
 
             if dim.type is 'time'
                 dimensions.timeDimension = dim
 
-            for codeId in dim.codes.id
-                code = dim.codes[codeId]
+            for code in dim.codes
                 code.checked = false
                 if dim.type is 'time'
                     dimensions.timeDimension = dim
                     code.start = new Date code.start
                     code.end = new Date code.end
 
-            dim.codes[dim.codes.id[0]].checked = true
-            if 1 < dim.codes.id.length
-                dim.codes[dim.codes.id[1]].checked = true
+            dim.codes[0].checked = true
+            if 1 < dim.codes.length
+                dim.codes[1].checked = true
             dim.show = false
 
         $scope.changeCheckedCodes()
@@ -361,40 +499,40 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         $scope.response =
             status: status
             headers: headers
+            errors: []
 
         $scope.data = data
         data.commonDimensions = []
         data.tableDimensions = rows: [], cols: []
+
+        if data['sdmx-proto-json'] is '2012-09-13'
+            for dimId in data.dimensions.id
+                dim = data.dimensions[dimId]
+                codes = []
+                for codeId, i in dim.codes.id
+                    code = dim.codes[codeId]
+                    code.order = i
+                    codes.push code
+                dim.codes = codes
+
         for dimId in data.dimensions.id
             dim = data.dimensions[dimId]
-            
             if dim.type is 'time'
                 data.dimensions.timeDimension = dim
-                for codeId in dim.codes.id
-                    code = dim.codes[codeId]
+                for code in dim.codes
                     # convert date strings to Javascript dates
                     code.start = new Date code.start
                     code.end = new Date code.end
- 
-        # calculate and store multipliers for measure index calculations
-        data.dimensions.multipliers = []
-        prev = 1
-        for dim in data.dimensions.id.slice().reverse()
-            data.dimensions.multipliers.push prev
-            prev *= data.dimensions[dim].codes.id.length
-        data.dimensions.multipliers.reverse()
 
-        # calculate and store multipliers for attribute value index calculations
-        for attrId in data.attributes.id
-            attr = data.attributes[attrId]
-            attr.multipliers = []
-            prev = 1
-            for dim in attr.dimension.slice().reverse()
-                attr.multipliers.push prev
-                prev *= data.dimensions[dim].codes.id.length
-            attr.multipliers.reverse()
+        switch data['sdmx-proto-json']
+            when '2012-09-13'
+                $scope.pivotTable.build new JSONArrayCube(data)
+            when '2012-11-15'
+                $scope.pivotTable.build new JSONSeriesCube(data)
+            else
+                $scope.state.httpErrorData = true
+                $scope.response.errors.push "Unsupported response version #{data['sdmx-proto-json']}"
 
-        $scope.pivotTable.build new JSONArrayCube(data)
 
 #-------------------------------------------------------------------------------
 # Code for handling request errors
@@ -437,7 +575,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     $scope.changeDimUrl = () ->
         $scope.dimUrl = "#{$scope.wsName}/data/#{$scope.dfName}"
-        
+
         if $scope.key.length
             $scope.dimUrl += "/#{$scope.key}"
 
@@ -454,8 +592,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         for dimId in dimensions.id
             dim = dimensions[dimId]
             dim.codes.checked = []
-            for codeId in dim.codes.id
-                code = dim.codes[codeId]
+            for code in dim.codes
                 dim.codes.checked.push code.id if code.checked
 
         $scope.changeDataUrl()
@@ -480,7 +617,10 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
         params = []
         params.push periods if periods.length
-        params.push "dimensionAtObservation=AllDimensions"
+        if $scope.responseVersion is '2012-11-15'
+            params.push "dimensionAtObservation=TIME_PERIOD"
+        else
+            params.push "dimensionAtObservation=AllDimensions"
         params.push $scope.customParams if $scope.customParams.length
         $scope.dataUrl += '?' + params.join '&' if params.length
 
@@ -489,9 +629,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         startPeriod = null
         endPeriod = null
         params = ''
-        
-        for codeId in timeDimension.codes.id
-            code = timeDimension.codes[codeId]
+
+        for code in timeDimension.codes
             continue unless code.checked
 
             if startPeriod?

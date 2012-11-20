@@ -8,7 +8,7 @@
     <script src="lib/angular.min.js"></script>
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
-  
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="css/bootstrap-responsive-min.css" rel="stylesheet">
 
@@ -29,7 +29,7 @@
           </div>
         </div>
       </div>
-    
+
     <div class="container">
 
     <div class="row">
@@ -43,7 +43,7 @@
               <input type="url" id="inputWSName" ng-model="wsName" ng-change="changeDimUrl()" class="input-xxlarge" placeholder="http://localhost:8081" autofocus></input>
             </div>
           </div>
-          
+
           <div class="control-group">
             <label class="control-label" for="inputDFName">Data Flow Identifier</label>
             <div class="controls">
@@ -57,21 +57,21 @@
               <input type="text" id="inputKey" ng-model="key" ng-change="changeDimUrl()"></input>
             </div>
           </div>
-          
+
           <div class="control-group">
             <label class="control-label" for="inputCustomParameters">Custom Parameters (optional)</label>
             <div class="controls">
               <input type="text" id="inputCustomParams" ng-model="customParams" ng-change="changeDimUrl()"></input>
             </div>
           </div>
-          
+
           <div class="control-group">
             <div class="controls">
               <label>{{dimUrl}}</label>
               <button type="submit" class="btn">Get Dimensions</button>
             </div>
           </div>
-        </form>       
+        </form>
       </div>
     </div>
 
@@ -82,10 +82,10 @@
           <h4>Please wait</h4>
           <p>Requesting dimensions from {{wsName}}.</p>
           <p ng-repeat="error in response.errors">{{error}}</p>
-        </div>        
-      </div>        
-    </div>        
-    
+        </div>
+      </div>
+    </div>
+
     <div class="row" ng-show="state.httpError">
       <div class="span12">
         <div class="alert alert-error">
@@ -93,9 +93,9 @@
           <h4>Request failed</h4>
           <p>Status code: {{response.status}}</p>
           <p ng-repeat="error in response.errors">{{error}}</p>
-        </div>        
-      </div>        
-    </div>        
+        </div>
+      </div>
+    </div>
 
     <div class="row">
       <div class="span12">
@@ -105,7 +105,7 @@
           <div ng-repeat="dim in dimensions.seriesKeyDims">
           <h5>
             <button ng-click="dimensions[dim].show = ! dimensions[dim].show">{{showButtonText(dimensions[dim].show)}}</button>
-            {{dimensions[dim].name}} 
+            {{dimensions[dim].name}}
             ( {{dimensions[dim].codes.id.length}} codes
             / selected codes:
             <span ng-repeat="code in dimensions[dim].codes.checked">
@@ -119,12 +119,12 @@
               <th></th><th>#</th><th>ID</th><th>Name</th>
             </thead>
             <tbody>
-              <tr ng-repeat="code in dimensions[dim].codes.id" 
-              ng-class="{success: dimensions[dim].codes[code].checked}">
-                <td><input class="toggle" type="checkbox" ng-model="dimensions[dim].codes[code].checked" ng-change="changeCheckedCodes()"/></td>
-                <td>{{dimensions[dim].codes[code].index}}</td>
-                <td>{{dimensions[dim].codes[code].id}}</td>
-                <td>{{dimensions[dim].codes[code].name}}</td>
+              <tr ng-repeat="code in dimensions[dim].codes"
+              ng-class="{success: code.checked}">
+                <td><input class="toggle" type="checkbox" ng-model="code.checked" ng-change="changeCheckedCodes()"/></td>
+                <td>{{code.index}}</td>
+                <td>{{code.id}}</td>
+                <td>{{code.name}}</td>
               </tr>
             </tbody>
           </table>
@@ -133,10 +133,10 @@
           <label>{{dataUrl}}</label>
 
           <button type="submit" class="btn" ng-click="getData()">Get Data</button>
-          
+
         </form>
-      </div>        
-    </div>        
+      </div>
+    </div>
 
     <div class="row" ng-show="state.dataRequestRunning">
       <div class="span12">
@@ -145,9 +145,9 @@
           <h4>Please wait</h4>
           <p>Requesting data from {{wsName}}.</p>
           <p ng-repeat="error in response.errors">{{error}}</p>
-        </div>        
-      </div>        
-    </div>        
+        </div>
+      </div>
+    </div>
 
     <div class="row" ng-show="state.httpErrorData">
       <div class="span12">
@@ -156,9 +156,9 @@
           <h4>Request failed</h4>
           <p>Status code: {{response.status}}</p>
           <p ng-repeat="error in response.errors">{{error}}</p>
-        </div>        
-      </div>        
-    </div>        
+        </div>
+      </div>
+    </div>
 
     <div class="row">
       <div class="span12">
@@ -170,6 +170,9 @@
           </p>
           <p>
             Refresh runtime: {{refreshRuntime}} ms
+          </p>
+          <p>
+            Response Version: {{responseVersion}}
           </p>
 
           <p ng-repeat="attr in pivotTable.pageData">
@@ -210,7 +213,7 @@
             <tr><th>&nbsp;</th><td></td></tr>
           </table>
 
-          <table class="table table-condensed table-bordered"> 
+          <table class="table table-condensed table-bordered">
             <thead>
               <tr ng-repeat="row in pivotTable.headrows">
                 <th ng-repeat="header in row.headers" colspan="{{header.colspan}}" rowspan="{{header.rowspan}}">
@@ -228,14 +231,14 @@
                 <td>
               </tr>
             </tbody>
-          </table> 
+          </table>
         </form>
-      </div>  
-    </div>      
+      </div>
+    </div>
 
     <script src="lib/jquery-1.8.2.min.js"></script>
     <script src="lib/bootstrap.min.js"></script>
-  
+
     </div>
   </body>
 </html>
