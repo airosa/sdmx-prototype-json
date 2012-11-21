@@ -3,7 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeries3Cube, JSONSeriesCube, bytesToSize, getTestUrl, testCube, testTimeSeries;
-    $scope.version = '0.1.3';
+    $scope.version = '0.1.4';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -11,8 +11,8 @@
       dimensionRequestRunning: false
     };
     $scope.wsName = 'http://46.137.144.117/FusionCube/ws';
-    $scope.dfName = 'IMF,PGI,1.0';
-    $scope.key = '....A';
+    $scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0';
+    $scope.key = 'ALL';
     $scope.customParams = '';
     $scope.customParams = 'outputdates=true';
     $scope.results = [];
@@ -44,6 +44,7 @@
         if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
           result.memory = window.performance.memory.usedJSHeapSize - startMem;
         }
+        console.log(result.format);
         cube = (function() {
           switch (result.format) {
             case 'jsonarray':
@@ -429,10 +430,10 @@
       };
 
       JSONSeries3Cube.prototype.observation = function(key) {
-        var keyString, obs, timePeriod;
+        var keyString, obs, timePeriod, _ref;
         timePeriod = key[key.length - 1];
         keyString = key.slice(0, -1).join(':');
-        obs = this.msg.measure[keyString].observations[timePeriod];
+        obs = (_ref = this.msg.measure[keyString]) != null ? _ref.observations[timePeriod] : void 0;
         if (obs != null) {
           return obs.value;
         } else {

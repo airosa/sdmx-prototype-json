@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.3'
+    $scope.version = '0.1.4'
 
     $scope.state =
         httpError: false
@@ -12,13 +12,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.wsName = 'http://46.137.144.117/FusionCube/ws'
 
     #$scope.dfName = 'ECB_ICP1'
-    $scope.dfName = 'IMF,PGI,1.0'
-    #$scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
+    #$scope.dfName = 'IMF,PGI,1.0'
+    $scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
 
     #$scope.key = ''
     #$scope.key = '....'
-    $scope.key = '....A'
+    #$scope.key = '....A'
     #$scope.key = '...GB'
+    $scope.key = 'ALL'
 
     $scope.customParams = ''
     #$scope.customParams = 'format=samistat'
@@ -62,6 +63,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             if window?.performance?.memory?
                 result.memory = window.performance.memory.usedJSHeapSize - startMem
 
+            console.log result.format
             cube = switch result.format
                 when 'jsonarray' then new JSONArrayCube json
                 when 'jsonindex' then new JSONIndexCube json
@@ -313,7 +315,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             timePeriod = key[key.length-1]
             keyString = key.slice(0,-1).join(':')
 
-            obs = @msg.measure[keyString].observations[timePeriod]
+            obs = @msg.measure[keyString]?.observations[timePeriod]
             if obs? then obs.value else undefined
 
         timeSeries: (key) ->
