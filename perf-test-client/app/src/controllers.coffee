@@ -29,12 +29,39 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 #-------------------------------------------------------------------------------
 # Setup test formats
 
+    $scope.dimensions = []
+
     $scope.results = []
     $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonindex','jsonarray']
 
 
 #-------------------------------------------------------------------------------
 # Code for making requests to the WS
+
+    $scope.getDimensions = () ->
+
+        onResults = (data, status, headers, config) ->
+            $scope.state.testRunning = false
+            $scope.state.httpError = false
+
+            $scope.dimensions = []
+
+            for dimId in data.dimensions.id
+                dim = data.dimensions[dimId]
+                codes = []
+                for key, value of dim.codes
+                    codes.push key
+                $scope.dimensions.push { id: dimId, codes: codes.join(', ') }
+
+        config =
+            method: 'GET'
+            url: "#{$scope.wsName}/data/#{$scope.dfName}/ALL?format=jsonseries&detail=seriesKeysOnly"
+            cache: false
+
+        $scope.state.httpError = false
+        $scope.state.testRunning = true
+        $http(config).success(onResults).error(onError)
+
 
     $scope.runTest = (format) ->
         start = (new Date).getTime()
@@ -63,7 +90,6 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             if window?.performance?.memory?
                 result.memory = window.performance.memory.usedJSHeapSize - startMem
 
-            console.log result.format
             cube = switch result.format
                 when 'jsonarray' then new JSONArrayCube json
                 when 'jsonindex' then new JSONIndexCube json
@@ -140,8 +166,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             index = 0
             for codeIndex, j in key
                 index += codeIndex * @multipliers[j]
-            return undefined unless @msg.measure[0]?[index]?
             @msg.measure[0][index]
+
 
         timeSeries: (key) ->
             series =
@@ -378,13 +404,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 for codePos, j in key
                     key[j] = codes[j][codePos]
 
-            obs = cube.observation key unless calibrate
+            obs = cube.observation(key) unless calibrate
 
             if not obs?
                 missing += 1
                 continue
 
             checkSum += obs
+
 
         result.density = (1 - (missing / obsCount)).toFixed 2
 

@@ -15,8 +15,43 @@
     $scope.key = 'ALL';
     $scope.customParams = '';
     $scope.customParams = 'outputdates=true';
+    $scope.dimensions = [];
     $scope.results = [];
     $scope.formats = ['jsonseries', 'jsonseries2', 'jsonseries3', 'jsonindex', 'jsonarray'];
+    $scope.getDimensions = function() {
+      var config, onResults;
+      onResults = function(data, status, headers, config) {
+        var codes, dim, dimId, key, value, _i, _len, _ref, _ref1, _results;
+        $scope.state.testRunning = false;
+        $scope.state.httpError = false;
+        $scope.dimensions = [];
+        _ref = data.dimensions.id;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
+          dim = data.dimensions[dimId];
+          codes = [];
+          _ref1 = dim.codes;
+          for (key in _ref1) {
+            value = _ref1[key];
+            codes.push(key);
+          }
+          _results.push($scope.dimensions.push({
+            id: dimId,
+            codes: codes.join(', ')
+          }));
+        }
+        return _results;
+      };
+      config = {
+        method: 'GET',
+        url: "" + $scope.wsName + "/data/" + $scope.dfName + "/ALL?format=jsonseries&detail=seriesKeysOnly",
+        cache: false
+      };
+      $scope.state.httpError = false;
+      $scope.state.testRunning = true;
+      return $http(config).success(onResults).error(onError);
+    };
     $scope.runTest = function(format) {
       var config, onError, onResults, result, start, startMem, transformResponse, _ref;
       start = (new Date).getTime();
@@ -44,7 +79,6 @@
         if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
           result.memory = window.performance.memory.usedJSHeapSize - startMem;
         }
-        console.log(result.format);
         cube = (function() {
           switch (result.format) {
             case 'jsonarray':
@@ -131,14 +165,11 @@
       };
 
       JSONArrayCube.prototype.observation = function(key) {
-        var codeIndex, index, j, _i, _len, _ref;
+        var codeIndex, index, j, _i, _len;
         index = 0;
         for (j = _i = 0, _len = key.length; _i < _len; j = ++_i) {
           codeIndex = key[j];
           index += codeIndex * this.multipliers[j];
-        }
-        if (((_ref = this.msg.measure[0]) != null ? _ref[index] : void 0) == null) {
-          return void 0;
         }
         return this.msg.measure[0][index];
       };
