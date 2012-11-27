@@ -9,7 +9,7 @@ Use this guide to better understand SDMX-PROTO-JSON objects.
 - [Data](#Data)
 - [Dimensions](#Dimensions)
 - [Attributes](#Attributes)
-- [Codes](#Codes)
+- [Code](#Code)
 
 New fields may be introduced in later versions of the field guide. Therefore
 consuming applications should tolerate the addition of new fields with ease.
@@ -19,7 +19,7 @@ and consuming applications should not rely on any specific ordering. It is safe
 to consider a nulled field and the absence of a field as the same thing.
 
 Not all fields appear in all contexts. For example response with error messages
-may not contain fields for measure, dimension and attributes.
+may not contain fields for data, dimensions and attributes.
 
 ----
 
@@ -49,7 +49,7 @@ fields. Example:
 
 ### sdmx-proto-json
 
-*String*. A string specifying the version of the SDMX-PROTO-JSON response.
+*String*. A string that specifies the version of the SDMX-PROTO-JSON response.
 Version string is the same as the version of the field guide. Example:
 
     "sdmx-proto-json": "2012-11-15"
@@ -184,7 +184,7 @@ then error is null. Example:
 
 Data object is a container for the data and reference metadata. Data object
 contains either an observation field or an attributes field or both. It normally
-contains also a dimensions field. Example:
+contains also a dimensions field. Example series:
 
     {
       "dimensions": [ 0, 0, 0, 0, 0, 0 ],
@@ -203,6 +203,28 @@ contains also a dimensions field. Example:
         [ 3, 107.3, "P" ]
       ]
     }
+
+Example group:
+
+    {
+      "dimensions": [ null, 0, 0, 0, 0, 0 ],
+      "attributes": {
+        "UNIT": "PURE_NUMB",
+        "UNIT_MULT": "0",
+        "DECIMALS": "1",
+        "TITLE_COMPL": "Austria - HICP - Overall index, Monthly Index, Eurostat, Neither seasonally nor working day adjusted"
+      }
+    }
+
+Data objects map to SDMX series and groups:
+
+- Series have both dimensions and observations fields. They have usually also attributes
+field but this optional in case there are no attributes at the series level.
+The array values in the dimensions field are always integers (null is not possible).
+- Groups have at minimum always attributes field. They also have dimensions field
+unless the attributes are attached at the data set level. Groups do not have
+observations field. The array values in the dimensions field contain nulls for the
+dimensions that are wildcarded.
 
 ### dimensions
 
@@ -276,14 +298,12 @@ the value is not *AllDimensions* then there is  only one dimension code.
       "dimensions": [ 0, 0, 1 ],
       "observations": [
         [ 0, 87.2 ],
-        [ 1, "-", "M" ]
+        [ 1, null, "M" ]
       ]
     }
 
 Next element after the dimension codes is the observation value. The data type
-for observation value is *Number*. Undefined observation value is
-*null*. Data type for a missing observation value is a *String* with the value
-"-" (HYPHEN).
+for observation value is *Number*. Data type for a reported missing observation value is a *null*.
 
 Elements after the observation value are values for the observation level attributes.
 Observation level attributes are defined in the *obsAttributes* field in the
@@ -375,7 +395,7 @@ Example:
 
 ### codes
 
-*[Codes](#Codes)*. Array of codes for the dimension. Example:
+*[Code](#Code)*. Array of codes for the dimension. Example:
 
     "codes": [
       {
@@ -470,7 +490,7 @@ Example:
 
 ### codes
 
-*[Codes](#Codes)* *nullable*. Collection of codes for the attribute. Null if the
+*[Code](#Code)* *nullable*. Collection of codes for the attribute. Null if the
 attribute is not coded. Example:
 
     "codes": {
@@ -506,38 +526,6 @@ attribute is not coded. Example:
       }
     }
 
-### default
-
-*String* or *Number* *nullable*. Defines a default value for the attribute. If
-no value is provided then this value applies. Example:
-
-    "default": "A"
-
-----
-
-## <a name="Codes"></a>Codes
-
-Codes is the container of codes for dimensions and coded attributes. Code
-contains collections of ids, indices, names and other information for individual
-codes. It also contains the total number of codes. Example:
-
-    "codes": {
-      "id": [
-        "A",
-        "Q",
-        "M"
-      ]
-      "A": {
-        # Fields for code "A"
-      },
-      "Q": {
-        # Fields for code "Q"
-      },
-      "M": {
-        # Fields for code "M"
-      }
-    }
-
 ### id (codes collection)
 
 *Array*. Identifiers for individual codes. The order of the codes is significant.
@@ -550,15 +538,46 @@ Example:
       "P"
     ]
 
+### default
+
+*String* or *Number* *nullable*. Defines a default value for the attribute. If
+no value is provided then this value applies. Example:
+
+    "default": "A"
+
+----
+
+## <a name="Code"></a>Code
+
+Codes are used in all dimensions and coded attributes (uncoded attributes do not
+use codes. Examples:
+
+    {
+      "id": "A",
+      "name": "Normal value",
+      "index": 0,
+      "order": 0
+    }
+
+
+    {
+      "index": 0,
+      "id": "2008-01",
+      "name": "2008-01",
+      "order": "144",
+      "start": "2008-01-01T00:00:00.000Z",
+      "end": "2008-01-31T23:59:59.000Z"
+    }
+
 ### id
 
-*String*. Identifier for a code. Example:
+*String*. Unique identifier for a code. Example:
 
     "id": "A"
 
 ### name
 
-*String*. Human-readable names for a code. Example:
+*String*. Human-readable name for a code. Example:
 
     "name": "Missing value; data cannot exist"
 
@@ -595,7 +614,7 @@ parent. Example:
 
 *String* *nullable*. Start date for a code in a time dimension.
 This field is useful only when the codes are time periods for a time dimension
-(dimension type is 'time'). Value is date in ISO format for the beginning of the
+(dimension type is 'time'). Value is a date in ISO format for the beginning of the
 period. Example:
 
     "start": "2007-02-01T00:00:00.000Z"
@@ -604,7 +623,7 @@ period. Example:
 
 *String* *nullable*. End date for a code in a time dimension.
 This field is useful only when the codes are time periods for a time dimension
-(dimension type is 'time'). Value is date in ISO format for the end of the
+(dimension type is 'time'). Value is a date in ISO format for the end of the
 period. Example:
 
     "end": "2007-10-31T23:59:59.000Z"
