@@ -2,22 +2,22 @@
 (function() {
 
   demoModule.controller('MainCtrl', function($scope, $http) {
-    var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeries3Cube, JSONSeriesCube, bytesToSize, getTestUrl, testCube, testTimeSeries;
-    $scope.version = '0.1.4';
+    var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeries3Cube, JSONSeries4Cube, JSONSeriesCube, bytesToSize, getTestUrl, testCube, testTimeSeries;
+    $scope.version = '0.1.5';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
       dataRequestRunning: false,
       dimensionRequestRunning: false
     };
-    $scope.wsName = 'http://46.137.144.117/FusionCube/ws';
-    $scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0';
-    $scope.key = 'ALL';
+    $scope.wsName = 'http://46.51.142.127:8080/FusionMatrix3/ws';
+    $scope.dfName = 'SDMX,T1,1.0';
+    $scope.key = 'D.0.0.0.0.1';
     $scope.customParams = '';
     $scope.customParams = 'outputdates=true';
     $scope.dimensions = [];
     $scope.results = [];
-    $scope.formats = ['jsonseries', 'jsonseries2', 'jsonseries3', 'jsonindex', 'jsonarray'];
+    $scope.formats = ['jsonseries', 'jsonseries2', 'jsonseries3', 'jsonseries4', 'jsonindex', 'jsonarray'];
     $scope.getDimensions = function() {
       var config, onResults;
       onResults = function(data, status, headers, config) {
@@ -79,6 +79,7 @@
         if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
           result.memory = window.performance.memory.usedJSHeapSize - startMem;
         }
+        start = (new Date).getTime();
         cube = (function() {
           switch (result.format) {
             case 'jsonarray':
@@ -91,12 +92,16 @@
               return new JSONSeries2Cube(json);
             case 'jsonseries3':
               return new JSONSeries3Cube(json);
+            case 'jsonseries4':
+              return new JSONSeries4Cube(json);
           }
         })();
+        result.initTime = ((new Date).getTime() - start) + ' ms';
         stringKey = (function() {
           switch (result.format) {
             case 'jsonarray':
             case 'jsonindex':
+            case 'jsonseries4':
               return false;
             default:
               return true;
@@ -515,6 +520,122 @@
       };
 
       return JSONSeries3Cube;
+
+    })();
+    JSONSeries4Cube = (function() {
+
+      function JSONSeries4Cube(msg) {
+        var code, codePos, codes, dimId, i, lastMultiplier, obj, obs, prev, seriesPos, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+        this.msg = msg;
+        this.dimCodes = {};
+        _ref = this.dimensions();
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          dimId = _ref[_i];
+          codes = [];
+          _ref1 = this.msg.dimensions[dimId].codes;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            code = _ref1[_j];
+            codes.push(code);
+          }
+          this.dimCodes[dimId] = codes;
+        }
+        this.multipliers = [];
+        prev = 1;
+        _ref2 = this.dimensions().reverse();
+        for (_k = 0, _len2 = _ref2.length; _k < _len2; _k++) {
+          dimId = _ref2[_k];
+          this.multipliers.push(prev);
+          prev *= this.codes(dimId).length;
+        }
+        this.multipliers.reverse();
+        this.obsIndex = [];
+        this.seriesIndex = [];
+        _ref3 = this.msg.data;
+        for (_l = 0, _len3 = _ref3.length; _l < _len3; _l++) {
+          obj = _ref3[_l];
+          if (obj.dimensions == null) {
+            continue;
+          }
+          seriesPos = 0;
+          _ref4 = obj.dimensions.slice(0, -1);
+          for (i = _m = 0, _len4 = _ref4.length; _m < _len4; i = ++_m) {
+            codePos = _ref4[i];
+            seriesPos += codePos * this.multipliers[i];
+          }
+          this.seriesIndex[seriesPos] = obj;
+          if (!obj.observations) {
+            continue;
+          }
+          lastMultiplier = this.multipliers[this.multipliers.length - 1];
+          _ref5 = obj.observations;
+          for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
+            obs = _ref5[_n];
+            this.obsIndex[seriesPos + (obs[0] * lastMultiplier)] = obs;
+          }
+        }
+      }
+
+      JSONSeries4Cube.prototype.dimensions = function() {
+        return this.msg.dimensions.id.slice();
+      };
+
+      JSONSeries4Cube.prototype.codes = function(dimension) {
+        return this.dimCodes[dimension];
+      };
+
+      JSONSeries4Cube.prototype.observation = function(key) {
+        var codePos, i, pos, _i, _len, _ref;
+        pos = 0;
+        for (i = _i = 0, _len = key.length; _i < _len; i = ++_i) {
+          codePos = key[i];
+          pos += this.multipliers[i] * codePos;
+        }
+        return (_ref = this.obsIndex[pos]) != null ? _ref[1] : void 0;
+      };
+
+      JSONSeries4Cube.prototype.timeSeries = function(key) {
+        var codePos, i, newSeries, obs, pos, series, _i, _j, _len, _len1, _ref;
+        pos = 0;
+        for (i = _i = 0, _len = key.length; _i < _len; i = ++_i) {
+          codePos = key[i];
+          pos += this.multipliers[i] * codePos;
+        }
+        newSeries = {
+          observations: []
+        };
+        series = this.seriesIndex[pos];
+        if (series == null) {
+          return newSeries;
+        }
+        _ref = series.observations;
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          obs = _ref[_j];
+          newSeries.observations.push({
+            value: obs[1]
+          });
+        }
+        return newSeries;
+      };
+
+      JSONSeries4Cube.prototype.checkSum = function() {
+        var obj, obs, sum, _i, _j, _len, _len1, _ref, _ref1;
+        sum = 0;
+        _ref = this.msg.data;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          obj = _ref[_i];
+          if (obj.observations == null) {
+            continue;
+          }
+          _ref1 = obj.observations;
+          for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+            obs = _ref1[_j];
+            sum += obs[1];
+          }
+        }
+        return sum;
+      };
+
+      return JSONSeries4Cube;
 
     })();
     testCube = function(cube, result, calibrate, stringKey) {

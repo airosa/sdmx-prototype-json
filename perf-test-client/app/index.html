@@ -120,6 +120,8 @@
           <dd>Uncompressed size of the JSON response in KB/MB.</dd>
           <dt>Parse JSON</dt>
           <dd>Time to parse the JSON response with JSON.parse() in ms.</dd>
+          <dt>Initialize</dt>
+          <dd>Time to initialize the data structure (create indices etc.) in memory ms.</dd>
           <dt>Memory</dt>
           <dd>Memory allocation (does not currently work).</dd>
           <dt>Obs count</dt>
@@ -159,6 +161,7 @@
               <th>Request</th>
               <th>Response size</th>
               <th>Parse JSON</th>
+              <th>Initialize</th>
               <th>Memory</th>
               <th>Obs count</th>
               <th>Density</th>
@@ -176,6 +179,7 @@
               <td>{{result.requestTime}}</td>
               <td>{{result.size}}</td>
               <td>{{result.parseTime}}</td>
+              <td>{{result.initTime}}</td>
               <td>{{result.memory}}</td>
               <td>{{result.obsCount}}</td>
               <td>{{result.density}}</td>
