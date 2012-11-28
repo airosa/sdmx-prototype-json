@@ -3,7 +3,7 @@
 
   demoModule.controller('MainCtrl', function($scope, $http) {
     var JSONArrayCube, JSONIndexCube, JSONSeries2Cube, JSONSeries3Cube, JSONSeries4Cube, JSONSeriesCube, bytesToSize, getTestUrl, testCube, testTimeSeries;
-    $scope.version = '0.1.5';
+    $scope.version = '0.1.6';
     $scope.state = {
       httpError: false,
       httpErrorData: false,
@@ -19,7 +19,15 @@
     $scope.results = [];
     $scope.formats = ['jsonseries', 'jsonseries2', 'jsonseries3', 'jsonseries4', 'jsonindex', 'jsonarray'];
     $scope.getDimensions = function() {
-      var config, onResults;
+      var config, onError, onResults;
+      onError = function(data, status, headers, config) {
+        $scope.state.testRunning = false;
+        $scope.state.httpError = true;
+        return $scope.response = {
+          status: status,
+          errors: data.errors
+        };
+      };
       onResults = function(data, status, headers, config) {
         var codes, dim, dimId, key, value, _i, _len, _ref, _ref1, _results;
         $scope.state.testRunning = false;
@@ -76,6 +84,7 @@
         result.size = bytesToSize(unescape(encodeURIComponent(data.length)), 2);
         start = (new Date).getTime();
         json = JSON.parse(data);
+        result.parseTime = ((new Date).getTime() - start) + ' ms';
         if ((typeof window !== "undefined" && window !== null ? (_ref1 = window.performance) != null ? _ref1.memory : void 0 : void 0) != null) {
           result.memory = window.performance.memory.usedJSHeapSize - startMem;
         }
@@ -107,17 +116,16 @@
               return true;
           }
         })();
-        result.parseTime = ((new Date).getTime() - start) + ' ms';
         start = (new Date).getTime();
         testCube(cube, result, true, stringKey);
-        calibration = (new Date).getTime() - start;
+        calibration = 0;
         start = (new Date).getTime();
         result.dataChecksum = cube.checkSum();
         result.cubeChecksum = testCube(cube, result, false, stringKey);
         result.cubeAccessTime = ((new Date).getTime() - start - calibration) + ' ms';
         start = (new Date).getTime();
         testTimeSeries(cube, result, true, stringKey);
-        calibration = (new Date).getTime() - start;
+        calibration = 0;
         start = (new Date).getTime();
         result.tsChecksum = testTimeSeries(cube, result, false, stringKey);
         return result.tsAccessTime = ((new Date).getTime() - start - calibration) + ' ms';
@@ -525,7 +533,7 @@
     JSONSeries4Cube = (function() {
 
       function JSONSeries4Cube(msg) {
-        var code, codePos, codes, dimId, i, lastMultiplier, obj, obs, prev, seriesPos, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+        var code, codePos, codes, dimId, i, idx, lastMultiplier, obj, obs, prev, seriesPos, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
         this.msg = msg;
         this.dimCodes = {};
         _ref = this.dimensions();
@@ -566,11 +574,12 @@
           if (!obj.observations) {
             continue;
           }
-          lastMultiplier = this.multipliers[this.multipliers.length - 1];
+          lastMultiplier = this.multipliers.slice(-1)[0];
           _ref5 = obj.observations;
           for (_n = 0, _len5 = _ref5.length; _n < _len5; _n++) {
             obs = _ref5[_n];
-            this.obsIndex[seriesPos + (obs[0] * lastMultiplier)] = obs;
+            idx = seriesPos + (obs[0] * lastMultiplier);
+            this.obsIndex[idx] = obs;
           }
         }
       }
@@ -588,7 +597,7 @@
         pos = 0;
         for (i = _i = 0, _len = key.length; _i < _len; i = ++_i) {
           codePos = key[i];
-          pos += this.multipliers[i] * codePos;
+          pos += codePos * this.multipliers[i];
         }
         return (_ref = this.obsIndex[pos]) != null ? _ref[1] : void 0;
       };

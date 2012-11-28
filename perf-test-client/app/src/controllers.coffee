@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.5'
+    $scope.version = '0.1.6'
 
     $scope.state =
         httpError: false
@@ -42,6 +42,15 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 # Code for making requests to the WS
 
     $scope.getDimensions = () ->
+
+        onError = (data, status, headers, config) ->
+            $scope.state.testRunning = false
+            $scope.state.httpError = true
+
+            $scope.response =
+                status: status
+                errors: data.errors
+
 
         onResults = (data, status, headers, config) ->
             $scope.state.testRunning = false
@@ -89,6 +98,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             start = (new Date).getTime()
             json = JSON.parse data
+            result.parseTime = ((new Date).getTime() - start) + ' ms'
 
             if window?.performance?.memory?
                 result.memory = window.performance.memory.usedJSHeapSize - startMem
@@ -107,11 +117,9 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 when 'jsonarray', 'jsonindex', 'jsonseries4' then false
                 else true
 
-            result.parseTime = ((new Date).getTime() - start) + ' ms'
-
             start = (new Date).getTime()
             testCube cube, result, true, stringKey
-            calibration = ((new Date).getTime() - start)
+            calibration = 0 #((new Date).getTime() - start)
 
             start = (new Date).getTime()
             result.dataChecksum = cube.checkSum()
@@ -120,7 +128,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             start = (new Date).getTime()
             testTimeSeries cube, result, true, stringKey
-            calibration = ((new Date).getTime() - start)
+            calibration = 0 # ((new Date).getTime() - start)
 
             start = (new Date).getTime()
             result.tsChecksum = testTimeSeries cube, result, false, stringKey
@@ -404,9 +412,10 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
                 continue unless obj.observations
 
-                lastMultiplier = @multipliers[ @multipliers.length - 1 ]
+                lastMultiplier = @multipliers[-1..][0]
                 for obs in obj.observations
-                    @obsIndex[ seriesPos + ( obs[0] * lastMultiplier) ] = obs
+                    idx = seriesPos + (obs[0] * lastMultiplier)
+                    @obsIndex[idx] = obs
 
         dimensions: () ->
             @msg.dimensions.id.slice()
@@ -417,7 +426,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         observation: (key) ->
             pos = 0
             for codePos, i in key
-                pos += @multipliers[i] * codePos
+                pos += codePos * @multipliers[i]
 
             @obsIndex[pos]?[1]
 
