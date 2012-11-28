@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.4'
+    $scope.version = '0.1.5'
 
     $scope.state =
         httpError: false
@@ -9,17 +9,20 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     #$scope.wsName = 'http://live-test-ws.nodejitsu.com'
     #$scope.wsName = 'http://localhost:8081'
-    $scope.wsName = 'http://46.137.144.117/FusionCube/ws'
+    #$scope.wsName = 'http://46.137.144.117/FusionCube/ws'
+    $scope.wsName = 'http://46.51.142.127:8080/FusionMatrix3/ws'
 
     #$scope.dfName = 'ECB_ICP1'
     #$scope.dfName = 'IMF,PGI,1.0'
-    $scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
+    #$scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
+    $scope.dfName = 'SDMX,T1,1.0'
 
     #$scope.key = ''
     #$scope.key = '....'
     #$scope.key = '....A'
     #$scope.key = '...GB'
-    $scope.key = 'ALL'
+    #$scope.key = 'ALL'
+    $scope.key = 'D.0.0.0.0.1'
 
     $scope.customParams = ''
     #$scope.customParams = 'format=samistat'
@@ -32,7 +35,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.dimensions = []
 
     $scope.results = []
-    $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonindex','jsonarray']
+    $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonseries4','jsonindex','jsonarray']
 
 
 #-------------------------------------------------------------------------------
@@ -90,15 +93,18 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             if window?.performance?.memory?
                 result.memory = window.performance.memory.usedJSHeapSize - startMem
 
+            start = (new Date).getTime()
             cube = switch result.format
                 when 'jsonarray' then new JSONArrayCube json
                 when 'jsonindex' then new JSONIndexCube json
                 when 'jsonseries' then new JSONSeriesCube json
                 when 'jsonseries2' then new JSONSeries2Cube json
                 when 'jsonseries3' then new JSONSeries3Cube json
+                when 'jsonseries4' then new JSONSeries4Cube json
+            result.initTime = ((new Date).getTime() - start) + ' ms'
 
             stringKey = switch result.format
-                when 'jsonarray', 'jsonindex' then false
+                when 'jsonarray', 'jsonindex', 'jsonseries4' then false
                 else true
 
             result.parseTime = ((new Date).getTime() - start) + ' ms'
@@ -367,6 +373,77 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 continue unless val.observations?
                 for key2, val2 of val.observations
                     sum += +val2.value
+            sum
+
+
+    class JSONSeries4Cube
+        constructor: (@msg) ->
+            @dimCodes = {}
+            for dimId in @dimensions()
+                codes = []
+                for code in @msg.dimensions[dimId].codes
+                    codes.push code
+                @dimCodes[dimId] = codes
+
+            @multipliers = []
+            prev = 1
+            for dimId in @dimensions().reverse()
+                @multipliers.push prev
+                prev *= @codes(dimId).length
+            @multipliers.reverse()
+
+            @obsIndex = []
+            @seriesIndex = []
+
+            for obj in @msg.data
+                continue unless obj.dimensions?
+                seriesPos = 0
+                for codePos, i in obj.dimensions[0...-1]
+                    seriesPos += codePos * @multipliers[i]
+                @seriesIndex[seriesPos] = obj
+
+                continue unless obj.observations
+
+                lastMultiplier = @multipliers[ @multipliers.length - 1 ]
+                for obs in obj.observations
+                    @obsIndex[ seriesPos + ( obs[0] * lastMultiplier) ] = obs
+
+        dimensions: () ->
+            @msg.dimensions.id.slice()
+
+        codes: (dimension) ->
+            @dimCodes[dimension]
+
+        observation: (key) ->
+            pos = 0
+            for codePos, i in key
+                pos += @multipliers[i] * codePos
+
+            @obsIndex[pos]?[1]
+
+        timeSeries: (key) ->
+            pos = 0
+            for codePos, i in key
+                pos += @multipliers[i] * codePos
+
+            newSeries =
+                observations: []
+
+            series = @seriesIndex[pos]
+
+            return newSeries unless series?
+
+            for obs in series.observations
+                newSeries.observations.push { value: obs[1] }
+
+            newSeries
+
+        checkSum: () ->
+            sum = 0
+            for obj in @msg.data
+                continue unless obj.observations?
+                for obs in obj.observations
+                    sum += obs[1]
             sum
 
 #-------------------------------------------------------------------------------
