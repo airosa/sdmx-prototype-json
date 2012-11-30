@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.1.6'
+    $scope.version = '0.1.7'
 
     $scope.state =
         httpError: false
@@ -35,7 +35,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     $scope.dimensions = []
 
     $scope.results = []
-    $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonseries4','jsonindex','jsonarray']
+    $scope.formats = ['jsonseries','jsonseries2','jsonseries3','jsonseries4_Index','jsonseries4_NoIndex','jsonseries4_NoIndexBinarySearch','jsonindex','jsonarray']
 
 
 #-------------------------------------------------------------------------------
@@ -110,15 +110,17 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 when 'jsonseries' then new JSONSeriesCube json
                 when 'jsonseries2' then new JSONSeries2Cube json
                 when 'jsonseries3' then new JSONSeries3Cube json
-                when 'jsonseries4' then new JSONSeries4Cube json
+                when 'jsonseries4_Index' then new JSONSeries4Cube json, true, false
+                when 'jsonseries4_NoIndex' then new JSONSeries4Cube json, false, false
+                when 'jsonseries4_NoIndexBinarySearch' then new JSONSeries4Cube json, false, true
             result.initTime = ((new Date).getTime() - start) + ' ms'
 
             stringKey = switch result.format
                 when 'jsonarray', 'jsonindex', 'jsonseries4' then false
                 else true
 
-            start = (new Date).getTime()
-            testCube cube, result, true, stringKey
+            #start = (new Date).getTime()
+            #testCube cube, result, true, stringKey
             calibration = 0 #((new Date).getTime() - start)
 
             start = (new Date).getTime()
@@ -126,8 +128,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             result.cubeChecksum = testCube cube, result, false, stringKey
             result.cubeAccessTime = ((new Date).getTime() - start - calibration) + ' ms'
 
-            start = (new Date).getTime()
-            testTimeSeries cube, result, true, stringKey
+            #start = (new Date).getTime()
+            #testTimeSeries cube, result, true, stringKey
             calibration = 0 # ((new Date).getTime() - start)
 
             start = (new Date).getTime()
@@ -182,7 +184,6 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 index += codeIndex * @multipliers[j]
             @msg.measure[0][index]
 
-
         timeSeries: (key) ->
             series =
                 observations: []
@@ -201,6 +202,13 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             for obs in @msg.measure[0]
                 sum += +obs
             sum
+
+        obsCount: ()->
+            count = 0
+            for obs in @msg.measure[0]
+                continue unless obs?
+                count += 1
+            count
 
 
     class JSONIndexCube
@@ -246,6 +254,12 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 sum += +val[0]
             sum
 
+        obsCount: () ->
+            count = 0
+            for key, val of @msg.measure
+                count += 1
+            count
+
 
     class JSONSeriesCube
         constructor: (@msg) ->
@@ -290,6 +304,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 for key2, val2 of val.observations
                     sum += +val2[0]
             sum
+
+        obsCount: () ->
+            count = 0
+            for key, val of @msg.measure
+                continue unless val.observations?
+                for key2, val2 of val.observations
+                    count += 1
+            count
 
 
     class JSONSeries2Cube
@@ -338,6 +360,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                     sum += +obs
             sum
 
+        obsCount: () ->
+            count = 0
+            for obj, val of @msg.measure
+                continue unless val.observations?
+                for obs in val.observations.values
+                    count += 1
+            count
+
 
     class JSONSeries3Cube
         constructor: (@msg) ->
@@ -383,39 +413,110 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                     sum += +val2.value
             sum
 
+        obsCount: () ->
+            count = 0
+            for key, val of @msg.measure
+                continue unless val.observations?
+                for key2, val2 of val.observations
+                    count += 1
+            count
+
 
     class JSONSeries4Cube
-        constructor: (@msg) ->
+        constructor: (@msg, @useIndex, @useBinarySearch) ->
             @dimCodes = {}
             for dimId in @dimensions()
                 codes = []
                 for code in @msg.dimensions[dimId].codes
-                    codes.push code
+                    codes.push code.index
                 @dimCodes[dimId] = codes
 
-            @multipliers = []
-            prev = 1
-            for dimId in @dimensions().reverse()
-                @multipliers.push prev
-                prev *= @codes(dimId).length
-            @multipliers.reverse()
+            if @useIndex
+                @multipliers = []
+                prev = 1
+                for dimId in @dimensions().reverse()
+                    @multipliers.push prev
+                    prev *= @codes(dimId).length
+                @multipliers.reverse()
 
-            @obsIndex = []
-            @seriesIndex = []
+                @obsIndex = []
+                @seriesIndex = []
 
-            for obj in @msg.data
-                continue unless obj.dimensions?
-                seriesPos = 0
-                for codePos, i in obj.dimensions[0...-1]
-                    seriesPos += codePos * @multipliers[i]
-                @seriesIndex[seriesPos] = obj
+                for obj in @msg.data
+                    continue unless obj.dimensions?
+                    seriesPos = 0
+                    for codePos, i in obj.dimensions
+                        seriesPos += codePos * @multipliers[i]
+                    @seriesIndex[seriesPos] = obj
 
-                continue unless obj.observations
+                    continue unless obj.observations
 
-                lastMultiplier = @multipliers[-1..][0]
-                for obs in obj.observations
-                    idx = seriesPos + (obs[0] * lastMultiplier)
-                    @obsIndex[idx] = obs
+                    lastMultiplier = @multipliers[-1..][0]
+                    for obs in obj.observations
+                        idx = seriesPos + (obs[0] * lastMultiplier)
+                        @obsIndex[idx] = obs
+                return
+
+            if @useBinarySearch
+                @msg.data.sort @dataObjectOrder
+                for obj in @msg.data
+                    continue unless obj.observations?
+                    obj.observations.sort @observationOrder
+                return
+
+        observationOrder: (a, b) ->
+            return -1 if a[0] < b[0]
+            return 1 if b[0] < a[0]
+            0
+
+        objectKeyOrder: (a, b) ->
+            for val, i in a
+                continue if a[i] is b[i]
+                return -1 if a[i] is null
+                return 1 if b[i] is null
+                return -1 if a[i] < b[i]
+                return 1
+            0
+
+        dataObjectOrder: (a, b) =>
+            return -1 if not a.dimensions? and b.dimensions?
+            return 1 if a.dimensions? and not b.dimensions?
+            return 0 if not a.dimensions? and not b.dimensions?
+            @objectKeyOrder a.dimensions, b.dimensions
+
+        dataObjectBinarySearch: (key) ->
+            startIndex  = 0
+            stopIndex = @msg.data.length - 1
+            middleIndex = Math.floor( (stopIndex + startIndex) / 2 )
+            order = null
+
+            while startIndex <= stopIndex
+                order = @objectKeyOrder key, @msg.data[middleIndex].dimensions
+                if order < 0
+                    stopIndex = middleIndex - 1
+                else if 0 < order
+                    startIndex = middleIndex + 1
+                else
+                    return @msg.data[middleIndex]
+                middleIndex = Math.floor((stopIndex + startIndex)/2)
+
+            undefined
+
+        observationBinarySearch: (observations, period) ->
+            startIndex  = 0
+            stopIndex = observations.length - 1
+            middleIndex = Math.floor( (stopIndex + startIndex) / 2 )
+
+            while startIndex <= stopIndex
+                if period < observations[middleIndex][0]
+                    stopIndex = middleIndex - 1
+                else if observations[middleIndex][0] < period
+                    startIndex = middleIndex + 1
+                else
+                    return observations[middleIndex]
+                middleIndex = Math.floor((stopIndex + startIndex)/2)
+
+            undefined
 
         dimensions: () ->
             @msg.dimensions.id.slice()
@@ -423,22 +524,55 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         codes: (dimension) ->
             @dimCodes[dimension]
 
-        observation: (key) ->
-            pos = 0
-            for codePos, i in key
-                pos += codePos * @multipliers[i]
+        findSeries: (key) ->
+            if @useBinarySearch
+                return @dataObjectBinarySearch key
+            else
+                for obj in @msg.data
+                    continue unless obj.dimensions?
 
-            @obsIndex[pos]?[1]
+                    found = true
+                    for dim, i in obj.dimensions
+                        if dim isnt key[i]
+                            found = false
+                            break
+
+                    if found
+                        return obj
+
+        observation: (key) ->
+            if @useIndex
+                pos = 0
+                for codePos, i in key
+                    pos += codePos * @multipliers[i]
+
+                @obsIndex[pos]?[1]
+            else
+                series = @findSeries key[0...-1]
+                return undefined unless series?
+
+                if @useBinarySearch
+                    obs = @observationBinarySearch series.observations, key[key.length-1]
+                    return obs[1] if obs?
+                else
+                    obsDim = key[ key.length - 1 ]
+                    for obs in series.observations
+                        return obs[1] if obs[0] is obsDim
+
+                undefined
 
         timeSeries: (key) ->
-            pos = 0
-            for codePos, i in key
-                pos += @multipliers[i] * codePos
-
             newSeries =
                 observations: []
 
-            series = @seriesIndex[pos]
+            if @useIndex
+                pos = 0
+                for codePos, i in key
+                    pos += @multipliers[i] * codePos
+
+                series = @seriesIndex[pos]
+            else
+                series = @findSeries key
 
             return newSeries unless series?
 
@@ -454,6 +588,14 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
                 for obs in obj.observations
                     sum += obs[1]
             sum
+
+        obsCount: () ->
+            count = 0
+            for obj in @msg.data
+                continue unless obj.observations?
+                for obs in obj.observations
+                    count += 1
+            count
 
 #-------------------------------------------------------------------------------
 # Tests for cube access
@@ -498,8 +640,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
             checkSum += obs
 
-
         result.density = (1 - (missing / obsCount)).toFixed 2
+        result.actualObsCount = cube.obsCount()
 
         checkSum
 
@@ -599,7 +741,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
         params = []
         params.push $scope.customParams if $scope.customParams.length
-        params.push 'format=' + format
+        params.push 'format=' + format.split('_')[0]
         testUrl += "?" + params.join '&' if params.length
         $scope.url = testUrl
         testUrl
