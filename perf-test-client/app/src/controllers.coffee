@@ -10,7 +10,8 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
     #$scope.wsName = 'http://live-test-ws.nodejitsu.com'
     #$scope.wsName = 'http://localhost:8081'
     #$scope.wsName = 'http://46.137.144.117/FusionCube/ws'
-    $scope.wsName = 'http://46.51.142.127:8080/FusionMatrix3/ws'
+    #$scope.wsName = 'http://46.51.142.127:8080/FusionMatrix3/ws'
+    $scope.wsName = 'http://46.137.144.117/FusionMatrix3/ws'
 
     #$scope.dfName = 'ECB_ICP1'
     #$scope.dfName = 'IMF,PGI,1.0'
