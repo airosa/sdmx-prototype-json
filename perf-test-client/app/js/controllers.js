@@ -11,7 +11,7 @@
       dataRequestRunning: false,
       dimensionRequestRunning: false
     };
-    $scope.wsName = 'http://46.137.144.117/FusionCube/ws';
+    $scope.wsName = 'http://46.137.144.117/FusionMatrix/ws';
     $scope.dfName = 'SDMX,T1,1.0';
     $scope.key = 'D.0.0.0.0.1';
     $scope.customParams = '';
