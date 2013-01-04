@@ -1,0 +1,350 @@
+{
+  "sdmx-proto-json": "2013-01-03",
+  "id": "6e02ecae-522f-4a76-b861-b2c07b38b3dd",
+  "prepared": "2013-01-03T12:57:58",
+  "name": "BIS Effective Exchange Rates",
+  "dimensions": {
+    "id": [
+      "FREQ",
+      "EER_TYPE",
+      "EER_BASKET",
+      "REF_AREA"
+    ],
+    "size": [
+      1,
+      1,
+      1,
+      2
+    ],
+    "FREQ": {
+      "id": "FREQ",
+      "name": "Frequency",
+      "type": null,
+      "role": null,
+      "codes": {
+        "id": [
+          "M"
+        ],
+        "M": {
+          "id": "M",
+          "name": "Monthly",
+          "index": 0
+        }
+      }
+    },
+    "EER_TYPE": {
+      "id": "EER_TYPE",
+      "name": "Type",
+      "type": null,
+      "role": null,
+      "codes": {
+        "id": [
+          "N"
+        ],
+        "N": {
+          "id": "N",
+          "name": "Nominal",
+          "index": 0
+        }
+      }
+    },
+    "EER_BASKET": {
+      "id": "EER_BASKET",
+      "name": "Basket",
+      "type": null,
+      "role": null,
+      "codes": {
+        "id": [
+          "B"
+        ],
+        "B": {
+          "id": "B",
+          "name": "Broad (61 economies)",
+          "index": 0
+        }
+      }
+    },
+    "REF_AREA": {
+      "id": "REF_AREA",
+      "name": "Reference area",
+      "type": null,
+      "role": null,
+      "codes": {
+        "id": [
+          "DK",
+          "EE"
+        ],
+        "DK": {
+          "id": "DK",
+          "name": "Denmark",
+          "index": 0
+        },
+        "EE": {
+          "id": "EE",
+          "name": "Estonia",
+          "index": 1
+        }
+      }
+    },
+    "TIME_PERIOD": {
+      "id": "TIME_PERIOD",
+      "name": "Time period or range",
+      "type": "time",
+      "role": null,
+      "codes": {
+        "id": [
+          "2011-01",
+          "2011-02",
+          "2011-03",
+          "2011-04",
+          "2011-05",
+          "2011-06",
+          "2011-07",
+          "2011-08",
+          "2011-09",
+          "2011-10",
+          "2011-11",
+          "2011-12"
+        ],
+        "2011-01": {
+          "id": "2011-01",
+          "name": "2011-01",
+          "index": 0,
+          "start": "2011-01-01T00:00:00",
+          "end": "2011-01-31T23:59:59"
+        },
+        "2011-02": {
+          "id": "2011-02",
+          "name": "2011-02",
+          "index": 1,
+          "start": "2011-02-01T00:00:00",
+          "end": "2011-02-28T23:59:59"
+        },
+        "2011-03": {
+          "id": "2011-03",
+          "name": "2011-03",
+          "index": 2,
+          "start": "2011-03-01T00:00:00",
+          "end": "2011-03-31T23:59:59"
+        },
+        "2011-04": {
+          "id": "2011-04",
+          "name": "2011-04",
+          "index": 3,
+          "start": "2011-04-01T00:00:00",
+          "end": "2011-04-30T23:59:59"
+        },
+        "2011-05": {
+          "id": "2011-05",
+          "name": "2011-05",
+          "index": 4,
+          "start": "2011-05-01T00:00:00",
+          "end": "2011-05-31T23:59:59"
+        },
+        "2011-06": {
+          "id": "2011-06",
+          "name": "2011-06",
+          "index": 5,
+          "start": "2011-06-01T00:00:00",
+          "end": "2011-06-30T23:59:59"
+        },
+        "2011-07": {
+          "id": "2011-07",
+          "name": "2011-07",
+          "index": 6,
+          "start": "2011-07-01T00:00:00",
+          "end": "2011-07-31T23:59:59"
+        },
+        "2011-08": {
+          "id": "2011-08",
+          "name": "2011-08",
+          "index": 7,
+          "start": "2011-08-01T00:00:00",
+          "end": "2011-08-31T23:59:59"
+        },
+        "2011-09": {
+          "id": "2011-09",
+          "name": "2011-09",
+          "index": 8,
+          "start": "2011-09-01T00:00:00",
+          "end": "2011-09-30T23:59:59"
+        },
+        "2011-10": {
+          "id": "2011-10",
+          "name": "2011-10",
+          "index": 9,
+          "start": "2011-10-01T00:00:00",
+          "end": "2011-10-31T23:59:59"
+        },
+        "2011-11": {
+          "id": "2011-11",
+          "name": "2011-11",
+          "index": 10,
+          "start": "2011-11-01T00:00:00",
+          "end": "2011-11-30T23:59:59"
+        },
+        "2011-12": {
+          "id": "2011-12",
+          "name": "2011-12",
+          "index": 11,
+          "start": "2011-12-01T00:00:00",
+          "end": "2011-12-31T23:59:59"
+        }
+      }
+    }
+  },
+  "attributes": {
+    "id": [
+      "TIME_FORMAT",
+      "OBS_STATUS",
+      "OBS_CONF",
+      "OBS_PRE_BREAK",
+      "COLLECTION",
+      "UNIT_MEASURE"
+    ],
+    "TIME_FORMAT": {
+      "dimension": [
+        "FREQ",
+        "EER_TYPE",
+        "EER_BASKET",
+        "REF_AREA"
+      ],
+      "id": "TIME_FORMAT",
+      "name": "Time Format Code",
+      "type": null,
+      "role": null,
+      "mandatory": "true",
+      "codes": {
+        "id": [
+          "P1M"
+        ],
+        "P1M": {
+          "id": "P1M",
+          "name": "Monthly",
+          "index": 0
+        }
+      },
+      "value": "Monthly"
+    },
+    "OBS_STATUS": {
+      "dimension": [
+        "FREQ",
+        "EER_TYPE",
+        "EER_BASKET",
+        "REF_AREA"
+      ],
+      "id": "OBS_STATUS",
+      "name": "Observation Status",
+      "type": null,
+      "role": null,
+      "mandatory": "true",
+      "codes": {
+        "id": [
+          "A"
+        ],
+        "A": {
+          "id": "A",
+          "name": "Normal",
+          "index": 0
+        }
+      },
+      "value": "Normal"
+    },
+    "OBS_CONF": {
+      "dimension": [
+        "FREQ",
+        "EER_TYPE",
+        "EER_BASKET",
+        "REF_AREA"
+      ],
+      "id": "OBS_CONF",
+      "name": "Observation Confidentiality",
+      "type": null,
+      "role": null,
+      "mandatory": "false",
+      "codes": {
+        "id": []
+      },
+      "value": []
+    },
+    "OBS_PRE_BREAK": {
+      "dimension": [
+        "FREQ",
+        "EER_TYPE",
+        "EER_BASKET",
+        "REF_AREA"
+      ],
+      "id": "OBS_PRE_BREAK",
+      "name": "Pre-Break Observation",
+      "type": null,
+      "role": null,
+      "mandatory": "false",
+      "codes": {},
+      "value": []
+    },
+    "COLLECTION": {
+      "dimension": [
+        "FREQ",
+        "EER_TYPE",
+        "EER_BASKET",
+        "REF_AREA"
+      ],
+      "id": "COLLECTION",
+      "name": "Collection Indicator",
+      "type": null,
+      "role": null,
+      "mandatory": "true",
+      "codes": {
+        "id": [
+          "A"
+        ],
+        "A": {
+          "id": "A",
+          "name": "Average of observations through period",
+          "index": 0
+        }
+      },
+      "value": "Average of observations through period"
+    },
+    "UNIT_MEASURE": {
+      "dimension": [],
+      "id": "UNIT_MEASURE",
+      "name": "Unit of measure",
+      "type": null,
+      "role": null,
+      "mandatory": "true",
+      "codes": {
+        "id": []
+      },
+      "value": []
+    }
+  },
+  "measure": [
+    [
+      98.42,
+      98.82,
+      99.69,
+      100.47,
+      100.15,
+      100.38,
+      99.99,
+      100.32,
+      99.83,
+      99.99,
+      99.84,
+      99.04,
+      98.66,
+      98.95,
+      99.63,
+      100.29,
+      99.97,
+      100.22,
+      99.91,
+      100.36,
+      100.21,
+      100.34,
+      100.08,
+      99.4
+    ]
+  ]
+}
