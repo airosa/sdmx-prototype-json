@@ -6,6 +6,7 @@
 Use this guide to better understand SDMX-PROTO-JSON objects.
 
 - [Message](#Message)
+- [Header](#Header)
 - [Data](#Data)
 - [Dimensions](#Dimensions)
 - [Attributes](#Attributes)
@@ -31,9 +32,11 @@ fields. Example:
 
     {
       "sdmx-proto-json": "2012-11-15",
-      "name": "BIS Effective Exchange Rates",
-      "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
-      "prepared": "2012-05-04T03:30:00",
+      "header": {
+        "name": "BIS Effective Exchange Rates",
+        "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
+        "prepared": "2012-05-04T03:30:00"
+      },
       "data": [
         # data objects #
       ],
@@ -52,32 +55,17 @@ fields. Example:
 
     "sdmx-proto-json": "2012-11-15"
 
-### id
+### header
 
-*String*. Unique string that identifies the message for further reference.
+*[Header](#Header)*. Header contains basic information used in message exchanges.
 Example:
 
-    "id": "TEC00034"
+    "header": {
+      "name": "BIS Effective Exchange Rates",
+      "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
+      "prepared": "2012-05-04T03:30:00"
+    },
 
-### name
-
-*String* *nullable*. Brief summary of the message contents. Example:
-
-    "name": "Short-term interest rates: Day-to-day money rates"
-
-### test
-
-*Boolean* *nullable*. Test indicates whether the message is for test purposes or not. False
-for normal messages. Example:
-
-    "test": false
-
-### prepared
-
-*String*. Prepared is the date the message was prepared. String representation
-of Date formatted according to the ISO-8601 standard. Example:
-
-    "prepared": "2012-05-04T03:30:00"
 
 ### data
 
@@ -173,6 +161,56 @@ then error is null. Example:
     ]
 
 ----
+
+
+## <a name="Header"></a>Header
+
+Header contains basic header information for the message exhange. Example
+
+    "header": {
+      "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
+      "prepared": "2013-01-03T12:54:12",
+      "name": "BIS Effective Exchange Rates"
+    }
+
+### id
+
+*String*. Unique string that identifies the message for further reference.
+Example:
+
+    "id": "TEC00034"
+
+### name
+
+*String* *nullable*. Brief summary of the message contents. Example:
+
+    "name": "Short-term interest rates: Day-to-day money rates"
+
+### test
+
+*Boolean* *nullable*. Test indicates whether the message is for test purposes or not. False
+for normal messages. Example:
+
+    "test": false
+
+### prepared
+
+*String*. Prepared is the date the message was prepared. String representation
+of Date formatted according to the ISO-8601 standard. Example:
+
+    "prepared": "2012-05-04T03:30:00"
+    
+### sender
+
+*Object*. Sender is information about the party that is transmitting the message.
+Example:
+
+    "sender": {
+      "id": "SDMX"
+    }
+
+----
+
 
 ## <a name="Data"></a>Data
 

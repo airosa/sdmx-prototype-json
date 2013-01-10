@@ -1,8 +1,13 @@
 {
   "sdmx-proto-json": "2013-01-10",
-  "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
-  "prepared": "2013-01-03T12:54:12",
-  "name": "BIS Effective Exchange Rates",
+  "header": {
+    "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
+    "prepared": "2013-01-03T12:54:12",
+    "name": "BIS Effective Exchange Rates",
+    "sender": {
+      "id": "SDMX"
+    }
+  },
   "data": [
     {
       "dimensions": [
