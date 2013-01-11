@@ -170,7 +170,10 @@ Header contains basic header information for the message exhange. Example
     "header": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
       "prepared": "2013-01-03T12:54:12",
-      "name": "BIS Effective Exchange Rates"
+      "name": "BIS Effective Exchange Rates",
+      "sender: {
+        "id": "SDMX"
+      }
     }
 
 ### id
@@ -188,8 +191,7 @@ Example:
 
 ### test
 
-*Boolean* *nullable*. Test indicates whether the message is for test purposes or not. False
-for normal messages. Example:
+*Boolean* *nullable*. Test indicates whether the message is for test purposes or not. False for normal messages. Example:
 
     "test": false
 
@@ -202,12 +204,109 @@ of Date formatted according to the ISO-8601 standard. Example:
     
 ### sender
 
+```Currently subset of the SMDX-Ml functionality```
+
 *Object*. Sender is information about the party that is transmitting the message.
+Sender contains the following fields:
+
+* id - *string*. The id attribute holds the identification of the party.
+* name - *string* *nullable*. Name is a human-readable name of the party.
+
 Example:
 
     "sender": {
       "id": "SDMX"
     }
+    
+### structure
+
+```Currently subset of the SMDX-ML functionality```
+
+*Object* *nullable*. Structure provides a reference to the structure (either explicitly or through a structure usage reference) that describes the format of data or reference metadata. In addition to the structure, it is required to also supply the namespace of the structure specific schema that defines the format of the data/metadata. For cross sectional data, additional information is also required to state which dimension is being used at the observation level. This information will allow the structure specific schema to be generated. For generic format messages, this is used to simply reference the underlying structure. It is not mandatory in these cases and the generic data/metadata sets will require this reference explicitly.
+
+Structure contains following fields:
+
+* dimensionAtObservation - *String* *nullable*. The dimensionAtObservation is used to reference the dimension at the observation level for data messages. This can also be given the explicit value of "AllDimensions" which denotes that the cross sectional data is in the flat format.
+
+* explicitMeasures - *Boolean* *nullable*. The explicitMeasures indicates whether explicit measures are used in the cross sectional format. This is only applicable for the measure dimension as the dimension at the observation level or the flat structure.
+
+* ref - *Object* *nullable*. References the structure which defines the structure of the data or metadata set. Ref contains following fields:
+
+    * agencyID - *String*. The agencyID attribute identifies the maintenance agency for the object being referenced (agency-id in the URN structure). This is optional to allow for local references (where the other reference fields are inferred from another context), but all complete references will require this.
+    
+    * id - *String*. The id attribute identifies the object being referenced, and is therefore always required.
+    
+    * version - *String* *nullable*. The version attribute identifies the version of the object being reference, if applicable. If this is available, a default value of 1.0 will always apply.
+    
+Example:
+
+    "structure": {
+      "dimensionAtObservation": "AllDimensions",
+      "ref": {
+        "agencyID": "ECB",
+        "id": "ECB_EXR1",
+        "version": "1.0"
+      }
+    } 
+
+    
+### dataSetID
+
+*String* *nullable*. DataSetID provides an identifier for a contained data set.
+Example:
+
+    "dataSetID": "ECB_EXR1"
+
+### dataSetAction
+
+```Following is a direct copy from the SDMX-ML Schema Docs```
+
+*String* *nullable*. DataSetAction provides a list of actions, describing the intention of the data transmission from the sender's side. Each action provided at the data or metadata set level applies to the entire data set for which it is given. Note that the actions indicated in the Message Header are optional, and used to summarize specific actions indicated with this data type for all registry interactions. The "Informational" value is used when the message contains information in response to a query, rather than being used to invoke a maintenance activity. ```Default value is Informational```
+
+* Append - this is an incremental update for an existing data/metadata set or the provision of new data or documentation (attribute values) formerly absent. If any of the supplied data or metadata is already present, it will not replace that data or metadata. This corresponds to the "Update" value found in version 1.0 of the SDMX Technical Standards.
+
+* Replace - data/metadata is to be replaced, and may also include additional data/metadata to be appended. The replacement occurs at the level of the observation - that is, it is not possible to replace an entire series.
+
+* Delete - data/metadata is to be deleted. Deletion occurs at the lowest level object. For instance, if a delete data message contains a series with no observations, then the entire series will be deleted. If the series contains observations, then only those observations specified will be deleted. The same basic concept applies for attributes. If a series or observation in a delete message contains attributes, then only those attributes will be deleted.
+
+* Informational - data/metadata is being exchanged for informational purposes only, and not meant to update a system.
+
+Example:
+
+    "dataSetAction": "Informational"
+
+### extracted
+
+*String* *nullable*. Extracted is a time-stamp from the system rendering the data.
+Example:
+
+    "extracted": "2012-05-04T03:30:00"
+
+### embargoDate
+
+*String* *nullable*. EmbargoDate holds a ISO-8601 time period before which the data included in this message is not available. Example:
+
+    "embargoDate": "2012-05-04"
+    
+### source
+
+*Array* *nullable*. Source provides human-readable information about the source of the data. Example:
+
+    "source": [
+      "European Central Bank and European Commission"
+    ]
+    
+### reportingBegin
+
+*String* *nullable*. ReportingBegin provides the start of the time period covered by the message. Example:
+
+    "reportingBegin": "2012-05-04"
+
+### reportingEnd
+
+*String* *nullable*. ReportingEnd provides the end of the time period covered by the message. Example:
+
+    "reportingEnd": "2012-06-01"
 
 ----
 
