@@ -703,7 +703,7 @@ code index in the id array. Example:
 
 ### order
 
-*Number*. Default display order for the code. Example:
+*Number* *nullable*. Default display order for the code. Example:
 
     "order": 64
 
