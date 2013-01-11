@@ -1,10 +1,10 @@
-
 # Draft Field Guide to SDMX-PROTO-JSON Objects
 
 **Version for jsonseries format**
 
 Use this guide to better understand SDMX-PROTO-JSON objects.
 
+- [Introduction](#Introduction)
 - [Message](#Message)
 - [Header](#Header)
 - [Data](#Data)
@@ -21,6 +21,34 @@ to consider a nulled field and the absence of a field as the same thing.
 
 Not all fields appear in all contexts. For example response with error messages
 may not contain fields for data, dimensions and attributes.
+
+----
+
+## <a name="Introduction"></a>Introduction
+Let's first start with a brief introduction about the SDMX information model.
+
+In order to make sense of some statistical data, we need to know the concepts 
+associated with them. For example, on its own the figure 1.2953 is pretty meaningless, 
+but if we know that this is an exchange rate for the US dollar against the euro on 
+23 November 2006, it starts making more sense. 
+
+There are two types of concepts: dimensions and attributes. Dimensions, when combined, 
+allow to uniquely identify statistical data. Attributes on the other hand do not help 
+identifying statistical data, but they add useful information (like the unit of measure 
+or the number of decimals). 
+
+The measurement of some phenomenon (e.g. the figure 1.2953 mentioned above) is known as an
+"observation" in SDMX. Observations are grouped together into a "dataset". However, there
+can also be an intermediate grouping. For example, all exchange rates for the US dollar 
+against the euro can be measured on a daily basis and these measures can then be
+grouped together, in a so-called "time series". Similarily, you can group a collection of 
+observations made at the same point in time, in a "cross-section" (for example, 
+the values of the US dollar, the Japanese yen and the Swiss franc against the euro at a
+particular date).
+
+The SDMX information model is much richer than this limited introduction, 
+however the above should be sufficient to understand the JSON format proposed here. For
+additional information, please refer to the [SDMX documentation](http://sdmx.org/?page_id=10).
 
 ----
 
