@@ -155,13 +155,11 @@ the observation values. Example:
         "id": "OBS_COM",
         "name": "Observation comment",
         "code": null,
-        "mandatory": false,
         "default": null
       },
       "UNIT_MULT": {
         "id": "UNIT_MULT",
         "name": "Unit multiplier",
-        "mandatory": true,
         "codes": {
           "id": [
             "0"
@@ -595,12 +593,6 @@ Example:
 *String* *nullable*. Provides a description for the object. Example:
 
     "description": "Information on the quality of a value or an unusual or missing value."
-
-### mandatory
-
-*Boolean*. Indicates whether a value must be provided for the attribute. Example:
-
-    "mandatory": false
 
 ### codes
 
