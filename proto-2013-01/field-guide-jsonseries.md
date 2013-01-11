@@ -339,7 +339,11 @@ Example:
 
 ## <a name="Data"></a>Data
 
-Data object is a container for the data and reference metadata. Data object contains three fields: dimensions, attributes and observations. Example:
+Data object is a container for the data and reference metadata. 
+
+Data can be represented as a flat list of observations or can be grouped into collections (slices) that can be either time series or cross-sections.
+
+When data are grouped into collections, data object contains three fields: dimensions, attributes and observations. Example:
 
     {
       "dimensions": [ 0, 0, 0, 0, 0, 0 ],
@@ -355,33 +359,17 @@ Data object is a container for the data and reference metadata. Data object cont
       ]
     }
 
-Data objects map directly to series and groups in SDMX-ML messages:
-
-- Series have both dimensions and observations fields. Attributes
-field is optional in case there are no attributes at the series level.
-The array values in the dimensions field are always integers (null is not possible).
-- Groups have always attributes field. They also have dimensions field
-unless the attributes are attached at the data set level. Groups do not have
-observations field. The array values in the dimensions field contain nulls for the
-dimensions that are wildcarded.
+In this case, data objects map directly to series in SDMX-ML messages (series, in SDMX 2.1, is a generic term that covers both time series and cross-sections). Series have both dimensions and observations fields. Attributes
+field is optional in case there are no attributes at the series level. The array values in the dimensions field are always integers (null is not possible).
 
 ### dimensions
 
 *Array* *nullable*. An array of dimension values. Each value is an index to the
-*codes* array in the respective *Dimension* object. If the code is *null* then
-code value for respective dimension is wildcarded. Example:
+*codes* array in the respective *Dimension* object. 
 
     // Dimensions for series
     "dimensions": [
       0,
-      93,
-      12,
-      1
-    ]
-
-    // Dimensions for group at sibling set level
-    "dimensions": [
-      null,
       93,
       12,
       1
