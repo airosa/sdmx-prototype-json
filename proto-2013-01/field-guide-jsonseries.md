@@ -134,7 +134,6 @@ and attribute values. Example:
           {
             "id": "N",
             "name": "Neither seasonally or working day adjusted",
-            "index": 0,
             "order": 0
           }
         ]
@@ -167,7 +166,6 @@ the observation values. Example:
           "0": {
             "id": "0",
             "name": "Units",
-            "index": 0,
             "order": 0
           }
         },
@@ -501,7 +499,6 @@ Example:
       {
         "id": "M",
         "name": "Monthly",
-        "index": 0,
         "order": 0
       }
     ]
@@ -597,25 +594,21 @@ attribute is not coded. Example:
       "A": {
         "id": "A",
         "name": "Normal value",
-        "index": 0,
         "order": 0
       },
       "E": {
         "id": "E",
         "name": "Estimated value",
-        "index": 1,
         "order": 1
       },
       "M": {
         "id": "M",
         "name": "Missing value; data cannot exist",
-        "index": 2,
         "order": 2
       },
       "A": {
         "id": "P",
         "name": "Provisional value",
-        "index": 3,
         "order": 3
       }
     }
@@ -649,13 +642,11 @@ use codes). Examples:
     {
       "id": "A",
       "name": "Normal value",
-      "index": 0,
       "order": 0
     }
 
 
     {
-      "index": 0,
       "id": "2008-01",
       "name": "2008-01",
       "order": "144",
@@ -681,13 +672,6 @@ use codes). Examples:
 description of the code. Example:
 
     "description": "Provisional value"
-
-### index
-
-*Number*. Array index for a code. Index is always same as the
-code index in the id array. Example:
-
-    "index": 0
 
 ### order
 
