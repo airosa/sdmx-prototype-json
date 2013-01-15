@@ -129,7 +129,7 @@ and attribute values. Example:
       "ADJUSTMENT": {
         "id": "ADJUSTMENT",
         "name": "Adjustment indicator",
-        "type": null,
+        "role": null,
         "codes": [
           {
             "id": "N",
@@ -477,10 +477,10 @@ Example:
 
     "description": "The time interval at which observations occur over a given time period."
 
-### type
+### role
 
-*String* *nullable*. Defines the dimension type. For normal dimensions the value
-is null. There are two special dimension types:
+*String* *nullable*. Defines the dimension role(s). For normal dimensions the value
+is null. Dimensions can play various roles, such as, for example:
 
 - **time**. Time dimension is a special dimension which designates the period in
 time in which the data identified by the full series key applies.
