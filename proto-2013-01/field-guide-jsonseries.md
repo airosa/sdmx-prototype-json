@@ -7,10 +7,9 @@ Use this guide to better understand SDMX-PROTO-JSON objects.
 - [Introduction](#Introduction)
 - [Message](#Message)
 - [Header](#Header)
-- [Data](#Data)
+- [DataSets](#DataSets)
 - [Dimensions](#Dimensions)
 - [Attributes](#Attributes)
-- [Code](#Code)
 
 New fields may be introduced in later versions of the field guide. Therefore
 consuming applications should tolerate the addition of new fields with ease.
@@ -65,8 +64,8 @@ fields. Example:
         "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
         "prepared": "2012-05-04T03:30:00"
       },
-      "data": [
-        # data objects #
+      "dataSets": [
+        # data set objects #
       ],
       "dimensions": {
         # fields for dimensions #
@@ -95,26 +94,24 @@ Example:
     },
 
 
-### data
+### dataSets
 
-*Array* *nullable*. *Data* field is an array of *[Data](#Data)* objects. Example:
+*Array* *nullable*. *DataSets* field is an array of *[DataSet](#DataSet)* objects. In typical cases, the file will
+contain one data set. However, in some cases, such as when retrieveing, from an SDMX 2.1 web service, what has
+changed in the data source since the last time the same query was performed, the web service might return more than
+one dataset. Example:
 
-    "data": [
+    "dataSets": [
       {
-        "dimensions": [ 0, 0 ],
-        "observations": [
-          [ 0, 2.9 ],
-          [ 1, 3.64 ]
+        "structure": {
+          # structure object #
+        },
+        "dataSetAction": "Informational",
+        "extracted": "2012-05-04T03:30:00",
+        "data": [
+          # data object #
         ]
-      },
-      {
-        "dimensions": [ 0, 1 ],
-        "observations": [
-          [ 0, 5.52 ],
-          [ 1, 4.1 ],
-          [ 2, 2.45 ]
-        ]
-      }
+      }    
     ]
 
 ### dimensions
@@ -189,7 +186,7 @@ then error is null. Example:
 
 ## <a name="Header"></a>Header
 
-Header contains basic header information for the message exhange. Example
+Header contains basic header information for the message exchange. Example:
 
     "header": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
@@ -242,6 +239,62 @@ Example:
       "id": "SDMX"
     }
     
+### receiver
+
+```Currently subset of the SMDX-Ml functionality```
+
+*Object* *nullable*. Receiver is information about the party that is receiving the message.
+Receiver contains the following fields:
+
+* id - *string*. The id attribute holds the identification of the party.
+* name - *string* *nullable*. Name is a human-readable name of the party.
+
+Example:
+
+    "receiver": {
+      "id": "SDMX"
+    }    
+    
+### extracted
+
+*String* *nullable*. Extracted is a time-stamp from the system rendering the data.
+Example:
+
+    "extracted": "2012-05-04T03:30:00"
+
+### embargoDate
+
+*String* *nullable*. EmbargoDate holds a ISO-8601 time period before which the data included in this message is not available. Example:
+
+    "embargoDate": "2012-05-04"
+    
+### source
+
+*Array* *nullable*. Source provides human-readable information about the source of the data. Example:
+
+    "source": [
+      "European Central Bank and European Commission"
+    ]
+----
+
+
+## <a name="DataSets"></a>DataSets
+
+DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains additional metadata. Example:
+
+    "dataSets": [
+      {
+        "structure": {
+          # structure object #
+        },
+        "dataSetAction": "Informational",
+        "extracted": "2012-05-04T03:30:00",
+        "data": [
+          # data object #
+        ]
+      }    
+    ]
+    
 ### structure
 
 ```Currently subset of the SMDX-ML functionality```
@@ -272,7 +325,6 @@ Example:
         "version": "1.0"
       }
     } 
-
     
 ### dataSetID
 
@@ -298,28 +350,21 @@ Example:
 Example:
 
     "dataSetAction": "Informational"
+    
+### provider    
 
-### extracted
+*Object* *nullable*. Provider is information about the party that provides the data contained in the dataset.
+Provider contains the following fields:
 
-*String* *nullable*. Extracted is a time-stamp from the system rendering the data.
+* id - *string*. The id attribute holds the identification of the party.
+* name - *string* *nullable*. Name is a human-readable name of the party.
+
 Example:
 
-    "extracted": "2012-05-04T03:30:00"
+    "provider": {
+      "id": "EUROSTAT"
+    }    
 
-### embargoDate
-
-*String* *nullable*. EmbargoDate holds a ISO-8601 time period before which the data included in this message is not available. Example:
-
-    "embargoDate": "2012-05-04"
-    
-### source
-
-*Array* *nullable*. Source provides human-readable information about the source of the data. Example:
-
-    "source": [
-      "European Central Bank and European Commission"
-    ]
-    
 ### reportingBegin
 
 *String* *nullable*. ReportingBegin provides the start of the time period covered by the message. Example:
@@ -330,12 +375,43 @@ Example:
 
 *String* *nullable*. ReportingEnd provides the end of the time period covered by the message. Example:
 
-    "reportingEnd": "2012-06-01"
+    "reportingEnd": "2012-06-01"    
 
-----
+### validFrom
 
+*String* *nullable*. The validFromDate indicates the inclusive start time indicating the validity of the information in the data.
 
-## <a name="Data"></a>Data
+    "validFrom": "2012-01-01T10:00:00Z"
+
+### validTo
+
+*String* *nullable*. The validToDate indicates the inclusive end time indicating the validity of the information in the data.
+
+    "validTo": "2013-01-01T10:00:00Z"
+
+### publicationYear
+
+*String* *nullable*. The publicationYear holds the ISO 8601 four-digit year.
+
+    "publicationYear": "2005"
+
+### publicationPeriod
+
+*String* *nullable*. The publicationPeriod specifies the period of publication of the data in terms of whatever 
+provisioning agreements might be in force (i.e., "2005-Q1" if that is the time of publication for a data set 
+published on a quarterly basis).
+
+    "publicationPeriod": "2005-Q1"
+    
+### attributes
+
+*Array* *nullable*. Collection of attributes values attached to the data set level. Example:
+
+    "attributes": [
+      "A"
+    ]
+
+### Data
 
 Data object is a container for the data and reference metadata. 
 
