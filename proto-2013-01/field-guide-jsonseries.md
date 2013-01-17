@@ -39,13 +39,14 @@ identifying statistical data, but they add useful information (like the unit of 
 or the number of decimals). 
 
 The measurement of some phenomenon (e.g. the figure 1.2953 mentioned above) is known as an
-"observation" in SDMX. Observations are grouped together into a "dataset". However, there
+"observation" in SDMX. Observations are grouped together into a "data set". However, there
 can also be an intermediate grouping. For example, all exchange rates for the US dollar 
 against the euro can be measured on a daily basis and these measures can then be
 grouped together, in a so-called "time series". Similarily, you can group a collection of 
 observations made at the same point in time, in a "cross-section" (for example, 
 the values of the US dollar, the Japanese yen and the Swiss franc against the euro at a
-particular date).
+particular date). Of course, these intermediate groupings are entirely optional and you
+may simply decide to have a flat list of observations in your data set.
 
 The SDMX information model is much richer than this limited introduction, 
 however the above should be sufficient to understand the JSON format proposed here. For
@@ -56,8 +57,8 @@ additional information, please refer to the [SDMX documentation](http://sdmx.org
 ## <a name="Message"></a>Message
 
 Message is the response you get back from the RESTful API. Message is the top
-level object and it contains dimensions, attributes and other
-fields. Example:
+level object and it contains the data as well as the metadata needed to interpret those data. 
+Example:
 
     {
       "sdmx-proto-json": "2012-11-15",
@@ -80,7 +81,8 @@ fields. Example:
 
 ### sdmx-proto-json
 
-*String*. A string that specifies the version of the SDMX-PROTO-JSON response. Example:
+*String*. A string that specifies the version of the SDMX-PROTO-JSON response. A list of valid versions will
+be released later on. Example:
 
     "sdmx-proto-json": "2012-11-15"
 
@@ -99,9 +101,9 @@ Example:
 ### dataSets
 
 *Array* *nullable*. *DataSets* field is an array of *[DataSet](#DataSet)* objects. In typical cases, the file will
-contain one data set. However, in some cases, such as when retrieveing, from an SDMX 2.1 web service, what has
-changed in the data source since the last time the same query was performed, the web service might return more than
-one dataset. Example:
+contain only one data set. However, in some cases, such as when retrieveing, from an SDMX 2.1 web service, what has
+changed in the data source since in particular point in time, the web service might return more than one dataset. 
+Example:
 
     "dataSets": [
       {
@@ -118,8 +120,8 @@ one dataset. Example:
 
 ### dimensions
 
-*[Dimensions](#Dimensions)* *nullable*. Contains dimensions identifying the measure
-and attribute values. Example:
+*[Dimensions](#Dimensions)* *nullable*. Contains dimensions, that is, the statistical concepts that, when 
+combined, allow to uniquely identify observations. Example:
 
     "dimensions": {
       "id": [
@@ -141,8 +143,11 @@ and attribute values. Example:
 
 ### attributes
 
-*[Attributes](#Attributes)* *nullable*. Contains attributes that provide information about
-the observation values. Example:
+*[Attributes](#Attributes)* *nullable*. Contains attributes, that is, the concepts that provide additional information
+about the data contained in the dataset. Attributes can be attached to an observation (for example, to indicate 
+whether a particular value is an estimate), a data set (for example, to indicate when the data contained in the data set
+were last updated) and to a collection of observations (i.e.: a time series or a cross-section, for example, to give a 
+human-friendly title to a particular grouping of observations). Example:
 
     attribute: {
       "id": [
@@ -175,7 +180,7 @@ the observation values. Example:
 ### errors
 
 *Array* *nullable*. RESTful web services indicates errors using the HTTP status
-codes. In addition, whenever appropriate, the error is also be returned using
+codes. In addition, whenever appropriate, the error can also be returned using
 the error fields. Error is an array of error messages. If there are no errors
 then error is null. Example:
 
@@ -259,7 +264,7 @@ Example:
     
 ### extracted
 
-*String* *nullable*. Extracted is a time-stamp from the system rendering the data.
+*String* *nullable*. Extracted is a timestamp indicating when the data have been extracted from the data source.
 Example:
 
     "extracted": "2012-05-04T03:30:00"
