@@ -306,21 +306,30 @@ DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains a
 
 ```Currently subset of the SMDX-ML functionality```
 
-*Object* *nullable*. Structure provides a reference to the structure (either explicitly or through a structure usage reference) that describes the format of data or reference metadata. In addition to the structure, it is required to also supply the namespace of the structure specific schema that defines the format of the data/metadata. For cross sectional data, additional information is also required to state which dimension is being used at the observation level. This information will allow the structure specific schema to be generated. For generic format messages, this is used to simply reference the underlying structure. It is not mandatory in these cases and the generic data/metadata sets will require this reference explicitly.
+*Object* *nullable*. Structure provides a reference to the data structure definition (DSD), that describes the 
+format of data included in the message. In addition, it is also states which dimension is being used at the observation
+level, if any (for example, TIME_PERIOD for time series).
 
 Structure contains following fields:
 
-* dimensionAtObservation - *String* *nullable*. The dimensionAtObservation is used to reference the dimension at the observation level for data messages. This can also be given the explicit value of "AllDimensions" which denotes that the cross sectional data is in the flat format.
+* dimensionAtObservation - *String* *nullable*. The dimensionAtObservation is used to reference the dimension 
+* at the observation level for data messages. For time series, the value will be "TIME_PERIOD" while, for cross-sections,
+* it can be any of the other dimensions. This can also be given the explicit value of "AllDimensions", which denotes
+* that the data is in the flat format (i.e. no grouping of observations).
 
-* explicitMeasures - *Boolean* *nullable*. The explicitMeasures indicates whether explicit measures are used in the cross sectional format. This is only applicable for the measure dimension as the dimension at the observation level or the flat structure.
+* explicitMeasures - *Boolean* *nullable*. The explicitMeasures indicates whether explicit measures are used in
+* the cross sectional format. This is only applicable for the measure dimension as the dimension at 
+* the observation level or the flat structure.
 
-* ref - *Object* *nullable*. References the structure which defines the structure of the data or metadata set. Ref contains following fields:
+* ref - *Object* *nullable*. References the structure which defines the structure of the data or metadata set. 
+* Ref contains following fields:
 
-    * agencyID - *String*. The agencyID attribute identifies the maintenance agency for the object being referenced (agency-id in the URN structure). This is optional to allow for local references (where the other reference fields are inferred from another context), but all complete references will require this.
+    * agencyID - *String*. The id of the agency maintaining the data structure definition.
     
-    * id - *String*. The id attribute identifies the object being referenced, and is therefore always required.
+    * id - *String*. The id of the data structure definition that describes the data included in the message.
     
-    * version - *String* *nullable*. The version attribute identifies the version of the object being reference, if applicable. If this is available, a default value of 1.0 will always apply.
+    * version - *String* *nullable*. The version attribute identifies the version of the data structure definition
+    that describes the data included in the message.
     
 Example:
 
@@ -335,24 +344,27 @@ Example:
     
 ### dataSetID
 
-*String* *nullable*. DataSetID provides an identifier for a contained data set.
+*String* *nullable*. DataSetID provides an identifier for the data set.
 Example:
 
-    "dataSetID": "ECB_EXR1"
+    "dataSetID": "ECB_EXR_2011-06-17"
 
 ### dataSetAction
 
 ```Following is a direct copy from the SDMX-ML Schema Docs```
 
-*String* *nullable*. DataSetAction provides a list of actions, describing the intention of the data transmission from the sender's side. Each action provided at the data or metadata set level applies to the entire data set for which it is given. Note that the actions indicated in the Message Header are optional, and used to summarize specific actions indicated with this data type for all registry interactions. The "Informational" value is used when the message contains information in response to a query, rather than being used to invoke a maintenance activity. ```Default value is Informational```
+*String* *nullable*. DataSetAction provides a list of actions, describing the intention of the data transmission 
+from the sender's side. ```Default value is Informational```
 
-* Append - this is an incremental update for an existing data/metadata set or the provision of new data or documentation (attribute values) formerly absent. If any of the supplied data or metadata is already present, it will not replace that data or metadata. This corresponds to the "Update" value found in version 1.0 of the SDMX Technical Standards.
+* Append - this is an incremental update for an existing data set or the provision of new data or documentation 
+(attribute values) formerly absent. If any of the supplied data or metadata is already present, it will not replace
+that data.
 
-* Replace - data/metadata is to be replaced, and may also include additional data/metadata to be appended. The replacement occurs at the level of the observation - that is, it is not possible to replace an entire series.
+* Replace - data are to be replaced, and may also include additional data to be appended. 
 
-* Delete - data/metadata is to be deleted. Deletion occurs at the lowest level object. For instance, if a delete data message contains a series with no observations, then the entire series will be deleted. If the series contains observations, then only those observations specified will be deleted. The same basic concept applies for attributes. If a series or observation in a delete message contains attributes, then only those attributes will be deleted.
+* Delete - data are to be deleted. 
 
-* Informational - data/metadata is being exchanged for informational purposes only, and not meant to update a system.
+* Informational - data are being exchanged for informational purposes only, and not meant to update a system.
 
 Example:
 
