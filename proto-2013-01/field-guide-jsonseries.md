@@ -545,7 +545,7 @@ structure. Example:
 
 ### id (dimensions collection)
 
-*Array*. An array of with identifiers all dimensions in the message. The order of
+*Array*. An array of identifiers for the dimensions contained in the message. The order of
 dimensions in the array is significant. Example:
 
     "id": [
@@ -574,7 +574,7 @@ Example:
 
 ### description
 
-*String* *nullable*. Provides as description for the object. Example:
+*String* *nullable*. Provides a description for the object. Example:
 
     "description": "The time interval at which observations occur over a given time period."
 
@@ -632,7 +632,7 @@ attributes are identified with an id.
 
 ### id (attribute collection)
 
-*Array*. An array of with identifiers all attributes in message. Example:
+*Array*. An array of identifiers for the attributes contained in the message. Example:
 
     "id": [
       "COLLECTION",
