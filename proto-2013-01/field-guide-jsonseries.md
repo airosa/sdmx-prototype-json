@@ -313,16 +313,16 @@ level, if any (for example, TIME_PERIOD for time series).
 Structure contains following fields:
 
 * dimensionAtObservation - *String* *nullable*. The dimensionAtObservation is used to reference the dimension 
-* at the observation level for data messages. For time series, the value will be "TIME_PERIOD" while, for cross-sections,
-* it can be any of the other dimensions. This can also be given the explicit value of "AllDimensions", which denotes
-* that the data is in the flat format (i.e. no grouping of observations).
+at the observation level for data messages. For time series, the value will be "TIME_PERIOD" while, for cross-sections,
+it can be any of the other dimensions. This can also be given the explicit value of "AllDimensions", which denotes
+that the data is in the flat format (i.e. no grouping of observations).
 
 * explicitMeasures - *Boolean* *nullable*. The explicitMeasures indicates whether explicit measures are used in
-* the cross sectional format. This is only applicable for the measure dimension as the dimension at 
-* the observation level or the flat structure.
+the cross sectional format. This is only applicable for the measure dimension as the dimension at 
+the observation level or the flat structure.
 
 * ref - *Object* *nullable*. References the structure which defines the structure of the data or metadata set. 
-* Ref contains following fields:
+Ref contains following fields:
 
     * agencyID - *String*. The id of the agency maintaining the data structure definition.
     
