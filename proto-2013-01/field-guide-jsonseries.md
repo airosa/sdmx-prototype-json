@@ -302,7 +302,7 @@ DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains a
       }    
     ]
     
-### structure
+### <a name="structure"></a>structure
 
 ```Currently subset of the SMDX-ML functionality```
 
@@ -432,11 +432,13 @@ published on a quarterly basis).
 
 ### Data
 
-Data object is a container for the data and reference metadata. 
+Data object contains the observation values and associated metadata (dimensions and attrbutes). 
 
-Data can be represented as a flat list of observations or can be grouped into collections (slices) that can be either time series or cross-sections.
+Data can be represented as a flat list of observations or can be grouped into collections (slices) that can be either
+time series or cross-sections.
 
-When data are grouped into collections, data object contains three fields: dimensions, attributes and observations. Example:
+When data are grouped into collections, data object contains three fields: dimensions, attributes and observations. 
+Example:
 
     {
       "dimensions": [ 0, 0, 0, 0, 0, 0 ],
@@ -452,10 +454,12 @@ When data are grouped into collections, data object contains three fields: dimen
       ]
     }
 
-In this case, data objects map directly to series in SDMX-ML messages (series, in SDMX 2.1, is a generic term that covers both time series and cross-sections). Series have both dimensions and observations fields. Attributes
-field is optional in case there are no attributes at the series level. The array values in the dimensions field are always integers (null is not possible).
+In this case, data objects map directly to series in SDMX-ML messages (series, in SDMX 2.1, is a generic term that 
+covers both time series and cross-sections). Series have both dimensions and observations fields. Attributes
+field is optional in case there are no attributes at the series level. The array values in the dimensions field 
+are always integers (null is not possible).
 
-### dimensions
+#### dimensions
 
 *Array* *nullable*. An array of dimension values. Each value is an index to the
 *codes* array in the respective *Dimension* object. 
@@ -472,10 +476,10 @@ Dimension values map to the codes in the *Dimension* objects. The array index ma
 
 1. Dimensions array for a data object is [0,93,12,1]. The *id* field in the message *dimensions* object is [ "FREQ" , "REF_AREA" , "ADJUSTMENT" , "ICP_ITEM" ].
 2. First value 0 maps to the first value in the *codes* field for the dimension "FREQ".
-3. Second value 93 maps to the 93rd value in the *codes* field for the dimension "REF_AREA" etc.
+3. Second value 93 maps to the 94th value in the *codes* field for the dimension "REF_AREA" etc.
 
 
-### attributes
+#### attributes
 
 *Array* *nullable*. Collection of attributes values. Example:
 
@@ -485,7 +489,7 @@ Dimension values map to the codes in the *Dimension* objects. The array index ma
     ]
 
 
-### observations
+#### observations
 
 *Array* *nullable*. An array of observation values. Each observation value is an
 array of two of more values.
@@ -504,8 +508,10 @@ array of two of more values.
       ]
     }
 
-First element in an observation value array is index value of the observation level dimension. Observation level dimension is the last dimension in the *dimensions* *id* field. Second element is the observation value. The data type
-for observation value is *Number*. Data type for a reported missing observation value is a *null*.
+First element in an observation value array is index value of the observation level dimension. 
+Observation level dimension is the one defined in the dimensionAtObservation field of the [structure](#structure) element. 
+Second element is the observation value. The data type for observation value is *Number*. Data type for a reported
+missing observation value is a *null*.
 
 Elements after the observation value are values for the observation level attributes.
 Observation level attributes are defined in the *obsAttributes* field in the
