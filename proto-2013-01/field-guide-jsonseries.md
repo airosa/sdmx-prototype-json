@@ -15,8 +15,10 @@ New fields may be introduced in later versions of the field guide. Therefore
 consuming applications should tolerate the addition of new fields with ease.
 
 The ordering of fields in objects is undefined. The fields may appear in any order
-and consuming applications should not rely on any specific ordering. It is safe
-to consider a nulled field and the absence of a field as the same thing.
+and consuming applications should not rely on any specific ordering. However, in
+case of large messages streamed back by a web service, it is considered good practice
+to include the metadata information (header, dimensions and attributes) before the 
+data. It is safe to consider a nulled field and the absence of a field as the same thing.
 
 Not all fields appear in all contexts. For example response with error messages
 may not contain fields for data, dimensions and attributes.
