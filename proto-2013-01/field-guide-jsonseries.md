@@ -193,7 +193,7 @@ then error is null. Example:
 
 ## <a name="Header"></a>Header
 
-Header contains basic header information for the message exchange. All the elements are optional. Example:
+Header contains basic header information for the message exchange. Example:
 
     "header": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
@@ -206,7 +206,7 @@ Header contains basic header information for the message exchange. All the eleme
 
 ### id
 
-*String* *nullable*. Unique string that identifies the message for further reference.
+*String*. Unique string that identifies the message for further reference.
 Example:
 
     "id": "TEC00034"
@@ -225,7 +225,7 @@ Example:
 
 ### prepared
 
-*String* *nullable*. Prepared is the date the message was prepared. String representation
+*String*. Prepared is the date the message was prepared. String representation
 of Date formatted according to the ISO-8601 standard. Example:
 
     "prepared": "2012-05-04T03:30:00"
@@ -234,7 +234,7 @@ of Date formatted according to the ISO-8601 standard. Example:
 
 ```Currently subset of the SMDX-Ml functionality```
 
-*Object* *nullable*. Sender is information about the party that is transmitting the message.
+*Object*. Sender is information about the party that is transmitting the message.
 Sender contains the following fields:
 
 * id - *string*. The id attribute holds the identification of the party.
