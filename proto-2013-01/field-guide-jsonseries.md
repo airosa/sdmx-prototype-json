@@ -131,7 +131,7 @@ combined, allow to uniquely identify observations. Example:
         "id": "ADJUSTMENT",
         "name": "Adjustment indicator",
         "role": null,
-        "codes": [
+        "values": [
           {
             "id": "N",
             "name": "Neither seasonally or working day adjusted",
@@ -157,22 +157,24 @@ human-friendly title to a particular grouping of observations). Example:
       "OBS_COM": {
         "id": "OBS_COM",
         "name": "Observation comment",
-        "code": null,
+        "values": [
+            {
+                "id": null,
+                "name": "An observation comment"
+            }
+        ],
         "default": null
       },
       "UNIT_MULT": {
         "id": "UNIT_MULT",
         "name": "Unit multiplier",
-        "codes": {
-          "id": [
-            "0"
-          ],
-          "0": {
+        "values": [
+          {
             "id": "0",
             "name": "Units",
             "order": 0
           }
-        },
+        ],
         "default": "0"
       }
     }
@@ -462,7 +464,7 @@ are always integers (null is not possible).
 #### dimensions
 
 *Array* *nullable*. An array of dimension values. Each value is an index to the
-*codes* array in the respective *Dimension* object. 
+*values* array in the respective *Dimension* object. 
 
     // Dimensions for series
     "dimensions": [
@@ -472,11 +474,11 @@ are always integers (null is not possible).
       1
     ]
 
-Dimension values map to the codes in the *Dimension* objects. The array index maps to the array index in the *Dimensions* *id* field and this allows lookup for the corresponding code array. Example:
+Dimension values map to the values in the *Dimension* objects. The array index maps to the array index in the *Dimensions* *id* field and this allows lookup for the corresponding code array. Example:
 
 1. Dimensions array for a data object is [0,93,12,1]. The *id* field in the message *dimensions* object is [ "FREQ" , "REF_AREA" , "ADJUSTMENT" , "ICP_ITEM" ].
-2. First value 0 maps to the first value in the *codes* field for the dimension "FREQ".
-3. Second value 93 maps to the 94th value in the *codes* field for the dimension "REF_AREA" etc.
+2. First value 0 maps to the first value in the *values* field for the dimension "FREQ".
+3. Second value 93 maps to the 94th value in the *values* field for the dimension "REF_AREA" etc.
 
 
 #### attributes
@@ -592,11 +594,11 @@ Example:
 
     "type": "time"
 
-### codes
+### values
 
-*[Code](#Code)*. Array of codes for the dimension. Example:
+*[value](#value)*. Array of values for the dimension. Example:
 
-    "codes": [
+    "values": [
       {
         "id": "M",
         "name": "Monthly",
@@ -618,6 +620,12 @@ attributes are identified with an id.
         "DECIMALS",
         "OBS_STATUS"
       ],
+      "dataSetAttributes": null,
+      "seriesAttributes": [
+        "COLLECTION",
+        "DECIMALS",
+      ],
+      "obsAttributes": ["OBS_STATUS"],
       "COLLECTION": {
         # fields for attribute COLLECTION #
       },
@@ -651,9 +659,27 @@ attributes are identified with an id.
       "OBS_STATUS"
     ]
 
+### dataSetAttributes
+
+*Array*. An array of the identifiers of the attributes attached at the dataset level. Example:
+
+    "dataSetAttributes": [
+      "LAST_UPDATED"
+    ]    
+    
+### seriesAttributes
+
+*Array*. An array of the identifiers of the attributes attached at the level of a collection of observations (such as
+a time series or a cross-section). Example:
+
+    "seriesAttributes": [
+      "COLLECTION",
+      "DECIMALS"
+    ]    
+
 ### obsAttributes
 
-*Array*. An array of observation level attribute identifiers. Example:
+*Array*. An array of the identifiers of the attributes attached at the observation level. Example:
 
     "obsAttributes": [
       "OBS_STATUS",
@@ -680,50 +706,31 @@ Example:
 
     "description": "Information on the quality of a value or an unusual or missing value."
 
-### codes
+### values
 
-*[Code](#Code)* *nullable*. Collection of codes for the attribute. Null if the
-attribute is not coded. Example:
+*[value](#value)* *nullable*. Collection of values for the attribute. Example:
 
-    "codes": {
-      "id": [
-        "A",
-        "E",
-        "M",
-        "P"
-      ],
-      "A": {
+    "values": [
+      {
         "id": "A",
         "name": "Normal value",
         "order": 0
       },
-      "E": {
+      {
         "id": "E",
         "name": "Estimated value",
         "order": 1
       },
-      "M": {
+      {
         "id": "M",
         "name": "Missing value; data cannot exist",
         "order": 2
       },
-      "A": {
+      {
         "id": "P",
         "name": "Provisional value",
         "order": 3
       }
-    }
-
-### id (codes collection)
-
-*Array*. Identifiers for individual codes. The order of the codes is significant.
-Example:
-
-    "id": [
-      "A",
-      "E",
-      "M",
-      "P"
     ]
 
 ### default
@@ -735,17 +742,15 @@ no value is provided then this value applies. Example:
 
 ----
 
-## <a name="Code"></a>Code
+## <a name="value"></a>value
 
-Codes are used in all dimensions and coded attributes (uncoded attributes do not
-use codes). Examples:
+Represents an attribute value. Examples:
 
     {
       "id": "A",
       "name": "Normal value",
       "order": 0
     }
-
 
     {
       "id": "2008-01",
@@ -782,9 +787,9 @@ description of the code. Example:
 
 ### parent
 
-*String* *nullable*. Parent codes for code hierarchies. If parent is null then
-the code does not belong to any hierarchy. Hierarchy root codes have special
-value "ROOT" for the parent. There may be multiple roots. Each code has only one
+*String* *nullable*. Parent value (for code hierarchies). If parent is null then
+the value does not belong to any hierarchy. Hierarchy root values have special
+value "ROOT" for the parent. There may be multiple roots. Each value has only one
 parent. Example:
 
     "parent": "U2"
