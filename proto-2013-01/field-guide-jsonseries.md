@@ -6,7 +6,7 @@ Use this guide to better understand SDMX-PROTO-JSON objects.
 
 - [Introduction](#Introduction)
 - [Message](#Message)
-- [Metadata](#Metadata)
+- [Header](#Header)
 - [DataSets](#DataSets)
 - [Tutorial: Handling component values](#handling_values)
 
@@ -80,12 +80,12 @@ be released later on. Example:
 
     "sdmx-proto-json": "2012-11-15"
 
-### Metadata
+### Header
 
-*Object* *nullable*. *Metadata* contains the information needed to interpret the data contained in the message.
+*Object* *nullable*. *Header* contains basic information about the message.
 Example:
 
-    "metadata": {
+    "header": {
       "name": "BIS Effective Exchange Rates",
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
       "prepared": "2012-05-04T03:30:00",
@@ -126,9 +126,9 @@ then error is null. Example:
 ----
 
 
-## <a name="Metadata"></a>Metadata
+## <a name="Header"></a>Header
 
-Metadata contains the information needed to interpret the data contained in the message. Example:
+Header contains basic information about the message. Example:
 
     "metadata": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
