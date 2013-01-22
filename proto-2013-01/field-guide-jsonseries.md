@@ -423,10 +423,10 @@ reference area etc.). The inner coordinates array is formatted as [geoJSON]
     "packaging": {
         "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
         "seriesDimensions": ["CURRENCY"],
-        "obsDimensions": ["TIME_PERIOD"],
+        "observationDimensions": ["TIME_PERIOD"],
         "dataSetAttributes": [],
         "seriesAttributes": ["TITLE"],
-        "obsAttributes": ["OBS_STATUS"]
+        "observationAttributes": ["OBS_STATUS"]
     }
 
 ----
@@ -729,10 +729,10 @@ Let's say for example that the following message needs to be processed:
                 "packaging": {
                     "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
                     "seriesDimensions": ["CURRENCY"],
-                    "obsDimensions": ["TIME_PERIOD"],
+                    "observationDimensions": ["TIME_PERIOD"],
                     "dataSetAttributes": [],
                     "seriesAttributes": ["TITLE"],
-                    "obsAttributes": ["OBS_STATUS"]
+                    "observationAttributes": ["OBS_STATUS"]
                 }
             }
         },
@@ -787,10 +787,10 @@ attached to the data set level:
     "packaging": {
         "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
         "seriesDimensions": ["CURRENCY"],
-        "obsDimensions": ["TIME_PERIOD"],
+        "observationDimensions": ["TIME_PERIOD"],
         "dataSetAttributes": [],
         "seriesAttributes": ["TITLE"],
-        "obsAttributes": ["OBS_STATUS"]
+        "observationAttributes": ["OBS_STATUS"]
     }
 
 We see that, for the first series, we get the value 0:
