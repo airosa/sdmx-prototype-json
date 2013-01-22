@@ -7,6 +7,7 @@ Use this guide to better understand SDMX-PROTO-JSON objects.
 - [Introduction](#Introduction)
 - [Message](#Message)
 - [Header](#Header)
+- [Structure](#Structure)
 - [DataSets](#DataSets)
 - [Tutorial: Handling component values](#handling_values)
 
@@ -62,10 +63,10 @@ Example:
       "metadata": {
         "name": "BIS Effective Exchange Rates",
         "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
-        "prepared": "2012-05-04T03:30:00",
-        "structure": {
-            # structure objects #
-        }
+        "prepared": "2012-05-04T03:30:00"
+      },    
+      "structure": {
+        # structure objects #
       },
       "dataSets": [
         # data set objects #
@@ -82,8 +83,7 @@ be released later on. Example:
 
 ### Header
 
-*Object* *nullable*. *Header* contains basic information about the message.
-Example:
+*Object* *nullable*. *Header* contains basic information about the message. Example:
 
     "header": {
       "name": "BIS Effective Exchange Rates",
@@ -92,8 +92,22 @@ Example:
       "structure": {
         # structure objects #
       }
-    },
+    }
+    
+### structure
 
+*Object* *nullable*. *Structure* contains the information needed to interpret the data available in the message. Example:
+
+    "structure": {
+        "id": "ECB_EXR_WEB",
+        "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+        "components": {
+            # components object # 
+        },
+        "packaging": {
+            # packaging object #
+        }
+    }
 
 ### dataSets
 
@@ -221,7 +235,9 @@ Example:
       "European Central Bank and European Commission"
     ]
     
-### structure
+----    
+    
+## <a name="Structure"></a>structure
 
 ```Currently subset of the SMDX-ML functionality```
 
@@ -232,30 +248,30 @@ level in the hierarchy (data set, series, observations), these components are at
 Example:
 
     "structure": {
-            "id": "ECB_EXR_WEB",
-            "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
-            "components": {
-               # components object # 
-            },
-            "packaging": {
-               # packaging object #
-            }
+        "id": "ECB_EXR_WEB",
+        "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+        "components": {
+            # components object # 
+        },
+        "packaging": {
+            # packaging object #
         }
+    }
 
-#### id 
+### id 
 
 *String* *nullable*. An identifier for the structure. Example:
     
     "id": "ECB_EXR_WEB"
 
-#### ref
+### ref
 
 *String* *nullable*. A link to a SDMX 2.1 web service resource where additional information regarding the structure is
 available. Example:
 
     "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0"
 
-#### components 
+### components 
 
 *Object*. A collection of components (dimensions and attributes) used in the message. Example:
 
@@ -297,27 +313,27 @@ available. Example:
             
 Each of the components may contain the following fields
 
-##### id
+#### id
 
 *String*. Identifier for the component.
 Example:
 
     "id": "FREQ"
 
-##### name
+#### name
 
 *String*. Name provides for a human-readable name for the object.
 Example:
 
     "name": "Frequency"
 
-##### description
+#### description
 
 *String* *nullable*. Provides a description for the object. Example:
 
     "description": "The time interval at which observations occur over a given time period."
 
-##### role
+#### role
 
 *String* *nullable*. Defines the component role(s). For normal components the value
 is null. Components can play various roles, such as, for example:
@@ -331,14 +347,14 @@ Example:
 
     "role": "time"
     
-##### default
+#### default
 
 *String* or *Number* *nullable*. Defines a default value for the component (valid for attributes only!). If
 no value is provided then this value applies. Example:
 
     "default": "A"    
 
-##### values
+#### values
 
 *[value](#value)*. Array of values for the components. Example:
 
@@ -352,32 +368,32 @@ no value is provided then this value applies. Example:
     
 Each of the values may contain the following fields:    
 
-###### id
+##### id
 
 *String*. Unique identifier for a value. Example:
 
     "id": "A"
 
-###### name
+##### name
 
 *String*. Human-readable name for a value. Example:
 
     "name": "Missing value; data cannot exist"
 
-###### description
+##### description
 
 *String* *nullable*. Description provides a plain text, human-readable
 description of the value. Example:
 
     "description": "Provisional value"
 
-###### order
+##### order
 
 *Number* *nullable*. Default display order for the value. Example:
 
     "order": 64
 
-###### parent
+##### parent
 
 *String* *nullable*. Parent value (for code hierarchies). If parent is null then
 the value does not belong to any hierarchy. Hierarchy root values have special
@@ -386,7 +402,7 @@ parent. Example:
 
     "parent": "U2"
 
-###### start
+##### start
 
 *String* *nullable*. Start date for the period in a time dimension.
 This field is useful only when the value represents a period for a time dimension
@@ -395,7 +411,7 @@ period. Example:
 
     "start": "2007-02-01T00:00:00.000Z"
 
-###### end
+##### end
 
 *String* *nullable*. End date for period in a time dimension.
 This field is useful only when the value represents a period for a time dimension
@@ -404,7 +420,7 @@ period. Example:
 
     "end": "2007-10-31T23:59:59.000Z"
 
-###### geometry
+##### geometry
 
 *Object* *nullable*. Represents the geographic location of this code (country,
 reference area etc.). The inner coordinates array is formatted as [geoJSON]
@@ -418,7 +434,7 @@ reference area etc.). The inner coordinates array is formatted as [geoJSON]
       ]
     }            
 
-#### packaging
+### packaging
 
 *Object*. Describes to which level in the hierarchy (data set, series, observations), the components are attached. Example:
 
@@ -624,10 +640,7 @@ Elements after the observation value are values for the observation level attrib
 
 ## <a name="handling_values">Handling component values</a>
 
-Component values map to the values in the component objects. The array index maps to the array index in the appropriate
-property of the packaging field. 
-
-Let's say for example that the following message needs to be processed:
+Let's say that the following message needs to be processed:
 
     {
         "sdmx-proto-json": "2012-11-29",
@@ -810,8 +823,7 @@ From the packaging information, we know that the identifier of the dimension for
 
     "seriesDimensions": ["CURRENCY"]
     
-We can now find the CURRENCY component in the collection of components available below the structure field available in the
-metadata object:
+We can now find the CURRENCY component in the collection of components available below the structure field:
 
     "CURRENCY": {
         "id": "CURRENCY",
