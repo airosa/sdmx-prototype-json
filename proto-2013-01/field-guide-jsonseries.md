@@ -13,10 +13,8 @@ New fields may be introduced in later versions of the field guide. Therefore
 consuming applications should tolerate the addition of new fields with ease.
 
 The ordering of fields in objects is undefined. The fields may appear in any order
-and consuming applications should not rely on any specific ordering. However, in
-case of large messages streamed back by a web service, it is considered good practice
-to include the metadata information (header, dimensions and attributes) before the 
-data. It is safe to consider a nulled field and the absence of a field as the same thing.
+and consuming applications should not rely on any specific ordering. It is safe to consider a nulled field 
+and the absence of a field as the same thing.
 
 Not all fields appear in all contexts. For example response with error messages
 may not contain fields for data, dimensions and attributes.
@@ -24,7 +22,7 @@ may not contain fields for data, dimensions and attributes.
 ----
 
 ## <a name="Introduction"></a>Introduction
-Let's first start with a brief introduction about the SDMX information model.
+Let's first start with a brief introduction of the SDMX information model.
 
 In order to make sense of some statistical data, we need to know the concepts 
 associated with them. For example, on its own the figure 1.2953 is pretty meaningless, 
@@ -81,9 +79,9 @@ be released later on. Example:
 
     "sdmx-proto-json": "2012-11-15"
 
-### metadata
+### Metadata
 
-*[Metadata](#Metadata)*. Metadata contains the information to interpret the data contained in the message.
+*Object* *nullable*. *Metadata* contains the information needed to interpret the data contained in the message.
 Example:
 
     "metadata": {
@@ -100,7 +98,7 @@ Example:
 
 *Array* *nullable*. *DataSets* field is an array of *[DataSet](#DataSet)* objects. In typical cases, the file will
 contain only one data set. However, in some cases, such as when retrieveing, from an SDMX 2.1 web service, what has
-changed in the data source since in particular point in time, the web service might return more than one dataset. 
+changed in the data source since in particular point in time, the web service might return more than one data set. 
 Example:
 
     "dataSets": [
@@ -129,7 +127,7 @@ then error is null. Example:
 
 ## <a name="Metadata"></a>Metadata
 
-Metadata contains the information to interpret the data contained in the message. Example:
+Metadata contains the information needed to interpret the data contained in the message. Example:
 
     "metadata": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
@@ -145,7 +143,7 @@ Metadata contains the information to interpret the data contained in the message
 
 ### id
 
-*String*. Unique string that identifies the message for further reference.
+*String*. Unique string that identifies the message for further references.
 Example:
 
     "id": "TEC00034"
@@ -167,7 +165,7 @@ Example:
 *String*. Prepared is the date the message was prepared. String representation
 of Date formatted according to the ISO-8601 standard. Example:
 
-    "prepared": "2012-05-04T03:30:00"
+    "prepared": "2012-05-04T03:30:00Z"
     
 ### sender
 
@@ -222,13 +220,13 @@ Example:
       "European Central Bank and European Commission"
     ]
     
-### <a name="structure"></a>structure
+### structure
 
 ```Currently subset of the SMDX-ML functionality```
 
 *Object* *nullable*. Structure provides the structural metadata necessary to interpret the data contained in the message.
-It tells you which are the components (dimensions and attributes) available in the message and also describes to which 
-level in the hierarchy (data set, series, observations), these components will be attached.
+It tells you which are the components (dimensions and attributes) used in the message and also describes to which 
+level in the hierarchy (data set, series, observations), these components are attached.
     
 Example:
 
@@ -256,68 +254,67 @@ available. Example:
 
     "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0"
 
-
 #### components 
 
 *Array*. A collection of components (dimensions and attributes) used in the message. Example:
 
     "components": [
-                {
-                    "id": "FREQ",
-                    "name": "Frequency",
-                    "values": [
-                        {
-                            "id": "D",
-                            "name": "Daily"
-                        }
-                    ]
-                }, {
-                    "id": "CURRENCY",
-                    "name": "Currency",
-                    "values": [
-                        {
-                            "id": "NZD",
-                            "name": "New Zealand dollar"
-                        }, {
-                            "id": "RUB",
-                            "name": "Russian rouble"
-                        }
-                    ]
-                }, {
-                    "id": "OBS_STATUS",
-                    "name": "Observation status",
-                    "values": [
-                        {
-                            "id": "A",
-                            "name": "Normal value"
-                        }
-                    ]
-                }
-            ]
+      {
+        "id": "FREQ",
+        "name": "Frequency",
+        "values": [
+          {
+            "id": "D",
+            "name": "Daily"
+          }
+        ]
+      }, {
+        "id": "CURRENCY",
+        "name": "Currency",
+        "values": [
+          {
+            "id": "NZD",
+            "name": "New Zealand dollar"
+          }, {
+            "id": "RUB",
+            "name": "Russian rouble"
+          }
+        ]
+      }, {
+        "id": "OBS_STATUS",
+        "name": "Observation status",
+        "values": [
+          {
+            "id": "A",
+            "name": "Normal value"
+          }
+        ]
+      }
+    ]
             
 Each of the components may contain the following fields
 
-#### id
+##### id
 
 *String*. Identifier for the component.
 Example:
 
     "id": "FREQ"
 
-#### name
+##### name
 
 *String*. Name provides for a human-readable name for the object.
 Example:
 
     "name": "Frequency"
 
-###$ description
+##### description
 
 *String* *nullable*. Provides a description for the object. Example:
 
     "description": "The time interval at which observations occur over a given time period."
 
-#### role
+##### role
 
 *String* *nullable*. Defines the component role(s). For normal components the value
 is null. Components can play various roles, such as, for example:
@@ -331,14 +328,14 @@ Example:
 
     "role": "time"
     
-#### default
+##### default
 
-*String* or *Number* *nullable*. Defines a default value for the component (valid for attributes only). If
+*String* or *Number* *nullable*. Defines a default value for the component (valid for attributes only!). If
 no value is provided then this value applies. Example:
 
     "default": "A"    
 
-#### values
+##### values
 
 *[value](#value)*. Array of values for the components. Example:
 
@@ -349,53 +346,35 @@ no value is provided then this value applies. Example:
         "order": 0
       }
     ]
+    
+Each of the values may contain the following fields:    
 
-----
-
-#### <a name="value"></a>value
-
-Represents a component  value. Examples:
-
-    {
-      "id": "A",
-      "name": "Normal value",
-      "order": 0
-    }
-
-    {
-      "id": "2008-01",
-      "name": "2008-01",
-      "order": "144",
-      "start": "2008-01-01T00:00:00.000Z",
-      "end": "2008-01-31T23:59:59.000Z"
-    }
-
-##### id
+###### id
 
 *String*. Unique identifier for a value. Example:
 
     "id": "A"
 
-##### name
+###### name
 
 *String*. Human-readable name for a value. Example:
 
     "name": "Missing value; data cannot exist"
 
-##### description
+###### description
 
 *String* *nullable*. Description provides a plain text, human-readable
 description of the value. Example:
 
     "description": "Provisional value"
 
-##### order
+###### order
 
 *Number* *nullable*. Default display order for the value. Example:
 
     "order": 64
 
-##### parent
+###### parent
 
 *String* *nullable*. Parent value (for code hierarchies). If parent is null then
 the value does not belong to any hierarchy. Hierarchy root values have special
@@ -404,25 +383,25 @@ parent. Example:
 
     "parent": "U2"
 
-##### start
+###### start
 
-*String* *nullable*. Start date for a code in a time dimension.
-This field is useful only when the codes are time periods for a time dimension
+*String* *nullable*. Start date for the period in a time dimension.
+This field is useful only when the value represents a period for a time dimension
 (dimension type is 'time'). Value is a date in ISO format for the beginning of the
 period. Example:
 
     "start": "2007-02-01T00:00:00.000Z"
 
-##### end
+###### end
 
-*String* *nullable*. End date for a code in a time dimension.
-This field is useful only when the codes are time periods for a time dimension
+*String* *nullable*. End date for period in a time dimension.
+This field is useful only when the value represents a period for a time dimension
 (dimension type is 'time'). Value is a date in ISO format for the end of the
 period. Example:
 
     "end": "2007-10-31T23:59:59.000Z"
 
-##### geometry
+###### geometry
 
 *Object* *nullable*. Represents the geographic location of this code (country,
 reference area etc.). The inner coordinates array is formatted as [geoJSON]
@@ -473,8 +452,6 @@ Example:
     "dataSetID": "ECB_EXR_2011-06-17"
 
 ### dataSetAction
-
-```Following is a direct copy from the SDMX-ML Schema Docs```
 
 *String* *nullable*. DataSetAction provides a list of actions, describing the intention of the data transmission 
 from the sender's side. ```Default value is Informational```
@@ -553,6 +530,8 @@ that value can simply be attached at the data set level. Example:
 
     "dimensions": [0]    
     
+For information on how to handle the dimension values, see the section dedicate to [handling component values](#handling_values)    
+    
 ### attributes
 
 *Array* *nullable*. Collection of attributes values attached to the data set level. This is typically the case when a 
@@ -560,6 +539,8 @@ particular attribute always has the same value for the data available in the dat
 that value can simply be attached at the data set level. Example:
 
     "attributes": [0]
+    
+For information on how to handle the attribute values, see the section dedicate to [handling component values](#handling_values)        
 
 ### Data
 
@@ -599,13 +580,8 @@ are always integers (null is not possible).
       12,
       1
     ]
-
-Dimension values map to the values in the *Dimension* objects. The array index maps to the array index in the *Dimensions* *id* field and this allows lookup for the corresponding code array. Example:
-
-1. Dimensions array for a data object is [0,93,12,1]. The *id* field in the message *dimensions* object is [ "FREQ" , "REF_AREA" , "ADJUSTMENT" , "ICP_ITEM" ].
-2. First value 0 maps to the first value in the *values* field for the dimension "FREQ".
-3. Second value 93 maps to the 94th value in the *values* field for the dimension "REF_AREA" etc.
-
+    
+For information on how to handle the dimension values, see the section dedicate to [handling component values](#handling_values).    
 
 #### attributes
 
@@ -614,8 +590,7 @@ Dimension values map to the values in the *Dimension* objects. The array index m
 
     "attributes": [ 0, 1 ]
     
-To understand how to map the index to the attribute value, see the example in the section above (dimensions).    
-
+For information on how to handle the attribute values, see the section dedicate to [handling component values](#handling_values).    
 
 #### observations
 
@@ -637,10 +612,44 @@ array of two of more values.
     }
 
 First element in an observation value array is index value of the observation level dimension. 
-Observation level dimension is the one defined in the dimensionAtObservation field of the [structure](#structure) element. 
 Second element is the observation value. The data type for observation value is *Number*. Data type for a reported
 missing observation value is a *null*.
 
 Elements after the observation value are values for the observation level attributes.
-Observation level attributes are defined in the *obsAttributes* field in the
-*attributes* object. Nulls may be trimmed from the end of the array.
+
+--
+
+## <a href="handling_values"> Handling component values
+
+Component values map to the values in the component objects. The array index maps to the array index in the appropriate
+property of the packaging field. 
+
+Let's say for example that the following series needs to be processed:
+
+    {
+      "dimensions": [0],
+      "attributes": [0],
+      "observations": [
+        [0, 1.5931, 0],
+        [1, 1.5925, 0]
+      ]
+    }
+
+We first need to extract information from the packaging field (below the structure field available in the metadata object):
+
+    "packaging": {
+        "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
+        "seriesDimensions": ["CURRENCY"],
+        "obsDimensions": ["TIME_PERIOD"],
+        "dataSetAttributes": [],
+        "seriesAttributes": ["TITLE"],
+        "obsAttributes": ["OBS_STATUS"]
+    }
+    
+This tells us that the id of the component for the series dimension is "CURRENCY". With this information, we may now look
+up in the collection of components (also available below the structure field available in the metadata object) and find 
+the CURRENCY component. This component will have information such as id and name but also a collection of values. As the
+value we got is 0 ("dimensions": [0]), we know that the value that applies to this particular series is
+the first one in the collection of values of the CURRENCY component.
+
+The same logic applies for mapping attributes.   
