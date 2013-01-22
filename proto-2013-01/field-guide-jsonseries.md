@@ -620,7 +620,7 @@ Elements after the observation value are values for the observation level attrib
 
 ----
 
-## <a href="handling_values"> Handling component values
+## <a name="handling_values">Handling component values</a>
 
 Component values map to the values in the component objects. The array index maps to the array index in the appropriate
 property of the packaging field. 
