@@ -8,6 +8,7 @@ Use this guide to better understand SDMX-PROTO-JSON objects.
 - [Message](#Message)
 - [Metadata](#Metadata)
 - [DataSets](#DataSets)
+- [Tutorial: Handling component values](#handling_values)
 
 New fields may be introduced in later versions of the field guide. Therefore
 consuming applications should tolerate the addition of new fields with ease.
@@ -617,25 +618,171 @@ missing observation value is a *null*.
 
 Elements after the observation value are values for the observation level attributes.
 
---
+----
 
 ## <a href="handling_values"> Handling component values
 
 Component values map to the values in the component objects. The array index maps to the array index in the appropriate
 property of the packaging field. 
 
-Let's say for example that the following series needs to be processed:
+Let's say for example that the following message needs to be processed:
 
     {
-      "dimensions": [0],
-      "attributes": [0],
-      "observations": [
-        [0, 1.5931, 0],
-        [1, 1.5925, 0]
-      ]
+        "sdmx-proto-json": "2012-11-29",
+        "metadata": {
+            "id": "62b5f19d-f1c9-495d-8446-a3661ed24753",
+            "prepared": "2012-11-29T08:40:26",
+            "sender": {
+                "id": "ECB",
+                "name": "European Central Bank"
+            },
+            "name": "TEST1",
+            "structure": {
+                "id": "ECB_EXR_WEB",
+                "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+                "components": [
+                    {
+                        "id": "FREQ",
+                        "name": "Frequency",
+                        "values": [
+                            {
+                                "id": "D",
+                                "name": "Daily"
+                            }
+                        ]
+                    }, {
+                        "id": "CURRENCY",
+                        "name": "Currency",
+                        "values": [
+                            {
+                                "id": "NZD",
+                                "name": "New Zealand dollar"
+                            }, {
+                                "id": "RUB",
+                                "name": "Russian rouble"
+                            }
+                        ]
+                    }, {
+                        "id": "CURRENCY_DENOM",
+                        "name": "Currency denominator",
+                        "values": [
+                            {
+                                "id": "EUR",
+                                "name": "Euro"
+                            }
+                        ]
+                    }, {
+                        "id": "EXR_TYPE",
+                        "name": "Exchange rate type",
+                        "values": [
+                            {
+                                "id": "SP00",
+                                "name": "Spot rate"
+                            }
+                        ]
+                    }, {
+                        "id": "EXR_SUFFIX",
+                        "name": "Series variation - EXR context",
+                        "values": [
+                            {
+                                "id": "A",
+                                "name": "Average or standardised measure for given frequency"
+                            }
+                        ]
+                    }, {
+                        "id": "TIME_PERIOD",
+                        "name": "Time period or range",
+                        "values": [
+                            {
+                                "id": "2013-01-18",
+                                "name": "2013-01-18",
+                                "start": "2013-01-18T00:00:00.000Z",
+                                "end": "2013-01-18T23:59:59.000Z"
+                            }, {
+                                "id": "2013-01-21",
+                                "name": "2013-01-21",
+                                "start": "2013-01-21T00:00:00.000Z",
+                                "end": "2013-01-21T23:59:59.000Z"
+                            }
+                        ]
+                    }, {
+                        "id": "TITLE",
+                        "name": "Series title",
+                        "values": [
+                            {
+                                "name": "New zealand dollar (NZD)"
+                            }, {
+                                "name": "Russian rouble (RUB)"
+                            }
+                        ]
+                    }, {
+                        "id": "OBS_STATUS",
+                        "name": "Observation status",
+                        "values": [
+                            {
+                                "id": "A",
+                                "name": "Normal value"
+                            }
+                        ]
+                    }
+                ],
+                "packaging": {
+                    "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
+                    "seriesDimensions": ["CURRENCY"],
+                    "obsDimensions": ["TIME_PERIOD"],
+                    "dataSetAttributes": [],
+                    "seriesAttributes": ["TITLE"],
+                    "obsAttributes": ["OBS_STATUS"]
+                }
+            }
+        },
+        "dataSets": [
+            {
+                "extracted": "2013-01-21T15:20:00.000Z",
+                "dataSetAction": "Informational",
+                "dimensions": [0, 0, 0, 0],
+                "data": [
+                    {
+                        "dimensions": [0],
+                        "attributes": [0],
+                        "observations": [
+                            [0, 1.5931, 0],
+                            [1, 1.5925, 0]
+                        ]
+                    }, {
+                        "dimensions": [1],
+                        "attributes": [1],
+                        "observations": [
+                            [0, 40.3426, 0],
+                            [1, 40.3000, 0]
+                        ]
+                    }
+                ]
+            }
+        ]
     }
+    
+There is only one data set in the message, and it contains two series.
 
-We first need to extract information from the packaging field (below the structure field available in the metadata object):
+    {
+        "dimensions": [0],
+        "attributes": [0],                       
+        "observations": [
+            [0, 1.5931, 0],
+            [1, 1.5925, 0]
+        ]
+    }, 
+    {
+        "dimensions": [1],
+        "attributes": [1],
+        "observations": [
+            [0, 40.3426, 0],
+            [1, 40.3000, 0]
+        ]
+    }
+    
+The packaging field tells us that, out of the 6 dimensions, 4 have the same value for the 2 series and are therefore 
+attached to the data set level:
 
     "packaging": {
         "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
@@ -645,11 +792,34 @@ We first need to extract information from the packaging field (below the structu
         "seriesAttributes": ["TITLE"],
         "obsAttributes": ["OBS_STATUS"]
     }
-    
-This tells us that the id of the component for the series dimension is "CURRENCY". With this information, we may now look
-up in the collection of components (also available below the structure field available in the metadata object) and find 
-the CURRENCY component. This component will have information such as id and name but also a collection of values. As the
-value we got is 0 ("dimensions": [0]), we know that the value that applies to this particular series is
-the first one in the collection of values of the CURRENCY component.
 
-The same logic applies for mapping attributes.   
+We see that, for the first series, the dimension is 0:
+
+    "dimensions": [0]
+    
+From the packaging information, we know that the dimension for this series is CURRENCY.
+
+    "seriesDimensions": ["CURRENCY"]
+    
+We can now find the CURRENCY component in collection of components available below the structure field available in the
+metadata object:
+
+    {
+        "id": "CURRENCY",
+        "name": "Currency",
+        "values": [
+            {
+                "id": "NZD",
+                "name": "New Zealand dollar"
+            }, 
+            {
+                "id": "RUB",
+                "name": "Russian rouble"
+            }
+        ]
+    }
+    
+The value 0 identified previously is the index of the item in the collection of values for this component. In this case,
+the dimension value is therefore "New Zealand dollar".
+
+The same logic applies when mapping attributes.   
