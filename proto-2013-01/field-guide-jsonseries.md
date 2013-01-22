@@ -793,15 +793,15 @@ attached to the data set level:
         "obsAttributes": ["OBS_STATUS"]
     }
 
-We see that, for the first series, the dimension is 0:
+We see that, for the first series, we get the value 0:
 
     "dimensions": [0]
     
-From the packaging information, we know that the dimension for this series is CURRENCY.
+From the packaging information, we know that the identifier of the dimension for this series is CURRENCY.
 
     "seriesDimensions": ["CURRENCY"]
     
-We can now find the CURRENCY component in collection of components available below the structure field available in the
+We can now find the CURRENCY component in the collection of components available below the structure field available in the
 metadata object:
 
     {
