@@ -6,10 +6,8 @@ Use this guide to better understand SDMX-PROTO-JSON objects.
 
 - [Introduction](#Introduction)
 - [Message](#Message)
-- [Header](#Header)
+- [Metadata](#Metadata)
 - [DataSets](#DataSets)
-- [Dimensions](#Dimensions)
-- [Attributes](#Attributes)
 
 New fields may be introduced in later versions of the field guide. Therefore
 consuming applications should tolerate the addition of new fields with ease.
@@ -62,20 +60,17 @@ Example:
 
     {
       "sdmx-proto-json": "2012-11-15",
-      "header": {
+      "metadata": {
         "name": "BIS Effective Exchange Rates",
         "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
-        "prepared": "2012-05-04T03:30:00"
+        "prepared": "2012-05-04T03:30:00",
+        "structure": {
+            # structure objects #
+        }
       },
       "dataSets": [
         # data set objects #
       ],
-      "dimensions": {
-        # fields for dimensions #
-      },
-      "attributes": {
-        # fields for attributes #
-      },
       "errors": null
     }
 
@@ -86,15 +81,18 @@ be released later on. Example:
 
     "sdmx-proto-json": "2012-11-15"
 
-### header
+### metadata
 
-*[Header](#Header)*. Header contains basic information used in message exchanges.
+*[Metadata](#Metadata)*. Metadata contains the information to interpret the data contained in the message.
 Example:
 
-    "header": {
+    "metadata": {
       "name": "BIS Effective Exchange Rates",
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
-      "prepared": "2012-05-04T03:30:00"
+      "prepared": "2012-05-04T03:30:00",
+      "structure": {
+        # structure objects #
+      }
     },
 
 
@@ -107,9 +105,6 @@ Example:
 
     "dataSets": [
       {
-        "structure": {
-          # structure object #
-        },
         "dataSetAction": "Informational",
         "extracted": "2012-05-04T03:30:00",
         "data": [
@@ -117,67 +112,6 @@ Example:
         ]
       }    
     ]
-
-### dimensions
-
-*[Dimensions](#Dimensions)* *nullable*. Contains dimensions, that is, the statistical concepts that, when 
-combined, allow to uniquely identify observations. Example:
-
-    "dimensions": {
-      "id": [
-        "ADJUSTMENT"
-      ],
-      "ADJUSTMENT": {
-        "id": "ADJUSTMENT",
-        "name": "Adjustment indicator",
-        "role": null,
-        "values": [
-          {
-            "id": "N",
-            "name": "Neither seasonally or working day adjusted",
-            "order": 0
-          }
-        ]
-      }
-    }
-
-### attributes
-
-*[Attributes](#Attributes)* *nullable*. Contains attributes, that is, the concepts that provide additional information
-about the data contained in the dataset. Attributes can be attached to an observation (for example, to indicate 
-whether a particular value is an estimate), a data set (for example, to indicate when the data contained in the data set
-were last updated) and to a collection of observations (i.e.: a time series or a cross-section, for example, to give a 
-human-friendly title to a particular grouping of observations). Example:
-
-    attribute: {
-      "id": [
-        "OBS_COM",
-        "UNIT_MULT"
-      ],
-      "OBS_COM": {
-        "id": "OBS_COM",
-        "name": "Observation comment",
-        "values": [
-            {
-                "id": null,
-                "name": "An observation comment"
-            }
-        ],
-        "default": null
-      },
-      "UNIT_MULT": {
-        "id": "UNIT_MULT",
-        "name": "Unit multiplier",
-        "values": [
-          {
-            "id": "0",
-            "name": "Units",
-            "order": 0
-          }
-        ],
-        "default": "0"
-      }
-    }
 
 ### errors
 
@@ -193,16 +127,19 @@ then error is null. Example:
 ----
 
 
-## <a name="Header"></a>Header
+## <a name="Metadata"></a>Metadata
 
-Header contains basic header information for the message exchange. Example:
+Metadata contains the information to interpret the data contained in the message. Example:
 
-    "header": {
+    "metadata": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
       "prepared": "2013-01-03T12:54:12",
       "name": "BIS Effective Exchange Rates",
       "sender: {
         "id": "SDMX"
+      }
+      "structure": {
+        # structure object #
       }
     }
 
@@ -284,8 +221,235 @@ Example:
     "source": [
       "European Central Bank and European Commission"
     ]
+    
+### <a name="structure"></a>structure
+
+```Currently subset of the SMDX-ML functionality```
+
+*Object* *nullable*. Structure provides the structural metadata necessary to interpret the data contained in the message.
+It tells you which are the components (dimensions and attributes) available in the message and also describes to which 
+level in the hierarchy (data set, series, observations), these components will be attached.
+    
+Example:
+
+    "structure": {
+            "id": "ECB_EXR_WEB",
+            "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+            "components": [
+               # components object # 
+            ],
+            "packaging": {
+               # packaging object #
+            }
+        }
+
+#### id 
+
+*String* *nullable*. An identifier for the structure. Example:
+    
+    "id": "ECB_EXR_WEB"
+
+#### ref
+
+*String* *nullable*. A link to a SDMX 2.1 web service resource where additional information regarding the structure is
+available. Example:
+
+    "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0"
+
+
+#### components 
+
+*Array*. A collection of components (dimensions and attributes) used in the message. Example:
+
+    "components": [
+                {
+                    "id": "FREQ",
+                    "name": "Frequency",
+                    "values": [
+                        {
+                            "id": "D",
+                            "name": "Daily"
+                        }
+                    ]
+                }, {
+                    "id": "CURRENCY",
+                    "name": "Currency",
+                    "values": [
+                        {
+                            "id": "NZD",
+                            "name": "New Zealand dollar"
+                        }, {
+                            "id": "RUB",
+                            "name": "Russian rouble"
+                        }
+                    ]
+                }, {
+                    "id": "OBS_STATUS",
+                    "name": "Observation status",
+                    "values": [
+                        {
+                            "id": "A",
+                            "name": "Normal value"
+                        }
+                    ]
+                }
+            ]
+            
+Each of the components may contain the following fields
+
+#### id
+
+*String*. Identifier for the component.
+Example:
+
+    "id": "FREQ"
+
+#### name
+
+*String*. Name provides for a human-readable name for the object.
+Example:
+
+    "name": "Frequency"
+
+###$ description
+
+*String* *nullable*. Provides a description for the object. Example:
+
+    "description": "The time interval at which observations occur over a given time period."
+
+#### role
+
+*String* *nullable*. Defines the component role(s). For normal components the value
+is null. Components can play various roles, such as, for example:
+
+- **time**. Time dimension is a special dimension which designates the period in
+time in which the data identified by the full series key applies.
+- **measure**. Measure dimension is a special type of dimension which defines
+multiple measures.
+
+Example:
+
+    "role": "time"
+    
+#### default
+
+*String* or *Number* *nullable*. Defines a default value for the component (valid for attributes only). If
+no value is provided then this value applies. Example:
+
+    "default": "A"    
+
+#### values
+
+*[value](#value)*. Array of values for the components. Example:
+
+    "values": [
+      {
+        "id": "M",
+        "name": "Monthly",
+        "order": 0
+      }
+    ]
+
 ----
 
+#### <a name="value"></a>value
+
+Represents a component  value. Examples:
+
+    {
+      "id": "A",
+      "name": "Normal value",
+      "order": 0
+    }
+
+    {
+      "id": "2008-01",
+      "name": "2008-01",
+      "order": "144",
+      "start": "2008-01-01T00:00:00.000Z",
+      "end": "2008-01-31T23:59:59.000Z"
+    }
+
+##### id
+
+*String*. Unique identifier for a value. Example:
+
+    "id": "A"
+
+##### name
+
+*String*. Human-readable name for a value. Example:
+
+    "name": "Missing value; data cannot exist"
+
+##### description
+
+*String* *nullable*. Description provides a plain text, human-readable
+description of the value. Example:
+
+    "description": "Provisional value"
+
+##### order
+
+*Number* *nullable*. Default display order for the value. Example:
+
+    "order": 64
+
+##### parent
+
+*String* *nullable*. Parent value (for code hierarchies). If parent is null then
+the value does not belong to any hierarchy. Hierarchy root values have special
+value "ROOT" for the parent. There may be multiple roots. Each value has only one
+parent. Example:
+
+    "parent": "U2"
+
+##### start
+
+*String* *nullable*. Start date for a code in a time dimension.
+This field is useful only when the codes are time periods for a time dimension
+(dimension type is 'time'). Value is a date in ISO format for the beginning of the
+period. Example:
+
+    "start": "2007-02-01T00:00:00.000Z"
+
+##### end
+
+*String* *nullable*. End date for a code in a time dimension.
+This field is useful only when the codes are time periods for a time dimension
+(dimension type is 'time'). Value is a date in ISO format for the end of the
+period. Example:
+
+    "end": "2007-10-31T23:59:59.000Z"
+
+##### geometry
+
+*Object* *nullable*. Represents the geographic location of this code (country,
+reference area etc.). The inner coordinates array is formatted as [geoJSON]
+(http://www.geojson.org) (longitude first, then latitude). Example:
+
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        62.4302,
+        24.7271
+      ]
+    }            
+
+#### packaging
+
+*Object*. Describes to which level in the hierarchy (data set, series, observations), the components are attached. Example:
+
+    "packaging": {
+        "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
+        "seriesDimensions": ["CURRENCY"],
+        "obsDimensions": ["TIME_PERIOD"],
+        "dataSetAttributes": [],
+        "seriesAttributes": ["TITLE"],
+        "obsAttributes": ["OBS_STATUS"]
+    }
+
+----
 
 ## <a name="DataSets"></a>DataSets
 
@@ -293,9 +457,6 @@ DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains a
 
     "dataSets": [
       {
-        "structure": {
-          # structure object #
-        },
         "dataSetAction": "Informational",
         "extracted": "2012-05-04T03:30:00",
         "data": [
@@ -303,46 +464,6 @@ DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains a
         ]
       }    
     ]
-    
-### <a name="structure"></a>structure
-
-```Currently subset of the SMDX-ML functionality```
-
-*Object* *nullable*. Structure provides a reference to the data structure definition (DSD), that describes the 
-format of data included in the message. In addition, it is also states which dimension is being used at the observation
-level, if any (for example, TIME_PERIOD for time series).
-
-Structure contains following fields:
-
-* dimensionAtObservation - *String* *nullable*. The dimensionAtObservation is used to reference the dimension 
-at the observation level for data messages. For time series, the value will be "TIME_PERIOD" while, for cross-sections,
-it can be any of the other dimensions. This can also be given the explicit value of "AllDimensions", which denotes
-that the data is in the flat format (i.e. no grouping of observations).
-
-* explicitMeasures - *Boolean* *nullable*. The explicitMeasures indicates whether explicit measures are used in
-the cross sectional format. This is only applicable for the measure dimension as the dimension at 
-the observation level or the flat structure.
-
-* ref - *Object* *nullable*. References the structure which defines the structure of the data or metadata set. 
-Ref contains following fields:
-
-    * agencyID - *String*. The id of the agency maintaining the data structure definition.
-    
-    * id - *String*. The id of the data structure definition that describes the data included in the message.
-    
-    * version - *String* *nullable*. The version attribute identifies the version of the data structure definition
-    that describes the data included in the message.
-    
-Example:
-
-    "structure": {
-      "dimensionAtObservation": "AllDimensions",
-      "ref": {
-        "agencyID": "ECB",
-        "id": "ECB_EXR1",
-        "version": "1.0"
-      }
-    } 
     
 ### dataSetID
 
@@ -424,13 +545,21 @@ published on a quarterly basis).
 
     "publicationPeriod": "2005-Q1"
     
+### dimensions
+
+*Array* *nullable*. Collection of dimensions values attached to the data set level. This is typically the case when a 
+particular dimension always has the same value for the data available in the data message. In order to avoid repetition, 
+that value can simply be attached at the data set level. Example:
+
+    "dimensions": [0]    
+    
 ### attributes
 
-*Array* *nullable*. Collection of attributes values attached to the data set level. Example:
+*Array* *nullable*. Collection of attributes values attached to the data set level. This is typically the case when a 
+particular attribute always has the same value for the data available in the data message. In order to avoid repetition, 
+that value can simply be attached at the data set level. Example:
 
-    "attributes": [
-      "A"
-    ]
+    "attributes": [0]
 
 ### Data
 
@@ -444,15 +573,12 @@ Example:
 
     {
       "dimensions": [ 0, 0, 0, 0, 0, 0 ],
-      "attributes": [
-        "P1M",
-        "A",
-      ],
+      "attributes": [ 0, 1 ],
       "observations": [
         [ 0, 105.6, null, null ],
         [ 1, 105.9 ],
         [ 2, 106.9 ],
-        [ 3, 107.3, "P" ]
+        [ 3, 107.3, 0 ]
       ]
     }
 
@@ -483,12 +609,12 @@ Dimension values map to the values in the *Dimension* objects. The array index m
 
 #### attributes
 
-*Array* *nullable*. Collection of attributes values. Example:
+*Array* *nullable*. Collection of attributes values. Each value is an index to the
+*values* array in the respective *Attribute* object. Example:
 
-    "attributes": [
-      "P1M",
-      "A"
-    ]
+    "attributes": [ 0, 1 ]
+    
+To understand how to map the index to the attribute value, see the example in the section above (dimensions).    
 
 
 #### observations
@@ -506,7 +632,7 @@ array of two of more values.
       "dimensions": [ 0, 0, 1 ],
       "observations": [
         [ 0, 87.2 ],
-        [ 1, null, "M" ]
+        [ 1, null, 0 ]
       ]
     }
 
@@ -518,310 +644,3 @@ missing observation value is a *null*.
 Elements after the observation value are values for the observation level attributes.
 Observation level attributes are defined in the *obsAttributes* field in the
 *attributes* object. Nulls may be trimmed from the end of the array.
-
-----
-
-## <a name="Dimensions"></a>Dimensions
-
-Dimension is a container for all dimensions in the message. It contains fields
-common to all dimensions and the individual dimensions. Dimensions share a common
-structure. Example:
-
-    "dimensions": {
-      "id": [
-        "FREQ",
-        "REF_AREA",
-        "ADJUSTMENT"
-      ],
-      "FREQ": {
-        # fields for dimension FREQ #
-      },
-      "REF_AREA": {
-        # fields for dimension REF_AREA #
-      },
-      "ADJUSTMENT": {
-        # fields for dimension ADJUSTMENT #
-      }
-    }
-
-
-### id (dimensions collection)
-
-*Array*. An array of identifiers for the dimensions contained in the message. The order of
-dimensions in the array is significant. Example:
-
-    "id": [
-      "FREQ",
-      "REF_AREA",
-      "ADJUSTMENT",
-      "ICP_ITEM",
-      "STS_INSTITUTION",
-      "ICP_SUFFIX",
-      "TIME_PERIOD"
-    ]
-
-### id
-
-*String*. Identifier for the dimension.
-Example:
-
-    "id": "FREQ"
-
-### name
-
-*String*. Name provides for a human-readable name for the object.
-Example:
-
-    "name": "Frequency"
-
-### description
-
-*String* *nullable*. Provides a description for the object. Example:
-
-    "description": "The time interval at which observations occur over a given time period."
-
-### role
-
-*String* *nullable*. Defines the dimension role(s). For normal dimensions the value
-is null. Dimensions can play various roles, such as, for example:
-
-- **time**. Time dimension is a special dimension which designates the period in
-time in which the data identified by the full series key applies.
-- **measure**. Measure dimension is a special type of dimension which defines
-multiple measures.
-
-Example:
-
-    "type": "time"
-
-### values
-
-*[value](#value)*. Array of values for the dimension. Example:
-
-    "values": [
-      {
-        "id": "M",
-        "name": "Monthly",
-        "order": 0
-      }
-    ]
-
----
-
-## <a name="Attributes"></a>Attributes
-
-Attributes is the container for attributes in the message. Like other containers
-it contains fields common to all attributes and individual attributes. All
-attributes are identified with an id.
-
-    "attributes": {
-      "id": [
-        "COLLECTION",
-        "DECIMALS",
-        "OBS_STATUS"
-      ],
-      "dataSetAttributes": null,
-      "seriesAttributes": [
-        "COLLECTION",
-        "DECIMALS",
-      ],
-      "obsAttributes": ["OBS_STATUS"],
-      "COLLECTION": {
-        # fields for attribute COLLECTION #
-      },
-      "DECIMALS": {
-        # fields for attribute DECIMALS #
-      },
-      "OBS_STATUS": {
-        # fields for attribute OBS_STATUS #
-      }
-    }
-
-
-### id (attribute collection)
-
-*Array*. An array of identifiers for the attributes contained in the message. Example:
-
-    "id": [
-      "COLLECTION",
-      "COMPILATION",
-      "DECIMALS",
-      "DOM_SER_IDS",
-      "PUBL_MU",
-      "PUBL_PUBLIC",
-      "TIME_FORMAT",
-      "TITLE_COMPL",
-      "UNIT",
-      "UNIT_INDEX_BASE",
-      "UNIT_MULT",
-      "OBS_COM",
-      "OBS_CONF",
-      "OBS_STATUS"
-    ]
-
-### dataSetAttributes
-
-*Array*. An array of the identifiers of the attributes attached at the dataset level. Example:
-
-    "dataSetAttributes": [
-      "LAST_UPDATED"
-    ]    
-    
-### seriesAttributes
-
-*Array*. An array of the identifiers of the attributes attached at the level of a collection of observations (such as
-a time series or a cross-section). Example:
-
-    "seriesAttributes": [
-      "COLLECTION",
-      "DECIMALS"
-    ]    
-
-### obsAttributes
-
-*Array*. An array of the identifiers of the attributes attached at the observation level. Example:
-
-    "obsAttributes": [
-      "OBS_STATUS",
-      "OBS_CONF",
-      "OBS_COM"
-    ]
-
-### id
-
-*String*. Identifier for an attribute. Example:
-
-    "id": "COLLECTION"
-
-### name
-
-*String*. Name provides for a human-readable name for the object.
-Example:
-
-    "name": "Observation status"
-
-### description
-
-*String* *nullable*. Provides a description for the object. Example:
-
-    "description": "Information on the quality of a value or an unusual or missing value."
-
-### values
-
-*[value](#value)* *nullable*. Collection of values for the attribute. Example:
-
-    "values": [
-      {
-        "id": "A",
-        "name": "Normal value",
-        "order": 0
-      },
-      {
-        "id": "E",
-        "name": "Estimated value",
-        "order": 1
-      },
-      {
-        "id": "M",
-        "name": "Missing value; data cannot exist",
-        "order": 2
-      },
-      {
-        "id": "P",
-        "name": "Provisional value",
-        "order": 3
-      }
-    ]
-
-### default
-
-*String* or *Number* *nullable*. Defines a default value for the attribute. If
-no value is provided then this value applies. Example:
-
-    "default": "A"
-
-----
-
-## <a name="value"></a>value
-
-Represents an attribute value. Examples:
-
-    {
-      "id": "A",
-      "name": "Normal value",
-      "order": 0
-    }
-
-    {
-      "id": "2008-01",
-      "name": "2008-01",
-      "order": "144",
-      "start": "2008-01-01T00:00:00.000Z",
-      "end": "2008-01-31T23:59:59.000Z"
-    }
-
-### id
-
-*String*. Unique identifier for a code. Example:
-
-    "id": "A"
-
-### name
-
-*String*. Human-readable name for a code. Example:
-
-    "name": "Missing value; data cannot exist"
-
-### description
-
-*String* *nullable*. Description provides a plain text, human-readable
-description of the code. Example:
-
-    "description": "Provisional value"
-
-### order
-
-*Number* *nullable*. Default display order for the code. Example:
-
-    "order": 64
-
-### parent
-
-*String* *nullable*. Parent value (for code hierarchies). If parent is null then
-the value does not belong to any hierarchy. Hierarchy root values have special
-value "ROOT" for the parent. There may be multiple roots. Each value has only one
-parent. Example:
-
-    "parent": "U2"
-
-### start
-
-*String* *nullable*. Start date for a code in a time dimension.
-This field is useful only when the codes are time periods for a time dimension
-(dimension type is 'time'). Value is a date in ISO format for the beginning of the
-period. Example:
-
-    "start": "2007-02-01T00:00:00.000Z"
-
-### end
-
-*String* *nullable*. End date for a code in a time dimension.
-This field is useful only when the codes are time periods for a time dimension
-(dimension type is 'time'). Value is a date in ISO format for the end of the
-period. Example:
-
-    "end": "2007-10-31T23:59:59.000Z"
-
-### geometry
-
-*Object* *nullable*. Represents the geographic location of this code (country,
-reference area etc.). The inner coordinates array is formatted as [geoJSON]
-(http://www.geojson.org) (longitude first, then latitude). Example:
-
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        62.4302,
-        24.7271
-      ]
-    }
