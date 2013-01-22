@@ -234,9 +234,9 @@ Example:
     "structure": {
             "id": "ECB_EXR_WEB",
             "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
-            "components": [
+            "components": {
                # components object # 
-            ],
+            },
             "packaging": {
                # packaging object #
             }
@@ -257,10 +257,10 @@ available. Example:
 
 #### components 
 
-*Array*. A collection of components (dimensions and attributes) used in the message. Example:
+*Object*. A collection of components (dimensions and attributes) used in the message. Example:
 
-    "components": [
-      {
+    "components": {
+      "FREQ": {
         "id": "FREQ",
         "name": "Frequency",
         "values": [
@@ -269,7 +269,8 @@ available. Example:
             "name": "Daily"
           }
         ]
-      }, {
+      }, 
+      "CURRENCY": {
         "id": "CURRENCY",
         "name": "Currency",
         "values": [
@@ -281,7 +282,8 @@ available. Example:
             "name": "Russian rouble"
           }
         ]
-      }, {
+      }, 
+      "OBS_STATUS": {
         "id": "OBS_STATUS",
         "name": "Observation status",
         "values": [
@@ -291,7 +293,7 @@ available. Example:
           }
         ]
       }
-    ]
+    }
             
 Each of the components may contain the following fields
 
@@ -629,111 +631,118 @@ Let's say for example that the following message needs to be processed:
 
     {
         "sdmx-proto-json": "2012-11-29",
-        "metadata": {
+        "header": {
             "id": "62b5f19d-f1c9-495d-8446-a3661ed24753",
             "prepared": "2012-11-29T08:40:26",
             "sender": {
                 "id": "ECB",
                 "name": "European Central Bank"
             },
-            "name": "TEST1",
-            "structure": {
-                "id": "ECB_EXR_WEB",
-                "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
-                "components": [
-                    {
-                        "id": "FREQ",
-                        "name": "Frequency",
-                        "values": [
-                            {
-                                "id": "D",
-                                "name": "Daily"
-                            }
-                        ]
-                    }, {
-                        "id": "CURRENCY",
-                        "name": "Currency",
-                        "values": [
-                            {
-                                "id": "NZD",
-                                "name": "New Zealand dollar"
-                            }, {
-                                "id": "RUB",
-                                "name": "Russian rouble"
-                            }
-                        ]
-                    }, {
-                        "id": "CURRENCY_DENOM",
-                        "name": "Currency denominator",
-                        "values": [
-                            {
-                                "id": "EUR",
-                                "name": "Euro"
-                            }
-                        ]
-                    }, {
-                        "id": "EXR_TYPE",
-                        "name": "Exchange rate type",
-                        "values": [
-                            {
-                                "id": "SP00",
-                                "name": "Spot rate"
-                            }
-                        ]
-                    }, {
-                        "id": "EXR_SUFFIX",
-                        "name": "Series variation - EXR context",
-                        "values": [
-                            {
-                                "id": "A",
-                                "name": "Average or standardised measure for given frequency"
-                            }
-                        ]
-                    }, {
-                        "id": "TIME_PERIOD",
-                        "name": "Time period or range",
-                        "values": [
-                            {
-                                "id": "2013-01-18",
-                                "name": "2013-01-18",
-                                "start": "2013-01-18T00:00:00.000Z",
-                                "end": "2013-01-18T23:59:59.000Z"
-                            }, {
-                                "id": "2013-01-21",
-                                "name": "2013-01-21",
-                                "start": "2013-01-21T00:00:00.000Z",
-                                "end": "2013-01-21T23:59:59.000Z"
-                            }
-                        ]
-                    }, {
-                        "id": "TITLE",
-                        "name": "Series title",
-                        "values": [
-                            {
-                                "name": "New zealand dollar (NZD)"
-                            }, {
-                                "name": "Russian rouble (RUB)"
-                            }
-                        ]
-                    }, {
-                        "id": "OBS_STATUS",
-                        "name": "Observation status",
-                        "values": [
-                            {
-                                "id": "A",
-                                "name": "Normal value"
-                            }
-                        ]
-                    }
-                ],
-                "packaging": {
-                    "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
-                    "seriesDimensions": ["CURRENCY"],
-                    "observationDimensions": ["TIME_PERIOD"],
-                    "dataSetAttributes": [],
-                    "seriesAttributes": ["TITLE"],
-                    "observationAttributes": ["OBS_STATUS"]
+            "name": "Sample time series data message"
+        },
+        "structure": {
+            "id": "ECB_EXR_WEB",
+            "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+            "components": {
+                "FREQ": {
+                    "id": "FREQ",
+                    "name": "Frequency",
+                    "values": [
+                        {
+                            "id": "D",
+                            "name": "Daily"
+                        }
+                    ]
+                },
+                "CURRENCY": {
+                    "id": "CURRENCY",
+                    "name": "Currency",
+                    "values": [
+                        {
+                            "id": "NZD",
+                            "name": "New Zealand dollar"
+                        }, {
+                            "id": "RUB",
+                            "name": "Russian rouble"
+                        }
+                    ]
+                },
+                "CURRENCY_DENOM": {
+                    "id": "CURRENCY_DENOM",
+                    "name": "Currency denominator",
+                    "values": [
+                        {
+                            "id": "EUR",
+                            "name": "Euro"
+                        }
+                    ]
+                },
+                "EXR_TYPE": {
+                    "id": "EXR_TYPE",
+                    "name": "Exchange rate type",
+                    "values": [
+                        {
+                            "id": "SP00",
+                            "name": "Spot rate"
+                        }
+                    ]
+                },
+                "EXR_SUFFIX": {
+                    "id": "EXR_SUFFIX",
+                    "name": "Series variation - EXR context",
+                    "values": [
+                        {
+                            "id": "A",
+                            "name": "Average or standardised measure for given frequency"
+                        }
+                    ]
+                },
+                "TIME_PERIOD": {
+                    "id": "TIME_PERIOD",
+                    "name": "Time period or range",
+                    "values": [
+                        {
+                            "id": "2013-01-18",
+                            "name": "2013-01-18",
+                            "start": "2013-01-18T00:00:00.000Z",
+                            "end": "2013-01-18T23:59:59.000Z"
+                        }, {
+                            "id": "2013-01-21",
+                            "name": "2013-01-21",
+                            "start": "2013-01-21T00:00:00.000Z",
+                            "end": "2013-01-21T23:59:59.000Z"
+                        }
+                    ]
+                },
+                "TITLE": {
+                    "id": "TITLE",
+                    "name": "Series title",
+                    "values": [
+                        {
+                            "name": "New zealand dollar (NZD)"
+                        }, {
+                            "name": "Russian rouble (RUB)"
+                        }
+                    ]
+                },
+                "OBS_STATUS": {
+                    "id": "OBS_STATUS",
+                    "name": "Observation status",
+                    "values": [
+                        {
+                            "id": "A",
+                            "name": "Normal value"
+                        }
+                    ]
                 }
+            },
+            "packaging": {
+                "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
+                "seriesDimensions": ["CURRENCY"],
+                "observationDimensions": ["TIME_PERIOD"],
+                "dataSetAttributes": [],
+                "seriesAttributes": ["TITLE"],
+                "observationAttributes": ["OBS_STATUS"]
             }
         },
         "dataSets": [
@@ -804,7 +813,7 @@ From the packaging information, we know that the identifier of the dimension for
 We can now find the CURRENCY component in the collection of components available below the structure field available in the
 metadata object:
 
-    {
+    "CURRENCY": {
         "id": "CURRENCY",
         "name": "Currency",
         "values": [
