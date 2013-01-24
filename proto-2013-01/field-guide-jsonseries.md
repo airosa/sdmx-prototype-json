@@ -264,6 +264,45 @@ Example:
 available. Example:
 
     "href": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0"
+    
+### ref
+
+*Object* *nullable*. Provides the 4 elements necessary to uniquely identify structural metadata that offers additional 
+information about the data contained in the message. Example:
+
+    "ref": {
+        "type": "dataStructure",
+        "agencyID": "ECB",
+        "id": "EXR",
+        "version": 1.0
+    }
+    
+The ref element may contain the following elements:    
+
+#### type
+
+*String*. The type of structural metadata. The following values are allowed: dataStructure, dataflow, provisionAgreement.
+For additional information about these, please refer to the [SDMX documentation](http://sdmx.org/?page_id=10). Example:
+
+    "type": "dataStructure"
+
+#### agencyID
+
+*String*. The ID of the agency maintaining the structural metadata. Example:
+
+    "agencyID": "ECB"
+
+#### id
+
+*String*. The ID of the structural metadata. Example:
+
+    "id": "EXR"
+
+#### version
+
+*String* *nullable*. The version of the structural metadata. If not supplied, defaults to 1.0. Example:
+
+    "version": 1.0    
 
 ### components
 
