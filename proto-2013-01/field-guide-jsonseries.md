@@ -34,7 +34,7 @@ but if we know that this is an exchange rate for the US dollar against the euro 
 There are two types of concepts: dimensions and attributes. Dimensions, when combined, 
 allow to uniquely identify statistical data. Attributes on the other hand do not help 
 identifying statistical data, but they add useful information (like the unit of measure 
-or the number of decimals). 
+or the number of decimals). Dimensions and attributes are known as "components". 
 
 The measurement of some phenomenon (e.g. the figure 1.2953 mentioned above) is known as an
 "observation" in SDMX. Observations are grouped together into a "data set". However, there
@@ -54,7 +54,7 @@ additional information, please refer to the [SDMX documentation](http://sdmx.org
 
 ## <a name="Message"></a>Message
 
-Message is the response you get back from the RESTful API. Message is the top
+Message is the response you get back from the SDMX RESTful API. Message is the top
 level object and it contains the data as well as the metadata needed to interpret those data. 
 Example:
 
@@ -108,7 +108,8 @@ be released later on. Example:
 
 ### dataSets
 
-*Array* *nullable*. *DataSets* field is an array of *[DataSet](#DataSet)* objects. In typical cases, the file will
+*Array* *nullable*. *DataSets* field is an array of *[DataSet](#DataSet)* objects. That's where the data (i.e.: the observations)
+will be. In typical cases, the file will
 contain only one data set. However, in some cases, such as when retrieveing, from an SDMX 2.1 web service, what has
 changed in the data source since in particular point in time, the web service might return more than one data set. 
 Example:
@@ -267,7 +268,7 @@ available. Example:
 
 ### components 
 
-*Object*. A collection of [components]{#Component} (dimensions and attributes) used in the message. Example:
+*Object*. A collection of [components](#Component) (dimensions and attributes) used in the message. Example:
 
     "components": {
       "FREQ": {
@@ -357,7 +358,7 @@ no value is provided then this value applies. Example:
 
 #### values
 
-*[value](#value)*. Array of [values](#component_values) for the components. Example:
+Array of [values](#component_values) for the components. Example:
 
     "values": [
       {
@@ -369,7 +370,7 @@ no value is provided then this value applies. Example:
     
 #### <a name="component_values"></a>Component value    
 
-A particular value for a component available in a message. Example:
+*Object* *nullable*. A particular value for a component in a message. Example:
 
     {
         "id": "M",
