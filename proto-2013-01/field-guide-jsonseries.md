@@ -448,7 +448,7 @@ reference area etc.). The inner coordinates array is formatted as [geoJSON]
 
 ## <a name="DataSets"></a>DataSets
 
-DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains additional metadata. Example:
+DataSets object is an array of data set objects. Example:
 
     "dataSets": [
       {
@@ -470,7 +470,7 @@ cross-sections. In this scenario, we have 3 levels in the data part of the messa
 series level and the observation level.
 
 Dimensions and attributes may be attached to any of these 3 levels. The way this is done in a particular message is
-documented in the (packaging element)[#packaging].
+documented in the [packaging element](#packaging).
 
 Observations will be found directly under a data set object, in case the data set is a flat list of observations. In
 case the data set represents time series or cross sections, the observations will be found under the series elements.
@@ -573,7 +573,7 @@ a data set represents a flat collection of observations. In case the observation
 
 ### <a name="series"></a> series
 
-*Object* *nullable*. The series object contains the observation values and associated metadata (dimensions and attributes), when
+*Array* *nullable*. A collection of series. Each series object contains the observation values and associated metadata (dimensions and attributes), when
 the observations contained in the data set are used into logical groups (time series or cross-sections). This element must
 not be used in case the data set represents a flat list of observations! Example:
 
@@ -601,7 +601,7 @@ not be used in case the data set represents a flat list of observations! Example
       1
     ]
     
-For information on how to handle the dimension values, see the section dedicate to [handling component values](#handling_values).    
+For information on how to handle the dimension values, see the section dedicated to [handling component values](#handling_values).    
 
 #### <a name="attributes"></a>attributes
 
@@ -610,7 +610,7 @@ For information on how to handle the dimension values, see the section dedicate 
 
     "attributes": [ 0, 1 ]
     
-For information on how to handle the attribute values, see the section dedicate to [handling component values](#handling_values).    
+For information on how to handle the attribute values, see the section dedicated to [handling component values](#handling_values).    
 
 #### <a name="observations"></a>observations
 
