@@ -634,7 +634,7 @@ Elements after the observation value are values for the observation level attrib
 
 ----
 
-## <a name="handling_values">Handling component values</a>
+## <a name="handling_values"></a>Handling component values
 
 Let's say that the following message needs to be processed:
 
