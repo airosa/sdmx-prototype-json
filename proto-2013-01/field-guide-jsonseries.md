@@ -243,7 +243,7 @@ Example:
 
     "structure": {
         "id": "ECB_EXR_WEB",
-        "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+        "href": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
         "components": {
             # components object #
         },
@@ -258,12 +258,12 @@ Example:
 
     "id": "ECB_EXR_WEB"
 
-### ref
+### href
 
 *String* *nullable*. A link to a SDMX 2.1 web service resource where additional information regarding the structure is
 available. Example:
 
-    "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0"
+    "href": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0"
 
 ### components
 
@@ -651,7 +651,7 @@ Let's say that the following message needs to be processed:
         },
         "structure": {
             "id": "ECB_EXR_WEB",
-            "ref": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
+            "href": "http://sdw-ws.ecb.europa.eu/dataflow/ECB/EXR/1.0",
             "components": {
                 "FREQ": {
                     "id": "FREQ",
