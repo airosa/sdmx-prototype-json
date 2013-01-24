@@ -60,7 +60,7 @@ Example:
 
     {
       "sdmx-proto-json": "2012-11-15",
-      "metadata": {
+      "header": {
         "name": "BIS Effective Exchange Rates",
         "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
         "prepared": "2012-05-04T03:30:00"
@@ -88,10 +88,7 @@ be released later on. Example:
     "header": {
       "name": "BIS Effective Exchange Rates",
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
-      "prepared": "2012-05-04T03:30:00",
-      "structure": {
-        # structure objects #
-      }
+      "prepared": "2012-05-04T03:30:00"
     }
     
 ### structure
@@ -120,7 +117,7 @@ Example:
       {
         "dataSetAction": "Informational",
         "extracted": "2012-05-04T03:30:00",
-        "data": [
+        "series": [
           # data object #
         ]
       }    
@@ -144,15 +141,12 @@ then error is null. Example:
 
 Header contains basic information about the message. Example:
 
-    "metadata": {
+    "header": {
       "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
       "prepared": "2013-01-03T12:54:12",
       "name": "BIS Effective Exchange Rates",
       "sender: {
         "id": "SDMX"
-      }
-      "structure": {
-        # structure object #
       }
     }
 
@@ -273,44 +267,51 @@ available. Example:
 
 ### components 
 
-*Object*. A collection of components (dimensions and attributes) used in the message. Example:
+*Object*. A collection of [components]{#Component} (dimensions and attributes) used in the message. Example:
 
     "components": {
       "FREQ": {
+        # component object #
+      }, 
+      "CURRENCY": {
+        # component object #
+      }, 
+      "OBS_STATUS": {
+        # component object #
+      },
+      "TIME_PERIOD": {
+        # component object #
+      }
+    }
+
+### <a name="packaging"></a>packaging
+
+*Object*. Describes to which level in the hierarchy (data set, series, observations), the components are attached. Example:
+
+    "packaging": {
+        "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
+        "seriesDimensions": ["CURRENCY"],
+        "observationDimensions": ["TIME_PERIOD"],
+        "dataSetAttributes": [],
+        "seriesAttributes": ["TITLE"],
+        "observationAttributes": ["OBS_STATUS"]
+    }
+    
+### <a name="Component"></a>Component 
+
+A component represents a dimension or an attribute used in the message. It contains basic information about the component
+(such as its name and id) as well as the list of values used in the message for this particular component. Example:
+
+    "FREQ": {
         "id": "FREQ",
         "name": "Frequency",
         "values": [
           {
-            "id": "D",
-            "name": "Daily"
-          }
-        ]
-      }, 
-      "CURRENCY": {
-        "id": "CURRENCY",
-        "name": "Currency",
-        "values": [
-          {
-            "id": "NZD",
-            "name": "New Zealand dollar"
-          }, {
-            "id": "RUB",
-            "name": "Russian rouble"
-          }
-        ]
-      }, 
-      "OBS_STATUS": {
-        "id": "OBS_STATUS",
-        "name": "Observation status",
-        "values": [
-          {
-            "id": "A",
-            "name": "Normal value"
+            # value object #
           }
         ]
       }
-    }
-            
+
 Each of the components may contain the following fields
 
 #### id
@@ -356,7 +357,7 @@ no value is provided then this value applies. Example:
 
 #### values
 
-*[value](#value)*. Array of values for the components. Example:
+*[value](#value)*. Array of [values](#component_values) for the components. Example:
 
     "values": [
       {
@@ -366,8 +367,16 @@ no value is provided then this value applies. Example:
       }
     ]
     
-Each of the values may contain the following fields:    
+#### <a name="component_values"></a>Component value    
 
+A particular value for a component available in a message. Example:
+
+    {
+        "id": "M",
+        "name": "Monthly",
+        "order": 0
+    }
+    
 ##### id
 
 *String*. Unique identifier for a value. Example:
@@ -434,19 +443,6 @@ reference area etc.). The inner coordinates array is formatted as [geoJSON]
       ]
     }            
 
-### packaging
-
-*Object*. Describes to which level in the hierarchy (data set, series, observations), the components are attached. Example:
-
-    "packaging": {
-        "dataSetDimensions": ["FREQ", "CURRENCY_DENOM", "EXR_TYPE", "EXR_SUFFIX"],
-        "seriesDimensions": ["CURRENCY"],
-        "observationDimensions": ["TIME_PERIOD"],
-        "dataSetAttributes": [],
-        "seriesAttributes": ["TITLE"],
-        "observationAttributes": ["OBS_STATUS"]
-    }
-
 ----
 
 ## <a name="DataSets"></a>DataSets
@@ -457,11 +453,26 @@ DataSets object is an array of *[DataSet](#DataSet)* objects. It also contains a
       {
         "dataSetAction": "Informational",
         "extracted": "2012-05-04T03:30:00",
-        "data": [
+        "series": [
           # data object #
         ]
       }    
     ]
+    
+There are between 2 and 3 levels in a data set object, depending on the way the data in the message is organised.
+
+A data set may contain a flat list of observations. In this scenario, we have 2 levels in the data part of the message: 
+the data set level and the observation level.
+
+A data set may also organise observations in logical groups called series. These groups can represent time series or 
+cross-sections. In this scenario, we have 3 levels in the data part of the message: the data set level, the
+series level and the observation level.
+
+Dimensions and attributes may be attached to any of these 3 levels. The way this is done in a particular message is
+documented in the (packaging element)[#packaging].
+
+Observations will be found directly under a data set object, in case the data set is a flat list of observations. In
+case the data set represents time series or cross sections, the observations will be found under the series elements.
     
 ### dataSetID
 
@@ -543,33 +554,27 @@ published on a quarterly basis).
     
 ### dimensions
 
-*Array* *nullable*. Collection of dimensions values attached to the data set level. This is typically the case when a 
+*Array* *nullable*. Collection of [dimensions values](#dimension) attached to the data set level. This is typically the case when a 
 particular dimension always has the same value for the data available in the data message. In order to avoid repetition, 
-that value can simply be attached at the data set level. Example:
-
-    "dimensions": [0]    
-    
-For information on how to handle the dimension values, see the section dedicate to [handling component values](#handling_values)    
+that value can simply be attached at the data set level.     
     
 ### attributes
 
-*Array* *nullable*. Collection of attributes values attached to the data set level. This is typically the case when a 
+*Array* *nullable*. Collection of [attributes values](#attributes) attached to the data set level. This is typically the case when a 
 particular attribute always has the same value for the data available in the data message. In order to avoid repetition, 
-that value can simply be attached at the data set level. Example:
+that value can simply be attached at the data set level.        
 
-    "attributes": [0]
-    
-For information on how to handle the attribute values, see the section dedicate to [handling component values](#handling_values)        
+### observations
 
-### Data
+*Array* *nullable*. Collection of [observations](#observations) directly attached to a data set. This is the case when
+a data set represents a flat collection of observations. In case the observations are organised into logical groups
+(time series or cross-sections), use the [series element](#series) instead.
 
-Data object contains the observation values and associated metadata (dimensions and attrbutes). 
+### <a name="series"></a> series
 
-Data can be represented as a flat list of observations or can be grouped into collections (slices) that can be either
-time series or cross-sections.
-
-When data are grouped into collections, data object contains three fields: dimensions, attributes and observations. 
-Example:
+*Object* *nullable*. The series object contains the observation values and associated metadata (dimensions and attributes), when
+the observations contained in the data set are used into logical groups (time series or cross-sections). This element must
+not be used in case the data set represents a flat list of observations! Example:
 
     {
       "dimensions": [ 0, 0, 0, 0, 0, 0 ],
@@ -582,12 +587,7 @@ Example:
       ]
     }
 
-In this case, data objects map directly to series in SDMX-ML messages (series, in SDMX 2.1, is a generic term that 
-covers both time series and cross-sections). Series have both dimensions and observations fields. Attributes
-field is optional in case there are no attributes at the series level. The array values in the dimensions field 
-are always integers (null is not possible).
-
-#### dimensions
+#### <a name="dimensions"></a>dimensions
 
 *Array* *nullable*. An array of dimension values. Each value is an index to the
 *values* array in the respective *Dimension* object. 
@@ -602,7 +602,7 @@ are always integers (null is not possible).
     
 For information on how to handle the dimension values, see the section dedicate to [handling component values](#handling_values).    
 
-#### attributes
+#### <a name="attributes"></a>attributes
 
 *Array* *nullable*. Collection of attributes values. Each value is an index to the
 *values* array in the respective *Attribute* object. Example:
@@ -611,27 +611,23 @@ For information on how to handle the dimension values, see the section dedicate 
     
 For information on how to handle the attribute values, see the section dedicate to [handling component values](#handling_values).    
 
-#### observations
+#### <a name="observations"></a>observations
 
 *Array* *nullable*. An array of observation values. Each observation value is an
 array of two of more values.
 
-    {
-      "dimensions": [ 0, 0, 0 ],
-      "observations": [
-        [ 0, 86.7 ],
-        [ 1, 86.9 ],
-    },
-    {
-      "dimensions": [ 0, 0, 1 ],
-      "observations": [
-        [ 0, 87.2 ],
-        [ 1, null, 0 ]
-      ]
-    }
+    "observations": [
+        [ 0, 105.6, null, null ],
+        [ 1, 105.9 ],
+        [ 2, 106.9 ],
+        [ 3, 107.3, 0 ]
+    ]
 
-First element in an observation value array is index value of the observation level dimension. 
-Second element is the observation value. The data type for observation value is *Number*. Data type for a reported
+The first elements in an observation value array are the index values of the observation level dimensions. It's typically one
+for time series and cross-sections, but there can be more than one when the data set represents a flat list of
+observations.
+
+Then comes the observation value. The data type for observation value is *Number*. Data type for a reported
 missing observation value is a *null*.
 
 Elements after the observation value are values for the observation level attributes.
@@ -763,7 +759,7 @@ Let's say that the following message needs to be processed:
                 "extracted": "2013-01-21T15:20:00.000Z",
                 "dataSetAction": "Informational",
                 "dimensions": [0, 0, 0, 0],
-                "data": [
+                "series": [
                     {
                         "dimensions": [0],
                         "attributes": [0],
