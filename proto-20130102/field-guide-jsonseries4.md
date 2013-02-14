@@ -1,7 +1,7 @@
 
 # Draft Field Guide to SDMX-PROTO-JSON Objects
 
-**Version for jsonseries4 format**
+**Version for JSONSERIES4 format**
 
 Use this guide to better understand SDMX-PROTO-JSON objects.
 
@@ -176,7 +176,9 @@ then error is null. Example:
 
 ## <a name="Data"></a>Data
 
-Data object is a container for the data and reference metadata. Data object contains three fields: dimensions, attributes and observations. Example:
+Data object is a container for the data and reference metadata. Data object
+contains either an observation field or an attributes field or both. It normally
+contains also a dimensions field. Example series:
 
     {
       "dimensions": [ 0, 0, 0, 0, 0, 0 ],
@@ -192,23 +194,25 @@ Data object is a container for the data and reference metadata. Data object cont
       ]
     }
 
-Data objects map directly to series and groups in SDMX-ML messages:
+Data objects map to SDMX series and groups:
 
-- Series have both dimensions and observations fields. Attributes
-field is optional in case there are no attributes at the series level.
+- Series have both dimensions and observations fields. They have usually also attributes
+field but this optional in case there are no attributes at the series level.
 The array values in the dimensions field are always integers (null is not possible).
-- Groups have always attributes field. They also have dimensions field
+- Groups have at minimum always attributes field. They also have dimensions field
 unless the attributes are attached at the data set level. Groups do not have
 observations field. The array values in the dimensions field contain nulls for the
 dimensions that are wildcarded.
 
 ### dimensions
 
-*Array* *nullable*. An array of dimension values. Each value is an index to the
+*Array* *nullable*. An array of dimension codes. Each code is an index to the
 *codes* array in the respective *Dimension* object. If the code is *null* then
-code value for respective dimension is wildcarded. Example:
+code value for respective dimension is undefined. For example if the data object
+is a sibling set. If dimensions is null then values for all dimensions are null.
+For example if the data object is data set level attributes. Example:
 
-    // Dimensions for series
+    // Dimensions for time series
     "dimensions": [
       0,
       93,
@@ -216,20 +220,13 @@ code value for respective dimension is wildcarded. Example:
       1
     ]
 
-    // Dimensions for group at sibling set level
+    // Dimensions for sibling set
     "dimensions": [
       null,
       93,
       12,
       1
     ]
-    
-Dimension values map to the codes in the *Dimension* objects. The array index maps to the array index in the *Dimensions* *id* field and this allows lookup for the corresponding code array. Example:
-
-1. Dimensions array for a data object is [0,93,12,1]. The *id* field in the message *dimensions* object is [ "FREQ" , "REF_AREA" , "ADJUSTMENT" , "ICP_ITEM" ].
-2. First value 0 maps to the first value in the *codes* field for the dimension "FREQ".
-3. Second value 93 maps to the 93rd value in the *codes* field for the dimension "REF_AREA" etc.
-
 
 ### attributes
 
@@ -260,7 +257,7 @@ array of two of more values.
       ]
     }
 
-First element in an observation value array is index value of the observation level dimension. Observation level dimension is the last dimension in the *dimensions* *id* field. Second element is the observation value. The data type
+Next element after the dimension code is the observation value. The data type
 for observation value is *Number*. Data type for a reported missing observation value is a *null*.
 
 Elements after the observation value are values for the observation level attributes.
