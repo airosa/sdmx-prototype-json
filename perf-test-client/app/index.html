@@ -2,10 +2,11 @@
 <html lang="en" ng-app="demoApp">
   <head>
     <meta charset="utf-8">
-    <title>PERF-TEST-CLIENT</title>
+    <title>PERF-TEST-CLIENT-2</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/app.css" rel="stylesheet">
     <script src="lib/angular.min.js"></script>
+    <script src="lib/crossfilter.js"></script>
     <script src="js/app.js"></script>
     <script src="js/controllers.js"></script>
     <script src="js/chart.js"></script>
@@ -14,12 +15,12 @@
     <link href="css/bootstrap-responsive.min.css" rel="stylesheet">
 
 
-    <!--
+<!--
     <script>
       document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
     </script>
-    -->
 
+ -->
 
   </head>
   <body ng-controller="MainCtrl">
@@ -27,7 +28,7 @@
       <div class="navbar navbar-fixed-top">
         <div class="navbar-inner">
           <div class="container">
-            <a class="brand" href="#">Perf-Test-Client</a>
+            <a class="brand" href="#">Perf-Test-Client-2</a>
             <p class="navbar-text pull-right">Version {{version}}</p>
           </div>
         </div>
@@ -93,6 +94,24 @@
       </div>
     </div>
 
+
+    <div class="row" ng-show="false">
+      <div class="span12">
+        <form class="form-horizontal">
+          <legend>Crossfilter</legend>
+
+          <button type="button" ng-click="testCrossfilter()">Crossfilter</button><br><br>
+          <table class="table table-condensed table-bordered">
+            <tr ng-repeat="data in crossFilterOutput">
+              <th>{{data.name}}</th>
+              <td align="left">{{data.value}}</td>
+            </tr>
+          </table>
+        </form>
+      </div>
+    </div>
+
+
     <div class="row">
       <div class="span12">
         <form class="form-horizontal">
@@ -101,7 +120,7 @@
           <button type="button" ng-click="getDimensions()">Get Codes</button><br><br>
           <table class="table table-condensed table-bordered">
             <tr ng-repeat="dim in dimensions">
-              <th>{{dim.id}}</th>
+              <th>{{dim.name}}</th>
               <td align="left">{{dim.codes}}</td>
             </tr>
           </table>
@@ -112,37 +131,6 @@
     <div class="row">
       <div class="span12">
         <H2>Tests</H2>
-
-        <dl>
-          <dt>Request</dt>
-          <dd>Time to make the request to the Web Service in ms.</dd>
-          <dt>Response size</dt>
-          <dd>Uncompressed size of the JSON response in KB/MB.</dd>
-          <dt>Parse JSON</dt>
-          <dd>Time to parse the JSON response with JSON.parse() in ms.</dd>
-          <dt>Initialize</dt>
-          <dd>Time to initialize the data structure (create indices etc.) in memory ms.</dd>
-          <dt>Memory</dt>
-          <dd>Memory allocation (does not currently work).</dd>
-          <dt>Obs count</dt>
-          <dd>Theoretical number of observations in the response.
-            Calculated by multiplying the number of codes in each dimension.</dd>
-          <dt>Density</dt>
-          <dd>Number of actual non-missing observation divided by the theoretical
-            number of observation above.</dd>
-          <dt>Data checksum</dt>
-          <dd>Checksum calculated from the observations in response.</dd>
-          <dt>Cube access</dt>
-          <dd>Time to sum all observations. Each observation is accessed with the key.</dd>
-          <dt>Cube checksum</dt>
-          <dd>Checksum for the cube access test. Results from the same query should be equal.</dd>
-          <dt>TS count</dt>
-          <dd>Number of time series in the response.</dd>
-          <dt>TS access</dt>
-          <dd>Time to sum all observations. Observation are accessed via time series keys.</dd>
-          <dt>TS checksum</dt>
-          <dd>Checksum for the time series access test. Results from the same query should be equal.</dd>
-        </dl>
 
         <p>
           <span ng-repeat="format in formats">
@@ -163,37 +151,74 @@
               <th>Parse JSON</th>
               <th>Initialize</th>
               <th>Memory</th>
-              <th>Obs count (cube)</th>
-              <th>Obs count (result)</th>
-              <th>Density</th>
-              <th>Data checksum</th>
-              <th>Cube access</th>
-              <th>Cube checksum</th>
-              <th>TS count</th>
-              <th>TS access</th>
-              <th>TS checksum</th>
+              <th>Flatten to simple array</th>
+              <th>Flatten to complex array</th>
+              <th>Access all cells with keys</th>
+              <th>Simple array obs count</th>
+              <th>Cube size</th>
+              <th>Simple array density</th>
+              <th>Simple array checksum</th>
+              <th>Complex array checksum</th>
+              <th>Cell access checksum</th>
+              <th>Checksum</th>
             </tr>
           </thead>
           <tbody>
             <tr ng-repeat="result in results">
               <td>{{result.format}}</td>
               <td>{{result.requestTime}}</td>
-              <td>{{result.size}}</td>
+              <td>{{result.responseSize}}</td>
               <td>{{result.parseTime}}</td>
               <td>{{result.initTime}}</td>
               <td>{{result.memory}}</td>
+              <td>{{result.flattenToSimpleArray}}</td>
+              <td>{{result.flattenToComplexArray}}</td>
+              <td>{{result.cellAccess}}</td>
+              <td>{{result.simpleArrayLength}}</td>
               <td>{{result.obsCount}}</td>
-              <td>{{result.actualObsCount}}</td>
               <td>{{result.density}}</td>
+              <td>{{result.simpleArrayChecksum}}</td>
+              <td>{{result.complexArrayChecksum}}</td>
+              <td>{{result.cellAccessChecksum}}</td>
               <td>{{result.dataChecksum}}</td>
-              <td>{{result.cubeAccessTime}}</td>
-              <td>{{result.cubeChecksum}}</td>
-              <td>{{result.tsCount}}</td>
-              <td>{{result.tsAccessTime}}</td>
-              <td>{{result.tsChecksum}}</td>
             </tr>
           </tbody>
         </table>
+
+        <dl>
+          <dt>Request</dt>
+          <dd>Time to make the request to the Web Service in ms.</dd>
+          <dt>Response size</dt>
+          <dd>Uncompressed size of the JSON response in KB/MB.</dd>
+          <dt>Parse JSON</dt>
+          <dd>Time to parse the JSON response with JSON.parse() in ms.</dd>
+          <dt>Initialize</dt>
+          <dd>Time to initialize the data structure (create indices etc.) in memory ms.</dd>
+          <dt>Memory</dt>
+          <dd>Memory allocation (does not currently work).</dd>
+
+          <dt>Flatten to simple array</dt>
+          <dd>Time to flatten the response into simple array with value indeces</dd>
+          <dt>Flatten to complex array</dt>
+          <dd>Time to flatten the response into complex array with references to values</dd>
+
+          <dt>Simple array obs count</dt>
+          <dd>Number of records in the simple array</dd>
+          <dt>Obs count (cube)</dt>
+          <dd>Theoretical number of observations in the response.
+            Calculated by multiplying the number of codes in each dimension.</dd>
+          <dt>Simple array density</dt>
+          <dd>Number of records divided by the theoretical number of observation in the response.</dd>
+
+          <dt>Simple array checksum</dt>
+          <dd>Checksum calculated from the observation values in the simple array</dd>
+          <dt>Complex array checksum</dt>
+          <dd>Checksum calculated from the observation values in the complex array</dd>
+          <dt>Checksum</dt>
+          <dd>Checksum calculated directly from the observation values in the response.</dd>
+
+        </dl>
+
       </div>
     </div>
 

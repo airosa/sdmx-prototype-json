@@ -550,7 +550,7 @@ no value is provided then this value applies. Example:
 ## <a name="Code"></a>Code
 
 Codes are used in all dimensions and coded attributes (uncoded attributes do not
-use codes. Examples:
+use codes). Examples:
 
     {
       "id": "A",

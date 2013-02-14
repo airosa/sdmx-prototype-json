@@ -1,0 +1,415 @@
+{
+  "sdmx-proto-json": "2013-01-03",
+  "id": "b1804c51-1ee3-45a9-bb75-795cd4e06489",
+  "prepared": "2013-01-03T12:54:12",
+  "name": "BIS Effective Exchange Rates",
+  "data": [
+    {
+      "dimensions": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "attributes": [
+        "P1M",
+        "A"
+      ],
+      "observations": [
+        [
+          0,
+          98.42,
+          "A",
+          null,
+          null
+        ],
+        [
+          1,
+          98.82,
+          "A",
+          null,
+          null
+        ],
+        [
+          2,
+          99.69,
+          "A",
+          null,
+          null
+        ],
+        [
+          3,
+          100.47,
+          "A",
+          null,
+          null
+        ],
+        [
+          4,
+          100.15,
+          "A",
+          null,
+          null
+        ],
+        [
+          5,
+          100.38,
+          "A",
+          null,
+          null
+        ],
+        [
+          6,
+          99.99,
+          "A",
+          null,
+          null
+        ],
+        [
+          7,
+          100.32,
+          "A",
+          null,
+          null
+        ],
+        [
+          8,
+          99.83,
+          "A",
+          null,
+          null
+        ],
+        [
+          9,
+          99.99,
+          "A",
+          null,
+          null
+        ],
+        [
+          10,
+          99.84,
+          "A",
+          null,
+          null
+        ],
+        [
+          11,
+          99.04,
+          "A",
+          null,
+          null
+        ]
+      ]
+    },
+    {
+      "dimensions": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "attributes": [
+        "P1M",
+        "A"
+      ],
+      "observations": [
+        [
+          0,
+          98.66,
+          "A",
+          null,
+          null
+        ],
+        [
+          1,
+          98.95,
+          "A",
+          null,
+          null
+        ],
+        [
+          2,
+          99.63,
+          "A",
+          null,
+          null
+        ],
+        [
+          3,
+          100.29,
+          "A",
+          null,
+          null
+        ],
+        [
+          4,
+          99.97,
+          "A",
+          null,
+          null
+        ],
+        [
+          5,
+          100.22,
+          "A",
+          null,
+          null
+        ],
+        [
+          6,
+          99.91,
+          "A",
+          null,
+          null
+        ],
+        [
+          7,
+          100.36,
+          "A",
+          null,
+          null
+        ],
+        [
+          8,
+          100.21,
+          "A",
+          null,
+          null
+        ],
+        [
+          9,
+          100.34,
+          "A",
+          null,
+          null
+        ],
+        [
+          10,
+          100.08,
+          "A",
+          null,
+          null
+        ],
+        [
+          11,
+          99.4,
+          "A",
+          null,
+          null
+        ]
+      ]
+    }
+  ],
+  "dimensions": {
+    "id": [
+      "FREQ",
+      "EER_TYPE",
+      "EER_BASKET",
+      "REF_AREA",
+      "TIME_PERIOD"
+    ],
+    "FREQ": {
+      "id": "FREQ",
+      "name": "Frequency",
+      "role": null,
+      "codes": [
+        {
+          "name": "Monthly",
+          "index": 0,
+          "order": 0
+        }
+      ]
+    },
+    "EER_TYPE": {
+      "id": "EER_TYPE",
+      "name": "Type",
+      "role": null,
+      "codes": [
+        {
+          "name": "Nominal",
+          "index": 0,
+          "order": 0
+        }
+      ]
+    },
+    "EER_BASKET": {
+      "id": "EER_BASKET",
+      "name": "Basket",
+      "role": null,
+      "codes": [
+        {
+          "name": "Broad (61 economies)",
+          "index": 0,
+          "order": 0
+        }
+      ]
+    },
+    "REF_AREA": {
+      "id": "REF_AREA",
+      "name": "Reference area",
+      "role": null,
+      "codes": [
+        {
+          "name": "Denmark",
+          "index": 0,
+          "order": 0
+        },
+        {
+          "name": "Estonia",
+          "index": 1,
+          "order": 1
+        }
+      ]
+    },
+    "TIME_PERIOD": {
+      "id": "TIME_PERIOD",
+      "name": "Time period or range",
+      "role": "time",
+      "codes": [
+        {
+          "start": "2011-01-01T00:00:00",
+          "end": "2011-01-31T23:59:59",
+          "index": 0,
+          "order": 0
+        },
+        {
+          "start": "2011-02-01T00:00:00",
+          "end": "2011-02-28T23:59:59",
+          "index": 1,
+          "order": 1
+        },
+        {
+          "start": "2011-03-01T00:00:00",
+          "end": "2011-03-31T23:59:59",
+          "index": 2,
+          "order": 2
+        },
+        {
+          "start": "2011-04-01T00:00:00",
+          "end": "2011-04-30T23:59:59",
+          "index": 3,
+          "order": 3
+        },
+        {
+          "start": "2011-05-01T00:00:00",
+          "end": "2011-05-31T23:59:59",
+          "index": 4,
+          "order": 4
+        },
+        {
+          "start": "2011-06-01T00:00:00",
+          "end": "2011-06-30T23:59:59",
+          "index": 5,
+          "order": 5
+        },
+        {
+          "start": "2011-07-01T00:00:00",
+          "end": "2011-07-31T23:59:59",
+          "index": 6,
+          "order": 6
+        },
+        {
+          "start": "2011-08-01T00:00:00",
+          "end": "2011-08-31T23:59:59",
+          "index": 7,
+          "order": 7
+        },
+        {
+          "start": "2011-09-01T00:00:00",
+          "end": "2011-09-30T23:59:59",
+          "index": 8,
+          "order": 8
+        },
+        {
+          "start": "2011-10-01T00:00:00",
+          "end": "2011-10-31T23:59:59",
+          "index": 9,
+          "order": 9
+        },
+        {
+          "start": "2011-11-01T00:00:00",
+          "end": "2011-11-30T23:59:59",
+          "index": 10,
+          "order": 10
+        },
+        {
+          "start": "2011-12-01T00:00:00",
+          "end": "2011-12-31T23:59:59",
+          "index": 11,
+          "order": 11
+        }
+      ]
+    }
+  },
+  "attributes": {
+    "id": [
+      "TIME_FORMAT",
+      "OBS_STATUS",
+      "OBS_CONF",
+      "OBS_PRE_BREAK",
+      "COLLECTION",
+      "UNIT_MEASURE"
+    ],
+    "TIME_FORMAT": {
+      "mandatory": true,
+      "id": "TIME_FORMAT",
+      "name": "Time Format Code",
+      "role": null,
+      "codes": [
+        {
+          "name": "Monthly",
+          "index": 0,
+          "order": 0
+        }
+      ]
+    },
+    "OBS_STATUS": {
+      "mandatory": true,
+      "id": "OBS_STATUS",
+      "name": "Observation Status",
+      "role": null,
+      "codes": [
+        {
+          "name": "Normal",
+          "index": 0,
+          "order": 0
+        }
+      ]
+    },
+    "OBS_CONF": {
+      "mandatory": false,
+      "id": "OBS_CONF",
+      "name": "Observation Confidentiality",
+      "role": null,
+      "codes": []
+    },
+    "OBS_PRE_BREAK": {
+      "mandatory": false,
+      "id": "OBS_PRE_BREAK",
+      "name": "Pre-Break Observation",
+      "role": null,
+      "codes": []
+    },
+    "COLLECTION": {
+      "mandatory": true,
+      "id": "COLLECTION",
+      "name": "Collection Indicator",
+      "role": null,
+      "codes": [
+        {
+          "name": "Average of observations through period",
+          "index": 0,
+          "order": 0
+        }
+      ]
+    },
+    "UNIT_MEASURE": {
+      "mandatory": true,
+      "id": "UNIT_MEASURE",
+      "name": "Unit of measure",
+      "role": null,
+      "codes": []
+    }
+  }
+}

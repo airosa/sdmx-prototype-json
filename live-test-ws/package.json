@@ -1,7 +1,7 @@
 {
-  "name":         	"live-test-ws-2",
-  "subdomain":      "live-test-ws-2",
-  "version":      	"0.3.0",
+  "name":         	"live-test-ws-4",
+  "subdomain":      "live-test-ws-4",
+  "version":      	"0.5.1",
   "description":    "Experimental SDMX RESTful web service for JSON testing and development",
   "keywords":     	["sdmx", "coffeescript"],
   "author":       	"Sami Airo",
@@ -25,6 +25,6 @@
   },
   "license":         "MIT",
   "scripts": {
-    "start":         "live-test-ws-2.js"
+    "start":         "live-test-ws-4.js"
   }
 }
