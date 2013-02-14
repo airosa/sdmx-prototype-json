@@ -7,7 +7,7 @@ zlib = require 'zlib'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS'
-SERVER_VERSION = '0.2.12'
+SERVER_VERSION = '0.3.1'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx.json'
 
@@ -22,7 +22,7 @@ log = (msg) ->
 #-------------------------------------------------------------------------------
 # Functions for the initial loading of data
 
-# Calculates index multipliers for all dimensions 
+# Calculates index multipliers for all dimensions
 calculateIndexMultipliers = (dimensions) ->
     multipliers = new Array dimensions.length
     reversedDimensions = dimensions.slice().reverse()
@@ -85,7 +85,7 @@ exports.timePeriodToDate = timePeriodToDate = (frequency, year, period, end) ->
     date
 
 
-# Parses time periods in all supported formats. 
+# Parses time periods in all supported formats.
 # Returns date object set the beginning of the period. If end is true
 # then returned date is set to the end of the period.
 exports.parseDate = parseDate = (value, end) ->
@@ -106,8 +106,8 @@ exports.parseDate = parseDate = (value, end) ->
                 when 4 then date.setUTCFullYear date.getUTCFullYear() + 1
                 when 7 then date.setUTCMonth date.getUTCMonth() + 1
                 when 10 then date.setUTCDate date.getUTCDate() + 1
-    
-    date.setUTCSeconds date.getUTCSeconds() - 1 if date? and end 
+
+    date.setUTCSeconds date.getUTCSeconds() - 1 if date? and end
 
     date
 
@@ -115,7 +115,7 @@ exports.parseDate = parseDate = (value, end) ->
 # Functions for parsing the request url
 
 exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
-    if not flowRefStr? 
+    if not flowRefStr?
         response.result.errors.push 'Mandatory parameter flowRef is missing'
         response.statusCode = 400
         return
@@ -132,7 +132,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     if not regex.test flowRefStr
         response.result.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
-        return        
+        return
 
     flowRef = flowRefStr.split ','
 
@@ -149,7 +149,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
 
 
 exports.parseKey = parseKey = (keyStr, request, response) ->
-    keyStr = 'all' unless keyStr? 
+    keyStr = 'all' unless keyStr?
 
     if keyStr is 'all'
         request.query.key = 'all'
@@ -180,14 +180,14 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
     if not regex.test keyStr
         response.result.errors.push "Invalid parameter flowRef #{keyStr}"
         response.statusCode = 400
-        return        
+        return
 
     key = []
 
     dims = keyStr.split '.'
     for dim, i in dims
         codes = dim.split '+'
-        
+
         key[i] = []
         for code in codes when code isnt ''
             key[i].push code
@@ -201,7 +201,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
 
 
 exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response) ->
-    providerRefStr = 'all' unless providerRefStr? 
+    providerRefStr = 'all' unless providerRefStr?
 
     regex = ///
         ^(
@@ -212,7 +212,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
     if not regex.test providerRefStr
         response.result.errors.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
-        return        
+        return
 
     providerRef = providerRefStr.split ','
 
@@ -248,9 +248,8 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                     request.query[param] = date
                     continue
             when 'firstNObservations', 'lastNObservations'
-                n = ~Number(value)
-                if String(n) is value and n >= 0
-                    request.query[param] = n
+                if 0 < +value
+                    request.query[param] = +value
                     continue
             when 'updatedAfter'
                 response.statusCode = 501
@@ -265,14 +264,14 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                         continue
 
         response.result.errors.push "Invalid query parameter #{param} value #{value}"
-        response.statusCode = 400  
+        response.statusCode = 400
         return
 
 
 parseDataQuery = (path, request, response) ->
     parseFlowRef path[2], request, response
     return unless response.statusCode is 200
- 
+
     parseKey path[3], request, response
     return unless response.statusCode is 200
 
@@ -285,11 +284,11 @@ parseDataQuery = (path, request, response) ->
 
 # Main parsing function
 parse = (request, response) ->
-    request.query = {} 
+    request.query = {}
     path = url.parse( request.url, no, no).pathname.split '/'
 
     path.shift() if path[1] is 'auth'
-    
+
     request.query.resource = path[1]
     switch request.query.resource
         when 'data'
@@ -324,7 +323,7 @@ findDataFlow = (request, response) ->
         when 'ECB', 'all' then true
         else false
 
-    if not found 
+    if not found
         response.statusCode = 404
         response.result.errors.push "Data flow not found"
         return
@@ -354,7 +353,7 @@ addCodesToQuery = (request, response, msg) ->
     # Special case, all codes for all dimensions are in
     if request.query.key is 'all'
         for dim, i in msg.dimensions.id
-            continue if msg.dimensions[dim].type is 'time' 
+            continue if msg.dimensions[dim].type is 'time'
             query[i].push j for code, j in msg.dimensions[dim].codes.id
         return query
 
@@ -372,7 +371,7 @@ addCodesToQuery = (request, response, msg) ->
             for code, j in msg.dimensions[dim].codes.id
                 query[i].push j
             continue
-        
+
         for code in keyCodes
             continue unless msg.dimensions[dim].codes[code]?
             index = msg.dimensions[dim].codes[code].index
@@ -384,7 +383,7 @@ addCodesToQuery = (request, response, msg) ->
 
 
 # Main query function. It finds matching observations, maps
-# dimension code positions and creates the result data and code arrays. 
+# dimension code positions and creates the result data and code arrays.
 query = (msg, request, response) ->
     # shorthand for result
     rslt = response.result
@@ -447,24 +446,24 @@ query = (msg, request, response) ->
             return
 
     # add dimensions to the response
-    rslt.dimensions = 
+    rslt.dimensions =
         id: msg.dimensions.id
         size: []
         dimensionAtObservation: request.query.dimensionAtObservation
 
     for dim, i in msg.dimensions.id
-        rslt.dimensions[dim] = 
+        rslt.dimensions[dim] =
             id: msg.dimensions[dim].id
-            codes: 
+            codes:
                 id: []
             name: msg.dimensions[dim].name
             type: msg.dimensions[dim].type
-            role: msg.dimensions[dim].role
+            #role: msg.dimensions[dim].role
             index: i
 
         for pos, j in Object.keys codesWithData[i]
             code = msg.dimensions[dim].codes.id[pos]
-            rslt.dimensions[dim].codes.id.push code            
+            rslt.dimensions[dim].codes.id.push code
             rslt.dimensions[dim].codes[code] =
                 index: j
                 id: msg.dimensions[dim].codes[code].id
@@ -477,12 +476,12 @@ query = (msg, request, response) ->
                 rslt.dimensions[dim].codes[code].end = msg.dimensions[dim].codes[code].end
 
         rslt.dimensions.size[i] = rslt.dimensions[dim].codes.id.length
-        
+
     return if request.query.detail is 'serieskeysonly'
 
     unless request.query.detail is 'nodata'
         # Build code mapping between codes in the response and codes in the
-        # data set. 
+        # data set.
 
         codeMap = []
         for dim, n in msg.dimensions.id
@@ -493,7 +492,7 @@ query = (msg, request, response) ->
 
         # Add measures to response
 
-        resultCount = 1 
+        resultCount = 1
         resultMultipliers = []
         for dim in rslt.dimensions.id.slice().reverse()
             resultMultipliers.push resultCount
@@ -508,7 +507,7 @@ query = (msg, request, response) ->
             for codes, n in codeMap
                 index = Math.floor( i / resultMultipliers[n] ) % codes.length
                 obsIndex += codes[index] * msgMultipliers[n]
-            
+
             rslt.measure[i] = msg.measure[obsIndex]
 
     if rslt.dimensions.dimensionAtObservation isnt 'AllDimensions'
@@ -538,7 +537,7 @@ query = (msg, request, response) ->
                     pivotSubIndex = codeIndex
                 else
                     pivotIndex += codeIndex * pivotMultipliers[n]
-            
+
             if msg.measure[obsIndex]?
                 pivot[pivotIndex] ?= []
                 pivot[pivotIndex][pivotSubIndex] = rslt.measure[obsIndex]
@@ -556,7 +555,7 @@ query = (msg, request, response) ->
             dimPos = msg.dimensions.id.indexOf dim
             attrCodeMapping.push codeMap[dimPos]
 
-        resultCount = 1 
+        resultCount = 1
         resultMultipliers = []
         for dim in msg.attributes[attr].dimension.slice().reverse()
             resultMultipliers.push resultCount
@@ -569,7 +568,7 @@ query = (msg, request, response) ->
             msgMultipliers.push msgCount
             msgCount *= msg.dimensions[dim].codes.id.length
         msgMultipliers.reverse()
-        
+
         value = []
         for i in [0..resultCount-1]
             attrIndex = 0
@@ -590,7 +589,7 @@ query = (msg, request, response) ->
             id: msg.attributes[attr].id
             name: msg.attributes[attr].name
             mandatory: msg.attributes[attr].mandatory
-            role: msg.attributes[attr].role
+            #role: msg.attributes[attr].role
             dimension: msg.attributes[attr].dimension
             default: msg.attributes[attr].default
             value: value
@@ -710,7 +709,7 @@ handleRequest = (request, response) ->
     response.setHeader 'Content-Type',                'application/json'
     response.setHeader 'Content-Language',            'en'
     response.statusCode = 200
-    response.result = 
+    response.result =
         'sdmx-proto-json': dataset['sdmx-proto-json']
         id: "IREF#{ process.hrtime()[0] }#{ process.hrtime()[1] }"
         test: true

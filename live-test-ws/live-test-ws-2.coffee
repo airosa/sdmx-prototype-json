@@ -7,7 +7,7 @@ zlib = require 'zlib'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS-2'
-SERVER_VERSION = '0.3.0'
+SERVER_VERSION = '0.4.0'
 PORT_NUMBER = process.env.PORT or 8081
 DATA_FILE = 'hicp-coicop-inx-flat.json'
 
@@ -22,7 +22,7 @@ log = (msg) ->
 #-------------------------------------------------------------------------------
 # Functions for the initial loading of data
 
-# Calculates index multipliers for all dimensions 
+# Calculates index multipliers for all dimensions
 calculateIndexMultipliers = (dimensions) ->
     multipliers = new Array dimensions.length
     reversedDimensions = dimensions.slice().reverse()
@@ -85,7 +85,7 @@ exports.timePeriodToDate = timePeriodToDate = (frequency, year, period, end) ->
     date
 
 
-# Parses time periods in all supported formats. 
+# Parses time periods in all supported formats.
 # Returns date object set the beginning of the period. If end is true
 # then returned date is set to the end of the period.
 exports.parseDate = parseDate = (value, end) ->
@@ -106,8 +106,8 @@ exports.parseDate = parseDate = (value, end) ->
                 when 4 then date.setUTCFullYear date.getUTCFullYear() + 1
                 when 7 then date.setUTCMonth date.getUTCMonth() + 1
                 when 10 then date.setUTCDate date.getUTCDate() + 1
-    
-    date.setUTCSeconds date.getUTCSeconds() - 1 if date? and end 
+
+    date.setUTCSeconds date.getUTCSeconds() - 1 if date? and end
 
     date
 
@@ -115,7 +115,7 @@ exports.parseDate = parseDate = (value, end) ->
 # Functions for parsing the request url
 
 exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
-    if not flowRefStr? 
+    if not flowRefStr?
         response.result.errors.push 'Mandatory parameter flowRef is missing'
         response.statusCode = 400
         return
@@ -132,7 +132,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     if not regex.test flowRefStr
         response.result.errors.push "Invalid parameter flowRef #{flowRefStr}"
         response.statusCode = 400
-        return        
+        return
 
     flowRef = flowRefStr.split ','
 
@@ -149,7 +149,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
 
 
 exports.parseKey = parseKey = (keyStr, request, response) ->
-    keyStr = 'all' unless keyStr? 
+    keyStr = 'all' unless keyStr?
 
     if keyStr is 'all'
         request.query.key = 'all'
@@ -180,14 +180,14 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
     if not regex.test keyStr
         response.result.errors.push "Invalid parameter flowRef #{keyStr}"
         response.statusCode = 400
-        return        
+        return
 
     key = []
 
     dims = keyStr.split '.'
     for dim, i in dims
         codes = dim.split '+'
-        
+
         key[i] = []
         for code in codes when code isnt ''
             key[i].push code
@@ -201,7 +201,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
 
 
 exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response) ->
-    providerRefStr = 'all' unless providerRefStr? 
+    providerRefStr = 'all' unless providerRefStr?
 
     regex = ///
         ^(
@@ -212,7 +212,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
     if not regex.test providerRefStr
         response.result.errors.push "Invalid parameter providerRef #{providerRefStr}"
         response.statusCode = 400
-        return        
+        return
 
     providerRef = providerRefStr.split ','
 
@@ -246,9 +246,8 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                     request.query[param] = date
                     continue
             when 'firstNObservations', 'lastNObservations'
-                n = ~Number(value)
-                if String(n) is value and n >= 0
-                    request.query[param] = n
+                if 0 < +value
+                    request.query[param] = +value
                     continue
             when 'updatedAfter'
                 response.statusCode = 501
@@ -263,14 +262,14 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                         continue
 
         response.result.errors.push "Invalid query parameter #{param} value #{value}"
-        response.statusCode = 400  
+        response.statusCode = 400
         return
 
 
 parseDataQuery = (path, request, response) ->
     parseFlowRef path[2], request, response
     return unless response.statusCode is 200
- 
+
     parseKey path[3], request, response
     return unless response.statusCode is 200
 
@@ -283,11 +282,11 @@ parseDataQuery = (path, request, response) ->
 
 # Main parsing function
 parse = (request, response) ->
-    request.query = {} 
+    request.query = {}
     path = url.parse( request.url, no, no).pathname.split '/'
 
     path.shift() if path[1] is 'auth'
-    
+
     request.query.resource = path[1]
     switch request.query.resource
         when 'data'
@@ -322,7 +321,7 @@ findDataFlow = (request, response) ->
         when 'ECB', 'all' then true
         else false
 
-    if not found 
+    if not found
         response.statusCode = 404
         response.result.errors.push "Data flow not found"
         return
@@ -357,11 +356,11 @@ addCodesToQuery = (request, response, msg) ->
     query.push [] for dim in msg.dimensions.id
 
     # Applies the date parameters to the codes in the time dimension
- 
+
     # Special case, all codes for all dimensions are in
     if request.query.key is 'all'
         for dim, i in msg.dimensions.id
-            continue if msg.dimensions[dim].type is 'time' 
+            continue if msg.dimensions[dim].type is 'time'
             query[i].push j for code, j in msg.dimensions[dim].codes.id
         return query
 
@@ -379,19 +378,22 @@ addCodesToQuery = (request, response, msg) ->
             for code, j in msg.dimensions[dim].codes.id
                 query[i].push j
             continue
-        
-        for code in keyCodes
-            continue unless msg.dimensions[dim].codes[code]?
-            index = msg.dimensions[dim].codes[code].index
-            query[i].push index if 0 <= index
 
-        # What happens if there are no valid codes for a dimension?
+        for code in keyCodes
+            if not msg.dimensions[dim].codes[code]?
+                #not a valid code for a dimension
+                query[i].push -1
+                continue
+
+            index = msg.dimensions[dim].codes[code].index
+            query[i].push index if -1 < index
+
 
     query
 
 
 # Main query function. It finds matching observations, maps
-# dimension code positions and creates the result data and code arrays. 
+# dimension code positions and creates the result data and code arrays.
 query = (msg, request, response) ->
     # shorthand for result
     rslt = response.result
@@ -427,7 +429,7 @@ query = (msg, request, response) ->
         for code, i in obj.dimensions
             continue if code is null
             continue if codesInQuery[i].length is 0
-            continue if -1 < codesInQuery[i].indexOf code 
+            continue if -1 < codesInQuery[i].indexOf code
             return false
         true
 
@@ -440,9 +442,9 @@ query = (msg, request, response) ->
     codesWithData = []
     codeCounts = []
     for dim in msg.dimensions.id
-        codesWithData.push {} 
+        codesWithData.push {}
         codeCounts.push 0
-    console.log request.query.dimensionAtObservation
+    #console.log request.query.dimensionAtObservation
     obsDimPos = msg.dimensions[msg.dimensions.dimensionAtObservation].index
 
     obsCount = 0
@@ -472,7 +474,13 @@ query = (msg, request, response) ->
             observations = obj.observations
 
         resultObj.observations = []
+        counter = 0
         for obs in observations
+            counter += 1
+
+            if request.query.lastNObservations?
+                continue unless observations.length - counter + 1 <= request.query.lastNObservations
+
             newObs = obs.slice()
             if not codesWithData[obsDimPos][obs[0]]?
                 codesWithData[obsDimPos][obs[0]] = codeCounts[obsDimPos]
@@ -481,22 +489,30 @@ query = (msg, request, response) ->
             resultObj.observations.push newObs
             obsCount += 1
 
+            if request.query.firstNObservations?
+                break if request.query.firstNObservations is counter
+
         continue unless 0 < resultObj.observations.length
 
         results.push resultObj
 
+    if obsCount is 0
+        response.statusCode = 404
+        response.result.errors.push 'Observations not found'
+        return
+
     # add dimensions to the response
-    rslt.dimensions = 
+    rslt.dimensions =
         id: msg.dimensions.id
         dimensionAtObservation: request.query.dimensionAtObservation
 
     for dim, i in msg.dimensions.id
-        rslt.dimensions[dim] = 
+        rslt.dimensions[dim] =
             id: msg.dimensions[dim].id
             codes: []
             name: msg.dimensions[dim].name
             type: msg.dimensions[dim].type
-            role: msg.dimensions[dim].role
+            #role: msg.dimensions[dim].role
             index: i
 
         for pos, newPos of codesWithData[i]
@@ -512,16 +528,11 @@ query = (msg, request, response) ->
 
             if msg.dimensions[dim].codes[code].end?
                 rslt.dimensions[dim].codes[newPos].end = msg.dimensions[dim].codes[code].end
-        
+
     return if request.query.detail is 'serieskeysonly'
 
-    if obsCount is 0
-        response.statusCode = 404
-        response.result.errors.push 'Observations not found'
-        return
-    
     if rslt.dimensions.dimensionAtObservation isnt msg.dimensions.dimensionAtObservation
-        console.log rslt.dimensions.dimensionAtObservation
+        #console.log rslt.dimensions.dimensionAtObservation
 
         if rslt.dimensions.dimensionAtObservation is 'AllDimensions'
             results2 = []
@@ -530,13 +541,18 @@ query = (msg, request, response) ->
                     results2.push obj
                     continue
 
-                obj2 = 
+                obj2 =
+                    dimensions: []
                     attributes: obj.attributes
                     observations: []
                 for obs in obj.observations
                     obj2.observations.push obj.dimensions.concat obs
                 results2.push obj2
             results = results2
+        else
+            response.statusCode = 501
+            response.result.errors.push 'Supported dimensionAtObservation values: TIME_PERIOD, AllDimensions'
+            return
 
     ###
         # We need to pivot the measure array into subarrays
@@ -572,7 +588,7 @@ query = (msg, request, response) ->
                     pivotSubIndex = codeIndex
                 else
                     pivotIndex += codeIndex * pivotMultipliers[n]
-            
+
             if msg.measure[obsIndex]?
                 pivot[pivotIndex] ?= []
                 pivot[pivotIndex][pivotSubIndex] = rslt.measure[obsIndex]
@@ -593,7 +609,7 @@ query = (msg, request, response) ->
     for attrId in msg.attributes.obsAttributes
         attributesInResults[attrId] = null
 
-    rslt.attributes = 
+    rslt.attributes =
         id: []
         obsAttributes: msg.attributes.obsAttributes
 
@@ -603,8 +619,8 @@ query = (msg, request, response) ->
             id: msg.attributes[attrId].id
             name: msg.attributes[attrId].name
             mandatory: msg.attributes[attrId].mandatory
-            role: msg.attributes[attrId].role
-            dimension: msg.attributes[attrId].dimension
+            #role: msg.attributes[attrId].role
+            #dimension: msg.attributes[attrId].dimension
             default: msg.attributes[attrId].default
             codes: msg.attributes[attrId].codes
 
@@ -721,7 +737,7 @@ handleRequest = (request, response) ->
     response.setHeader 'Content-Type',                'application/json'
     response.setHeader 'Content-Language',            'en'
     response.statusCode = 200
-    response.result = 
+    response.result =
         'sdmx-proto-json': dataset['sdmx-proto-json']
         id: "IREF#{ process.hrtime()[0] }#{ process.hrtime()[1] }"
         test: true
