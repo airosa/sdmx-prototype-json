@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="ValidationApp">
+    <head>
+
+        <meta charset="utf-8">
+        <title>VALIDATION-CLIENT</title>
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link href="css/app.css" rel="stylesheet">
+
+        <!--
+        <script>
+            document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+        </script>
+        -->
+
+    </head>
+    <body ng-controller="ValidationCtrl">
+
+        <div class="container">
+
+            <div class="row"><div class="span12">
+                <form>
+                    <fieldset>
+                        <legend>SDMX-JSON Validator</legend>
+
+                        <label>Web Service URL</label>
+
+                        <textarea rows=3 ng-model="wsName" ng-change="changeTestUrl()" class="span10"
+                        placeholder="http://ws-entry-point/data/ECB_EXR1_WEB/D.USD.EUR.SP00.A?startPeriod=2009-05-01&endPeriod=2009-05-31" autofocus></textarea>
+
+                        <span class="help-block">Paste the complete URL (including parameters) in the textarea above.</span>
+
+                        <label>JSON Schema</label>
+
+                        <select ng-model="schemaType">
+                            <option>json-slice</option>
+                            <option>json-code-index</option>
+                        </select>
+
+                        <button type="submit" class="btn" ng-click="validate()">Validate</button>
+                    </fieldset>
+                </form>
+            </div></div>
+
+
+            <div class="row" ng-show="state.testRunning"><div class="span12">
+                <div class="alert alert-info">
+                  <button type="button" class="close" ng-click="state.testRunning=false">×</button>
+                  <h4>Please wait</h4>
+                  <p>Running tests from {{wsName}}.</p>
+                </div>
+            </div></div>
+
+            <div class="row" ng-show="state.httpError"><div class="span12">
+                <div class="alert alert-error">
+                  <button type="button" class="close" ng-click="state.httpError=false">×</button>
+                  <h4>Request failed</h4>
+                  <p>Status code: {{response.status}}</p>
+                  <p ng-repeat="error in response.errors">{{error}}</p>
+                </div>
+            </div></div>
+
+
+            <div class="row"><div class="span12">
+                <div ng-repeat="msg in messages">
+                    <div>{{msg}}</div>
+                </div>
+            </div></div>
+
+        </div>
+
+        <script src="lib/jquery-1.8.2.min.js"></script>
+        <script src="lib/bootstrap.min.js"></script>
+        <script src="lib/angular.min.js"></script>
+        <script src="lib/tv4.min.js"></script>
+        <script src="js/app.js"></script>
+
+    </body>
+</html>
