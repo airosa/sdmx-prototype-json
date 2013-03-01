@@ -1,0 +1,82 @@
+{
+    "type": "object",
+    "properties": {
+        "sdmx-proto-json": {
+            "type": "string"
+        },
+        "header": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "prepared": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "test": {
+                    "type": "boolean"
+                }
+            },
+            "required": [ "id", "prepared" ],
+            "additionalProperties": false
+        },
+        "structure": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "href": {
+                    "type": "string"
+                },
+                "components": {
+                    "type": "array"
+                },
+                "packaging": {
+                    "type": "object"
+                }
+            },
+            "additionalProperties": false
+        },
+        "dataSets": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "action": {
+                        "enum": [ "Informational", "Append", "Replace", "Delete" ]
+                    },
+                    "extracted": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dimensions": {
+                        "type": "array"
+                    },
+                    "observations": {
+                        "type": "array"
+                    },
+                    "series": {
+                        "type": "array"
+                    }
+                },
+                "additionalProperties": false
+            }
+        },
+        "errors": {
+            "type": [ "null", "array" ],
+            "items": {
+                "type": "string"
+            }
+        }
+    },
+    "required": [ "sdmx-proto-json", "header" ],
+    "additionalProperties": false
+}
