@@ -4,11 +4,6 @@ validationApp = angular.module 'ValidationApp', []
 validationApp.controller 'ValidationCtrl', ($scope, $http) ->
     $scope.schemaType = 'json-slice'
     $scope.messages = []
-    $scope.state =
-        httpError: false
-        httpErrorData: false
-        dataRequestRunning: false
-        dimensionRequestRunning: false
     schema = {}
 
 
@@ -18,14 +13,11 @@ validationApp.controller 'ValidationCtrl', ($scope, $http) ->
 
 
     requestSchema = () ->
-        $scope.state.httpError = false
-        $scope.state.running = true
-
         switch $scope.schemaType
             when 'json-slice' then schemaUrl = 'json-slice-schema.json'
             when 'json-code-index' then schemaUrl = 'json-code-index-schema.json'
 
-        $scope.messages.push "Requesting schema from #{schemaUrl}"
+        info "Requesting schema from #{schemaUrl}"
 
         config =
             method: 'GET'
@@ -37,23 +29,17 @@ validationApp.controller 'ValidationCtrl', ($scope, $http) ->
 
 
     onSchema = (data, status, headers, config) ->
-        $scope.state.testRunning = false
-        $scope.state.httpError = false
-
-        $scope.messages.push 'Received schema'
-        $scope.messages.push 'Starting to parse schema'
+        info 'Received schema'
+        info 'Starting to parse schema'
 
         try
             schema = JSON.parse data
         catch error
-            $scope.messages.push "Error: #{error}"
+            severe error
             return
 
-        $scope.messages.push 'Finished parsing schema'
-
-        $scope.state.testRunning = true
-
-        $scope.messages.push "Requesting data from web service #{$scope.wsName}"
+        info 'Finished parsing schema'
+        info "Requesting data from web service #{$scope.wsName}"
 
         config =
             method: 'GET'
@@ -65,35 +51,39 @@ validationApp.controller 'ValidationCtrl', ($scope, $http) ->
 
 
     onData = (data, status, headers, config) ->
-        $scope.state.testRunning = false
-        $scope.state.httpError = false
-        $scope.messages.push 'Received data from web service'
-        $scope.messages.push 'Starting to parse data'
+        info 'Received data from web service'
+        info 'Starting to parse data'
 
         try
             json = JSON.parse data
         catch error
-            $scope.messages.push "ERROR: #{error}"
+            severe error
             return
 
-        $scope.messages.push 'Finished parsing data'
-
-        $scope.messages.push 'Starting to validate data'
+        info 'Finished parsing data'
+        info 'Starting to validate data'
 
         valid = tv4.validate json, schema
 
-        $scope.messages.push JSON.stringify(tv4.error, null, 4) unless valid
+        severe JSON.stringify(tv4.error, null, 4) unless valid
 
-        $scope.messages.push 'Finished validating data'
+        info 'Finished validating data'
+        info 'Done'
 
 
     onError = (data, status, headers, config) ->
-        $scope.state.testRunning = false
-        $scope.state.httpError = true
+        try
+            json = JSON.parse data
+            severe "#{status} #{json.errors}"
+        catch err
+            severe status
 
-        $scope.response =
-            status: status
-            errors: data.errors
+
+    info = (msg) -> log 'muted', msg
+
+    severe = (msg) -> log 'text-error', "Error: #{msg}"
+
+    log = (style, msg) -> $scope.messages.push class: style, msg: (new Date()).toISOString()[11..22] + ' ' + msg
 
 
 
