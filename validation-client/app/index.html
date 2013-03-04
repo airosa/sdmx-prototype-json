@@ -42,28 +42,9 @@
                 </form>
             </div></div>
 
-
-            <div class="row" ng-show="state.testRunning"><div class="span12">
-                <div class="alert alert-info">
-                  <button type="button" class="close" ng-click="state.testRunning=false">×</button>
-                  <h4>Please wait</h4>
-                  <p>Running tests from {{wsName}}.</p>
-                </div>
-            </div></div>
-
-            <div class="row" ng-show="state.httpError"><div class="span12">
-                <div class="alert alert-error">
-                  <button type="button" class="close" ng-click="state.httpError=false">×</button>
-                  <h4>Request failed</h4>
-                  <p>Status code: {{response.status}}</p>
-                  <p ng-repeat="error in response.errors">{{error}}</p>
-                </div>
-            </div></div>
-
-
             <div class="row"><div class="span12">
                 <div ng-repeat="msg in messages">
-                    <div>{{msg}}</div>
+                    <div class="{{msg.class}}">{{msg.msg}}</div>
                 </div>
             </div></div>
 

@@ -5,15 +5,9 @@
   validationApp = angular.module('ValidationApp', []);
 
   validationApp.controller('ValidationCtrl', function($scope, $http) {
-    var onData, onError, onSchema, requestSchema, schema;
+    var info, log, onData, onError, onSchema, requestSchema, schema, severe;
     $scope.schemaType = 'json-slice';
     $scope.messages = [];
-    $scope.state = {
-      httpError: false,
-      httpErrorData: false,
-      dataRequestRunning: false,
-      dimensionRequestRunning: false
-    };
     schema = {};
     $scope.validate = function() {
       $scope.messages = [];
@@ -21,8 +15,6 @@
     };
     requestSchema = function() {
       var config, schemaUrl;
-      $scope.state.httpError = false;
-      $scope.state.running = true;
       switch ($scope.schemaType) {
         case 'json-slice':
           schemaUrl = 'json-slice-schema.json';
@@ -30,7 +22,7 @@
         case 'json-code-index':
           schemaUrl = 'json-code-index-schema.json';
       }
-      $scope.messages.push("Requesting schema from " + schemaUrl);
+      info("Requesting schema from " + schemaUrl);
       config = {
         method: 'GET',
         url: schemaUrl,
@@ -42,19 +34,16 @@
       return $http(config).success(onSchema).error(onError);
     };
     onSchema = function(data, status, headers, config) {
-      $scope.state.testRunning = false;
-      $scope.state.httpError = false;
-      $scope.messages.push('Received schema');
-      $scope.messages.push('Starting to parse schema');
+      info('Received schema');
+      info('Starting to parse schema');
       try {
         schema = JSON.parse(data);
       } catch (error) {
-        $scope.messages.push("Error: " + error);
+        severe(error);
         return;
       }
-      $scope.messages.push('Finished parsing schema');
-      $scope.state.testRunning = true;
-      $scope.messages.push("Requesting data from web service " + $scope.wsName);
+      info('Finished parsing schema');
+      info("Requesting data from web service " + $scope.wsName);
       config = {
         method: 'GET',
         url: $scope.wsName,
@@ -67,31 +56,43 @@
     };
     onData = function(data, status, headers, config) {
       var json, valid;
-      $scope.state.testRunning = false;
-      $scope.state.httpError = false;
-      $scope.messages.push('Received data from web service');
-      $scope.messages.push('Starting to parse data');
+      info('Received data from web service');
+      info('Starting to parse data');
       try {
         json = JSON.parse(data);
       } catch (error) {
-        $scope.messages.push("ERROR: " + error);
+        severe(error);
         return;
       }
-      $scope.messages.push('Finished parsing data');
-      $scope.messages.push('Starting to validate data');
+      info('Finished parsing data');
+      info('Starting to validate data');
       valid = tv4.validate(json, schema);
       if (!valid) {
-        $scope.messages.push(JSON.stringify(tv4.error, null, 4));
+        severe(JSON.stringify(tv4.error, null, 4));
       }
-      return $scope.messages.push('Finished validating data');
+      info('Finished validating data');
+      return info('Done');
     };
-    return onError = function(data, status, headers, config) {
-      $scope.state.testRunning = false;
-      $scope.state.httpError = true;
-      return $scope.response = {
-        status: status,
-        errors: data.errors
-      };
+    onError = function(data, status, headers, config) {
+      var json;
+      try {
+        json = JSON.parse(data);
+        return severe("" + status + " " + json.errors);
+      } catch (err) {
+        return severe(status);
+      }
+    };
+    info = function(msg) {
+      return log('muted', msg);
+    };
+    severe = function(msg) {
+      return log('text-error', "Error: " + msg);
+    };
+    return log = function(style, msg) {
+      return $scope.messages.push({
+        "class": style,
+        msg: (new Date()).toISOString().slice(11, 23) + ' ' + msg
+      });
     };
   });
 
