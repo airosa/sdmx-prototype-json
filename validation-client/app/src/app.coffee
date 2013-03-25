@@ -14,8 +14,8 @@ validationApp.controller 'ValidationCtrl', ($scope, $http) ->
 
     requestSchema = () ->
         switch $scope.schemaType
-            when 'json-slice' then schemaUrl = 'https://raw.github.com/sdmx-twg/sdmx-prototype-json/master/json-slice/tools/schemas/json-slice-schema.json'
-            when 'json-code-index' then schemaUrl = 'https://raw.github.com/sdmx-twg/sdmx-prototype-json/master/json-code-index/tools/schemas/json-code-index-schema.json'
+            when 'json-slice' then schemaUrl = 'json-slice-schema.json'
+            when 'json-code-index' then schemaUrl = 'json-code-index-schema.json'
 
         info "Requesting schema from #{schemaUrl}"
 
@@ -38,7 +38,7 @@ validationApp.controller 'ValidationCtrl', ($scope, $http) ->
             severe error
             return
 
-        info 'Finished parsing schema'
+        info 'Finished parsing schema "' + schema.description + '"'
         info "Requesting data from #{$scope.wsName}"
 
         config =
