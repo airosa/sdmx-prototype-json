@@ -17,10 +17,10 @@
       var config, schemaUrl;
       switch ($scope.schemaType) {
         case 'json-slice':
-          schemaUrl = 'https://raw.github.com/sdmx-twg/sdmx-prototype-json/master/json-slice/tools/schemas/json-slice-schema.json';
+          schemaUrl = 'json-slice-schema.json';
           break;
         case 'json-code-index':
-          schemaUrl = 'https://raw.github.com/sdmx-twg/sdmx-prototype-json/master/json-code-index/tools/schemas/json-code-index-schema.json';
+          schemaUrl = 'json-code-index-schema.json';
       }
       info("Requesting schema from " + schemaUrl);
       config = {
@@ -42,7 +42,7 @@
         severe(error);
         return;
       }
-      info('Finished parsing schema');
+      info('Finished parsing schema "' + schema.description + '"');
       info("Requesting data from " + $scope.wsName);
       config = {
         method: 'GET',
