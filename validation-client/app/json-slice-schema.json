@@ -3,9 +3,6 @@
     "type": "object",
     "description": "Schema for json-slice, version 2013-03-24",
     "properties": {
-        "sdmx-proto-json": {
-            "type": "string"
-        },
         "header": {
             "$ref": "#/definitions/header"
         },
@@ -25,7 +22,7 @@
             }
         }
     },
-    "required": [ "sdmx-proto-json", "header" ],
+    "required": [ "header" ],
     "additionalProperties": false,
     "definitions": {
         "header": {
@@ -54,7 +51,7 @@
                             "type": "string"
                         }
                     },
-                    "required": [ "id", "name" ]
+                    "required": [ "id" ]
                 },
                 "receiver": {
                     "type": [ "null", "object" ],
@@ -66,7 +63,7 @@
                             "type": "string"
                         }
                     },
-                    "required": [ "id", "name" ]
+                    "required": [ "id" ]
                 },
                 "extracted": {
                     "type": [ "null", "string" ],
@@ -116,45 +113,50 @@
                     "required": [ "type", "agencyID", "id" ],
                     "additionalProperties": false
                 },
-                "packaging": {
+                "dimensions": {
                     "type": "object",
                     "properties": {
-                        "dataSetDimensions": {
+                        "dataSet": {
                             "type": [ "null", "array" ],
                             "items": {
                                 "$ref": "#/definitions/component"
                             },
                             "uniqueItems": true
                         },
-                        "seriesDimensions": {
+                        "series": {
                             "type": [ "null", "array" ],
                             "items": {
                                 "$ref": "#/definitions/component"
                             },
                             "uniqueItems": true
                         },
-                        "observationDimensions": {
+                        "observation": {
+                            "type": [ "null", "array" ],
+                            "items": {
+                                "$ref": "#/definitions/component"
+                            },
+                            "uniqueItems": true
+                        }
+                    }
+                },
+                "attributes": {
+                    "type": "object",
+                    "properties": {
+                        "dataSet": {
                             "type": [ "null", "array" ],
                             "items": {
                                 "$ref": "#/definitions/component"
                             },
                             "uniqueItems": true
                         },
-                        "dataSetAttributes": {
+                        "series": {
                             "type": [ "null", "array" ],
                             "items": {
                                 "$ref": "#/definitions/component"
                             },
                             "uniqueItems": true
                         },
-                        "seriesAttributes": {
-                            "type": [ "null", "array" ],
-                            "items": {
-                                "$ref": "#/definitions/component"
-                            },
-                            "uniqueItems": true
-                        },
-                        "observationAttributes": {
+                        "observation": {
                             "type": [ "null", "array" ],
                             "items": {
                                 "$ref": "#/definitions/component"
@@ -164,7 +166,7 @@
                     }
                 }
             },
-            "required": [ "packaging" ],
+            "required": [ "dimensions", "attributes" ],
             "additionalProperties": false
         },
         "component": {
@@ -201,9 +203,6 @@
                             },
                             "description": {
                                 "type": [ "null", "string" ]
-                            },
-                            "orderBy": {
-                                "type": [ "null", "integer" ]
                             },
                             "parent": {
                                 "type": [ "null", "integer" ]
