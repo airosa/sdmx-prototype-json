@@ -1,7 +1,7 @@
 {
     "$schema" : "http://json-schema.org/draft-04/schema#",
     "type": "object",
-    "description": "Schema for json-slice, version 2013-03-24",
+    "description": "Schema for json-slice, version 2013-05-08",
     "properties": {
         "header": {
             "$ref": "#/definitions/header"
@@ -31,9 +31,6 @@
                 "id": {
                     "type": "string"
                 },
-                "name": {
-                    "type": [ "null", "string" ]
-                },
                 "prepared": {
                     "type": "string",
                     "format": "date-time"
@@ -42,28 +39,10 @@
                     "type": [ "null", "boolean" ]
                 },
                 "sender": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [ "id" ]
+                    "$ref": "#/definitions/party"
                 },
                 "receiver": {
-                    "type": [ "null", "object" ],
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [ "id" ]
+                    "$ref": "#/definitions/party"
                 },
                 "extracted": {
                     "type": [ "null", "string" ],
@@ -82,6 +61,50 @@
             },
             "required": [ "id", "prepared", "sender" ],
             "additionalProperties": false
+        },
+        "party": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "contact": {
+                    "type": [ "null", "array" ],
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "department": {
+                                "type": "string"
+                            },
+                            "role": {
+                                "type": "string"
+                            },
+                            "telephone": {
+                                "type": "string"
+                            },
+                            "fax": {
+                                "type": "string"
+                            },
+                            "x400": {
+                                "type": "string"
+                            },
+                            "uri": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "required": [ "id" ]
         },
         "structure": {
             "type": [ "null", "object" ],
@@ -214,9 +237,6 @@
                             "end": {
                                 "type": [ "null", "string" ],
                                 "format": "date-time"
-                            },
-                            "geometry": {
-                                "type": [ "null", "object" ]
                             }
                         },
                         "required": [ "name" ]
