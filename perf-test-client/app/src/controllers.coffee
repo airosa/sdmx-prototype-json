@@ -1,5 +1,5 @@
 demoModule.controller 'MainCtrl', ($scope, $http) ->
-    $scope.version = '0.2.1'
+    $scope.version = '0.3.1'
 
     $scope.state =
         httpError: false
@@ -7,24 +7,25 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         dataRequestRunning: false
         dimensionRequestRunning: false
 
-    #$scope.wsName = 'http://live-test-ws.nodejitsu.com'
+    $scope.wsName = 'http://live-test-ws-7.nodejitsu.com'
     #$scope.wsName = 'http://localhost:8081'
     #$scope.wsName = 'http://46.137.144.117/FusionCube/ws'
     #$scope.wsName = 'http://46.51.142.127:8080/FusionMatrix3/ws'
-    $scope.wsName = 'http://46.137.144.117/FusionMatrix/ws'
+    #$scope.wsName = 'http://46.137.144.117/FusionMatrix/ws'
 
-    #$scope.dfName = 'ECB_ICP1'
+    $scope.dfName = 'ECB_ICP1'
     #$scope.dfName = 'IMF,PGI,1.0'
     #scope.dfName = 'BIS,BISWEB_EERDATAFLOW,1.0'
-    $scope.dfName = 'SDMX,T1,1.0'
+    #$scope.dfName = 'SDMX,T1,1.0'
 
     #$scope.key = ''
     #$scope.key = '....'
     #$scope.key = '....A'
     #$scope.key = '...GB'
     #$scope.key = 'ALL'
-    $scope.key = 'M.0+1.0.0.0+1.1+2+3' #D.0.0.0.0.1'
+    #$scope.key = 'M.0+1.0.0.0+1.1+2+3' #D.0.0.0.0.1'
     #$scope.key = 'M.0.0.0.0.3' #D.0.0.0.0.1'
+    $scope.key = 'M.AT.N.000000.4.INX'
 
     $scope.customParams = ''
     #$scope.customParams = 'format=samistat'
@@ -36,12 +37,11 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
     $scope.dimensions = []
     $scope.results = []
-    $scope.formats = ['jsoncodeindex','jsonslice']
+    $scope.formats = ['jsoncodeindex','jsonslice','sdmxjson']
 
 #-------------------------------------------------------------------------------
 
     fixJsonSlice = (msg) ->
-        #console.log msg
         msg.structure.id = msg.structure.structure
         delete msg.structure.structure
 
@@ -97,6 +97,11 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         msg
 
 
+    fixSdmxJson = (msg) ->
+        msg.structure.dimensions.dataSet ?= []
+        msg
+
+
 #-------------------------------------------------------------------------------
 # Code for testing crossfilter
 
@@ -142,8 +147,6 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         $scope.crossFilterOutput.push name: 'filter count', value: dims[1].top(Infinity).length
         $scope.crossFilterOutput.push name: 'group[0] size', value: groups[0].size()
         $scope.crossFilterOutput.push name: 'group[1] size', value: groups[1].size()
-        #console.log groups[0].all()
-        #console.log groups[1].all()
 
 
 #-------------------------------------------------------------------------------
@@ -187,8 +190,6 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             url: "#{$scope.wsName}/data/#{$scope.dfName}/ALL?format=jsonslice&detail=seriesKeysOnly" #lastNObservations=12"
             cache: false
 
-        #console.log 'test'
-
         $scope.state.httpError = false
         $scope.state.testRunning = true
         $http(config).success(onResults).error(onError)
@@ -226,6 +227,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
             cube = switch result.format
                 when 'jsonslice' then new JSONSliceCube json
                 when 'jsoncodeindex' then new JSONCodeIndexCube json, false, true
+                when 'sdmxjson' then new SDMXJsonCube json
             result.initTime = ((new Date).getTime() - start) + ' ms'
 
             result.actualObsCount = cube.obsCount()
@@ -415,17 +417,113 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
         obsCount: ()->
             Object.keys(@msg.data).length
 
+
+#-------------------------------------------------------------------------------
+
+    class SDMXJsonCube
+        constructor: (@msg) ->
+            @msg = fixSdmxJson @msg
+
+        observations: () ->
+            obs = []
+            dsDims = @msg.structure.dimensions.dataSet.map( (d) -> 0 )
+
+            for ds in @msg.dataSets
+                if ds.series
+                    for key, value of ds.series
+                        serDims = dsDims.concat key.split ':'
+                        for key2, value2 of value.observations
+                            dims = serDims.concat key2.split ':'
+                            obs.push dims.concat value2[0..0]
+                else
+                    for key, value of ds.observations
+                        dims = dsDims.concat key.split ':'
+                        obs.push dims.concat value[0..0]
+
+            obs
+
+        observationsWithReferences: () ->
+            obs = []
+            dsDims = @msg.structure.dimensions.dataSet.map( (d) -> d.values[0] )
+            dims = @msg.structure.dimensions
+
+            for ds in @msg.dataSets
+                if ds.series
+                    for key, value of ds.series
+                        serDims = dsDims.concat key.split(':').map( (v,i) -> dims.series[i].values[v] )
+                        for key2, value2 of value.observations
+                            obsDims = serDims.concat key2.split(':').map( (v,i) -> dims.observation[i].values[v] )
+                            obs.push obsDims.concat value2[0..0]
+                else
+                    for key, value of ds.observations
+                        obsDims = dsDims.concat key.split(':').map( (v,i) -> dims.observation[i].values[v] )
+                        obs.push obsDims.concat value[0..0]
+
+            obs
+
+        components: () ->
+            str = @msg.structure
+            str.dimensions.dataSet.concat str.dimensions.series,
+                str.dimensions.observation,
+                str.attributes.dataSet,
+                str.attributes.series,
+                str.attributes.observation
+
+        dimensions: () ->
+            str = @msg.structure
+            str.dimensions.dataSet.concat str.dimensions.series, str.dimensions.observation
+
+        observation: (key) ->
+            dataSetDims = @msg.structure.dimensions.dataSet.length
+            seriesDims = @msg.structure.dimensions.series.length
+
+            dataSetKey = key[0...dataSetDims].join ':'
+            seriesKey = key[dataSetDims...(dataSetDims+seriesDims)].join ':'
+            obsKey = key[(dataSetDims+seriesDims)...].join ':'
+
+            obs = undefined
+            for ds in @msg.dataSets
+                if ds.series
+                    obs = ds.series[seriesKey]?.observations[obsKey]
+                    return obs[0] if obs?
+                else
+                    obs = ds.observations[obsKey]
+                    return obs[0] if obs?
+
+            obs
+
+        checkSum: () ->
+            sum = 0
+            for ds in @msg.dataSets
+                if ds.series
+                    for key, value of ds.series
+                        for key2, value2 of value.observations
+                            sum += value2[0] if value2[0]?
+                else
+                    for key, value of ds.observations
+                        sum += value[0] if value[0]?
+            sum
+
+        obsCount: () ->
+            count = 0
+            for ds in @msg.dataSets
+                if ds.series
+                    for key, value of ds.series
+                        count += Object.keys(value.observations).length
+                else
+                    count += Object.keys(ds.observations).length
+            count
+
 #-------------------------------------------------------------------------------
 # Tests
 
     testFlattenResults = (cube, result) ->
-        components = cube.components()
+        dimensions = cube.dimensions()
 
-        obsValueIndex = -1
-        components.forEach (c,i) -> if c.id is 'OBS_VALUE' then obsValueIndex = i
+        obsValueIndex = dimensions.length
 
         result.obsCount = 1
-        result.obsCount *= c.values.length for c, i in components when i < obsValueIndex
+        result.obsCount *= c.values.length for c, i in dimensions
 
         obs = cube.observations()
         result.simpleArrayLength = obs.length
@@ -437,13 +535,12 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
 
     testFlattenResultsWithReferences = (cube, result) ->
-        components = cube.components()
+        dimensions = cube.dimensions()
 
-        obsValueIndex = -1
-        components.forEach (c,i) -> if c.id is 'OBS_VALUE' then obsValueIndex = i
+        obsValueIndex = dimensions.length
 
         result.obsCount = 1
-        result.obsCount *= c.values.length for c, i in components when i < obsValueIndex
+        result.obsCount *= c.values.length for c, i in dimensions
 
         obs = cube.observationsWithReferences()
         result.complexArrayLength = obs.length
@@ -525,7 +622,7 @@ demoModule.controller 'MainCtrl', ($scope, $http) ->
 
         params = []
         params.push $scope.customParams if $scope.customParams.length
-        params.push 'format=' + format.split('_')[0]
+        #params.push 'format=' + format.split('_')[0]
         testUrl += "?" + params.join '&' if params.length
         $scope.url = testUrl
         testUrl
