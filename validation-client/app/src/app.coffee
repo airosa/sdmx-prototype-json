@@ -2,7 +2,7 @@ validationApp = angular.module 'ValidationApp', []
 
 
 validationApp.controller 'ValidationCtrl', ($scope, $http) ->
-    $scope.schemaType = 'json-slice'
+    $scope.schemaType = 'draft-sdmx-json'
     $scope.messages = []
     schema = {}
 
@@ -14,6 +14,7 @@ validationApp.controller 'ValidationCtrl', ($scope, $http) ->
 
     requestSchema = () ->
         switch $scope.schemaType
+            when 'draft-sdmx-json' then schemaUrl = 'sdmx-json-schema.json'
             when 'json-slice' then schemaUrl = 'json-slice-schema.json'
             when 'json-code-index' then schemaUrl = 'json-code-index-schema.json'
 

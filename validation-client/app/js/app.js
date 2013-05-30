@@ -6,7 +6,7 @@
 
   validationApp.controller('ValidationCtrl', function($scope, $http) {
     var info, log, onData, onError, onSchema, requestSchema, schema, severe;
-    $scope.schemaType = 'json-slice';
+    $scope.schemaType = 'draft-sdmx-json';
     $scope.messages = [];
     schema = {};
     $scope.validate = function() {
@@ -16,6 +16,9 @@
     requestSchema = function() {
       var config, schemaUrl;
       switch ($scope.schemaType) {
+        case 'draft-sdmx-json':
+          schemaUrl = 'sdmx-json-schema.json';
+          break;
         case 'json-slice':
           schemaUrl = 'json-slice-schema.json';
           break;
