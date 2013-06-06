@@ -1,7 +1,7 @@
 {
     "$schema" : "http://json-schema.org/draft-04/schema#",
     "type": "object",
-    "description": "Schema for sdmx-json, v0.1.3 draft",
+    "description": "Schema for sdmx-json, v0.1.4 draft",
     "properties": {
         "header": {
             "$ref": "#/definitions/header"
@@ -91,14 +91,23 @@
                                 "type": [ "null", "string" ]
                             },
                             "telephone": {
-                                "type": [ "null", "string" ]
+                                "type": [ "null", "array" ],
+                                "items": {
+                                    "type": "string"
+                                }
                             },
                             "fax": {
-                                "type": [ "null", "string" ]
+                                "type": [ "null", "array" ],
+                                "items": {
+                                    "type": "string"
+                                }
                             },
                             "uri": {
-                                "type": [ "null", "string" ],
-                                "format": "uri"
+                                "type": [ "null", "array" ],
+                                "items": {
+                                    "type": "string",
+                                    "format": "uri"
+                                }
                             },
                             "email": {
                                 "type": [ "null", "array" ],
@@ -254,7 +263,7 @@
                         },
                         "required": [ "name" ]
                     },
-                    "minItems": 0,
+                    "minItems": 1,
                     "uniqueItems": true
                 }
             },
@@ -264,31 +273,9 @@
         "dataSet": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": [ "null", "string" ]
-                },
-                "name": {
-                    "type": [ "null", "string" ]
-                },
-                "description": {
-                    "type": [ "null", "string" ]
-                },
                 "action": {
                     "type": "string",
                     "enum": [ "Informational", "Append", "Replace", "Delete" ]
-                },
-                "provider": {
-                    "type": [ "null", "object" ],
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    },
-                    "required": [ "id", "name" ],
-                    "additionalProperties": false
                 },
                 "reportingBegin": {
                     "type": [ "null", "string" ]
