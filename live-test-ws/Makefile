@@ -8,7 +8,7 @@ test: release
 	@./node_modules/mocha/bin/mocha $(TESTS)
 
 release:
-	@rm *.js
-	@./node_modules/coffee-script/bin/coffee -c *.coffee
+	@rm -f *.js
+	@coffee -c *.coffee
 
 .PHONY: install test release
