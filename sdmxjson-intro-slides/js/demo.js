@@ -30,14 +30,18 @@
                 'Attributes: ' + attrsCount
             ];
 
+            var compressed  = response.getResponseHeader('content-length') ? response.getResponseHeader('content-length') : NaN;
+
             var sizeInfo = [
                 'Response: ' + Math.round(response.responseText.length / 1024) + ' KB',
-                'Compressed: ' + Math.round(response.getResponseHeader('content-length') / 1024) + ' KB'
+                'Compressed: ' + Math.round(compressed / 1024) + ' KB'
             ];
 
+            var serverTime = response.getResponseHeader('x-runtime') ? response.getResponseHeader('x-runtime') : NaN;
+
             var speedInfo = [
-                'Server: ' + response.getResponseHeader('x-runtime') + ' ms',
-                'Network: ' + (startHandle - start -  response.getResponseHeader('x-runtime')) + ' ms',
+                'Server: ' + serverTime + ' ms',
+                'Network: ' + (startHandle - start -  serverTime) + ' ms',
                 'Client: ' + (Date.now() - startHandle) + ' ms',
                 'Total: ' + (Date.now() - start) + ' ms'
             ];
