@@ -74,7 +74,11 @@ article header {
     margin-bottom: 20px;
 }
 
-article header img { display: inline-block; }
+article header img { 
+    display: inline-block; 
+    width: 164px;
+}
+
 article header h2 {
     padding-left: 10px;
     display: inline-block;
@@ -92,7 +96,10 @@ article footer {
     font-size: 0.5em;
 }
 
-article footer p { display: inline-block; }
+article footer p { 
+    display: inline-block; 
+}
+
 article footer .date {
     width:100px;
     text-align: left;
@@ -106,16 +113,16 @@ article footer .page {
     text-align: right;
 }
 
-article li {
+article section li {
     line-height: 120%;
 }
 
-article table {
+article section table {
     font-size: 0.5em;
     line-height: 120%;
 }
 
-article dl {
+article section dl {
     font-size: 0.5em;
     line-height: 120px;
 }
