@@ -1,16 +1,28 @@
 http = require 'http'
 url = require 'url'
 fs = require 'fs'
+path = require 'path'
 zlib = require 'zlib'
 
 #-------------------------------------------------------------------------------
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS-4'
-SERVER_VERSION = '0.5.1'
+SERVER_VERSION = '0.5.8'
 PORT_NUMBER = process.env.PORT or 8081
 NODE_ENV = process.env.NODE_ENV or 'test'
 DATA_FILE = 'hicp-coicop-inx-json-slice.json'
+
+# HTTP Response Codes
+HTTP_OK = 200
+HTTP_BAD_REQUEST = 400
+HTTP_UNAUTHORIZED = 401
+HTTP_NOT_FOUND = 404
+HTTP_METHOD_NOT_ALLOWED = 405
+HTTP_NOT_ACCEPTABLE = 406
+HTTP_INTERNAL_SERVER_ERROR = 500
+HTTP_NOT_IMPLEMENTED = 501
+
 
 dataset = null
 
@@ -42,54 +54,37 @@ loadDataset = (filename) ->
 
 
 preProcessMessage = (msg) ->
-    pkgFields = ['dataSetDimensions','seriesDimensions','observationDimensions','dataSetAttributes','seriesAttributes','observationAttributes']
+    str = msg.structure
+    ext = str.extensions =
+        componentMap: {}
+        keyDimensions: []
+        dimensions: []
+        attributeMap: {}
 
-    ext = msg.structure.extensions ?= {}
-    pkg = msg.structure.packaging
+    str.dimension ?= {}
+    str.dimensions.dataSet ?= []
+    str.dimensions.series ?= []
+    str.dimensions.observation ?= []
+    str.attributes ?= {}
+    str.attributes.dataSet ?= []
+    str.attributes.series ?= []
+    str.attributes.observation ?= []
 
-    pkg[field] ?= [] for field in pkgFields
+    for key, value of str.dimensions
+        for dim in value
+            ext.dimensions.push dim
+            ext.componentMap[dim.id] = dim
+            if dim.id is 'TIME_PERIOD'
+                ext.timeDimension = dim
+            else
+                ext.keyDimensions.push dim
 
-    ext.componentMap = {}
+    for key, value of str.attributes
+        for attr in value
+            ext.attributeMap[attr.id] = attr
+            ext.componentMap[attr.id] = attr
 
-    for comp in msg.structure.components
-        ext.componentMap[comp.id] = comp
-        ext.timeDimension = comp if comp.id is 'TIME_PERIOD'
-
-    dims = []
-    attrs = []
-
-    for key, value of pkg
-        array = if /Dimensions/.test key then dims else attrs
-        for compId, i in value
-            value[i] = ext.componentMap[compId]
-            array.push compId
-
-    ext.keyDimensions = []
-    ext.dimensions = []
-    ext.attributeMap = {}
-
-    for comp in msg.structure.components
-        ext.dimensions.push comp.id if comp.id in dims
-        ext.keyDimensions.push comp if comp.id in dims and comp.id isnt 'TIME_PERIOD'
-        ext.attributeMap[comp.id] = comp if comp.id in attrs
-
-    if msg.dataSets?
-        filterDataSet = (dataSet) ->
-            groups = dataSet.series.filter (series) -> not series.observations?
-            dataSet.series = dataSet.series.filter (series) -> series.observations?
-
-            joinGroupAttributes = (series) ->
-                matchSeries = (group) ->
-                    for dim, i in group.dimensions when dim isnt null
-                        return unless dim is series.dimensions[i]
-                    for attr, i in group.attributes when attr isnt null
-                        series.attributes[i] = attr
-
-                groups.forEach matchSeries
-
-            dataSet.series.forEach joinGroupAttributes
-
-        msg.dataSets.forEach filterDataSet
+    ext.keyDimensions.sort (a,b) -> a.keyPosition > b.keyPosition
 
     msg
 
@@ -171,7 +166,7 @@ exports.parseDate = parseDate = (value, end) ->
 exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
     if not flowRefStr?
         response.result.errors.push 'Mandatory parameter flowRef is missing'
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
     regex = ///
@@ -185,7 +180,7 @@ exports.parseFlowRef = parseFlowRef = (flowRefStr, request, response) ->
 
     if not regex.test flowRefStr
         response.result.errors.push "Invalid parameter flowRef #{flowRefStr}"
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
     flowRef = flowRefStr.split ','
@@ -233,7 +228,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
 
     if not regex.test keyStr
         response.result.errors.push "Invalid parameter flowRef #{keyStr}"
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
     key = []
@@ -248,7 +243,7 @@ exports.parseKey = parseKey = (keyStr, request, response) ->
 
         if -1 < dim.indexOf('+') and key[i].length is 0
             response.result.errors.push "Invalid parameter key #{keyStr}"
-            response.statusCode = 400
+            response.statusCode = HTTP_BAD_REQUEST
             return
 
     request.query.key = key
@@ -265,7 +260,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
 
     if not regex.test providerRefStr
         response.result.errors.push "Invalid parameter providerRef #{providerRefStr}"
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
     providerRef = providerRefStr.split ','
@@ -281,7 +276,7 @@ exports.parseProviderRef = parseProviderRef = (providerRefStr, request, response
 
     if providerRef.length isnt 2
         response.result.errors.push "Invalid parameter providerRef #{providerRefStr}"
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
     request.query.providerRef =
@@ -304,7 +299,7 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                     request.query[param] = +value
                     continue
             when 'updatedAfter'
-                response.statusCode = 501
+                response.statusCode = HTTP_NOT_IMPLEMENTED
                 return
             when 'dimensionAtObservation'
                 request.query[param] = value
@@ -314,24 +309,27 @@ exports.parseQueryParams = parseQueryParams = (request, response) ->
                     when 'full', 'dataonly', 'nodata', 'serieskeysonly'
                         request.query[param] = value
                         continue
+            when 'extraParams'
+                request.query.extraParams = value
+                continue
 
         response.result.errors.push "Invalid query parameter #{param} value #{value}"
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
 
 parseDataQuery = (path, request, response) ->
     parseFlowRef path[2], request, response
-    return unless response.statusCode is 200
+    return unless response.statusCode is HTTP_OK
 
     parseKey path[3], request, response
-    return unless response.statusCode is 200
+    return unless response.statusCode is HTTP_OK
 
     parseProviderRef path[4], request, response
-    return unless response.statusCode is 200
+    return unless response.statusCode is HTTP_OK
 
     parseQueryParams request, response
-    return unless response.statusCode is 200
+    return unless response.statusCode is HTTP_OK
 
 
 # Main parsing function
@@ -346,7 +344,7 @@ parse = (request, response) ->
         when 'data'
             parseDataQuery path, request, response
         else
-            response.statusCode = 501
+            response.statusCode = HTTP_NOT_IMPLEMENTED
             return
 
 #-------------------------------------------------------------------------------
@@ -376,7 +374,7 @@ findDataFlow = (request, response) ->
         else false
 
     if not found
-        response.statusCode = 404
+        response.statusCode = HTTP_NOT_FOUND
         response.result.errors.push "Data flow not found"
         return
 
@@ -414,7 +412,7 @@ mapCodesInQuery = (request, response, msg) ->
 
     if request.query.key.length isnt key.length
         response.result.errors.push "Invalid number of dimensions in parameter key"
-        response.statusCode = 400
+        response.statusCode = HTTP_BAD_REQUEST
         return
 
     # Normal query
@@ -447,7 +445,7 @@ query = (msg, request, response) ->
     # shorthand for result
     rslt = response.result
     dimAtObs = request.query.dimensionAtObservation
-    pkg = msg.structure.packaging
+    str = msg.structure
 
     #---------------------------------------------------------------------------
     # Check if we just send the whole dataset
@@ -466,34 +464,55 @@ query = (msg, request, response) ->
     #---------------------------------------------------------------------------
 
     # check that the dimension at obs makes sense
-    if dimAtObs? and dimAtObs isnt 'AllDimensions' and msg.structure.extensions.dimensions.indexOf(dimAtObs) is -1
-        response.statusCode = 400
-        response.result.errors.push "Invalid value for parameter dimensionAtObservation #{dimAtObs}"
-        return
+    if dimAtObs? and dimAtObs isnt 'AllDimensions'
+        if not msg.structure.extensions.dimensions.some( (dim) -> dim.id is dimAtObs )
+            response.statusCode = HTTP_BAD_REQUEST
+            response.result.errors.push "Invalid value for parameter dimensionAtObservation #{dimAtObs}"
+            return
 
     #---------------------------------------------------------------------------
 
     # Start collectiong the matching dimension codes
 
     codesInQuery = mapCodesInQuery request, response, msg
-    return unless response.statusCode is 200
+    return unless response.statusCode is HTTP_OK
 
     #---------------------------------------------------------------------------
 
     # We have matching codes. Start filtering series and observations.
 
+    componentValuesInResults = {}
+
+    # check the detail
+    noObservations = false
+    noAttributes = false
+    switch request.query.detail
+        when 'serieskeysonly'
+            noObservations = true
+            noAttributes = true
+        when 'dataonly'
+            noAttributes = true
+        when 'nodata'
+            noObservations = true
+
+    for key, value of msg.structure.dimensions
+        componentValuesInResults[comp.id] = {} for comp in value
+
+    for key, value of msg.structure.attributes
+        componentValuesInResults[comp.id] = {} for comp in value
+
+
     filterDataSet = (dataSet) ->
         return false if dataSet.dataSetAction is 'Delete'
-        return true unless pkg.dataSetDimensions?
-        return true if pkg.dataSetDimensions.length is 0
+        return true if str.dimensions.dataSet.length is 0
 
         for value, i in dataSet.dimensions
-            dimId = pkg.dataSetDimensions[i].id
+            dimId = str.dimensions.dataSet[i].id
             return false unless codesInQuery[dimId][value]?
             componentValuesInResults[dimId][value] = 1
 
-        for value, i in dataSet.attributes
-            dimId = pkg.dataSetAttributes[i].id
+        for value, i in dataSet.attributes when value?
+            dimId = str.attributes.dataSet[i].id
             componentValuesInResults[dimId][value] = 1
 
         true
@@ -503,30 +522,29 @@ query = (msg, request, response) ->
         return false unless series.observations?
 
         for value, i in series.dimensions
-            dimId = pkg.seriesDimensions[i].id
+            dimId = str.dimensions.series[i].id
             return false unless codesInQuery[dimId][value]?
 
         for value, i in series.dimensions
-            dimId = pkg.seriesDimensions[i].id
+            dimId = str.dimensions.series[i].id
             componentValuesInResults[dimId][value] = 1
 
-        for value, i in series.attributes
-            continue unless value?
-            dimId = pkg.seriesAttributes[i].id
+        for value, i in series.attributes when value?
+            dimId = str.attributes.series[i].id
             componentValuesInResults[dimId][value] = 1
 
         true
 
 
     filterObservations = (obs) ->
-        for dim, i in pkg.observationDimensions
+        for dim, i in str.dimensions.observation
             return false unless codesInQuery[dim.id][obs[i]]?
 
-        for dim, i in pkg.observationDimensions
+        for dim, i in str.dimensions.observation
             componentValuesInResults[dim.id][obs[i]] = 1
 
-        pos = pkg.observationDimensions.length + 1
-        for dim, i in pkg.observationAttributes
+        pos = str.dimensions.observation.length + 1
+        for dim, i in str.attributes.observation
             continue unless obs[pos+i]?
             componentValuesInResults[dim.id][ obs[pos+i] ] = 1
 
@@ -548,12 +566,17 @@ query = (msg, request, response) ->
 
     mapDataSetToResult = (dataSet) ->
         result =
-            dataSetID: dataSet.dataSetID
-            dataSetAction: dataSet.dataSetAction
+            id: dataSet.id
+            action: dataSet.action
             extracted: dataSet.extracted
+            name: dataSet.name
+            description: dataSet.description
 
-        result.dimensions = dataSet.dimensions.slice() if dataSet.dimensions?
-        result.attributes = dataSet.attributes.slice() if dataSet.attributes? and not noAttributes
+        if dataSet.dimensions?
+            result.dimensions = dataSet.dimensions.slice()
+
+        if dataSet.attributes? and not noAttributes
+            result.attributes = dataSet.attributes.slice()
 
         if dataSet.series?
             result.series = dataSet.series.filter(filterSeries).map(mapSeries)
@@ -562,21 +585,6 @@ query = (msg, request, response) ->
             result.observations = dataSet.observations.filter(filterObservations).map (obs) -> obs.slice()
 
         result
-
-    # check the detail
-    noObservations = false
-    noAttributes = false
-    switch request.query.detail
-        when 'serieskeysonly'
-            noObservations = true
-            noAttributes = true
-        when 'dataonly'
-            noAttributes = true
-        when 'nodata'
-            noObservations = true
-
-    componentValuesInResults = {}
-    componentValuesInResults[comp.id] = {} for comp in msg.structure.components
 
     resultDataSets = msg.dataSets.filter(filterDataSet).map(mapDataSetToResult)
 
@@ -588,7 +596,7 @@ query = (msg, request, response) ->
     count += Object.keys(value).length for key, value of componentValuesInResults
 
     if count is 0
-        response.statusCode = 404
+        response.statusCode = HTTP_NOT_FOUND
         response.result.errors.push 'Data not found'
         return
 
@@ -603,32 +611,32 @@ query = (msg, request, response) ->
             counter += 1
 
 
-    reBaseArray = (array, pkgId, start) ->
-        return unless array?
+    reBaseArray = (target, source, start) ->
+        return unless target?
         start ?= 0
-        for dim, i in pkg[pkgId]
-            continue unless array[ start + i ]?
-            array[ start + i ] = componentValuesInResults[dim.id][ array[ start + i] ]
+        for dim, i in source
+            continue unless target[ start + i ]?
+            target[ start + i ] = componentValuesInResults[dim.id][ target[ start + i] ]
 
 
     reBaseObservations = (obs) ->
-        reBaseArray obs, 'observationDimensions'
-        start = pkg.observationDimensions.length + 1
-        reBaseArray obs, 'observationAttributes', start
+        reBaseArray obs, str.dimensions.observation
+        start = str.dimensions.observation.length + 1
+        reBaseArray obs, str.attributes.observation, start
         obs
 
 
     reBaseSeries = (series) ->
-        reBaseArray series.dimensions, 'seriesDimensions'
-        reBaseArray series.attributes, 'seriesAttributes'
+        reBaseArray series.dimensions, str.dimensions.series
+        reBaseArray series.attributes, str.attributes.series
         if series.observations?
             series.observations = series.observations.map reBaseObservations
         series
 
 
     reBaseDataSet = (dataSet) ->
-        reBaseArray dataSet.dimensions, 'dataSetDimensions'
-        reBaseArray dataSet.attributes, 'dataSetAttributes'
+        reBaseArray dataSet.dimensions, str.dimensions.dataSet
+        reBaseArray dataSet.attributes, str.attributes.dataSet
 
         if dataSet.series?
             dataSet.series = dataSet.series.map reBaseSeries
@@ -660,20 +668,23 @@ query = (msg, request, response) ->
 
         resultComp
 
+
     rslt.structure =
         id: msg.structure.id
         href: msg.structure.href
-        packaging: {}
-        components: msg.structure.components.map mapComponent
+        ref: msg.structure.ref
+        dimensions: {}
+        attributes: {}
 
-    compIdMap = {}
-    rslt.structure.components.forEach (comp) -> compIdMap[comp.id] = comp
+    for key, components of msg.structure.dimensions
+        comps = rslt.structure.dimensions[key] = []
+        for comp in components when comp?
+            continue if request.query.detail is 'serieskeysonly' and comp.id is 'TIME_PERIOD'
+            comps.push mapComponent(comp)
 
-    for key, value of pkg
-        rslt.structure.packaging[key] = value.map (comp) -> compIdMap[comp.id]
-
-    for key, value of rslt.structure.packaging
-        rslt.structure.packaging[key] = value.map (comp) -> comp.id
+    unless noAttributes
+        for key, components of msg.structure.attributes
+            rslt.structure.attributes[key] = components.map(mapComponent) #.filter( (a) -> 0 < a.values.length )
 
     #---------------------------------------------------------------------------
 
@@ -708,48 +719,89 @@ query = (msg, request, response) ->
     flattenDataSet = (ds) ->
         if ds.series?
             ds.observations = []
-            ds.series.forEach((s) -> ds.observations = ds.observations.concat s.observations.map((o) -> s.dimensions.concat o, s.attributes))
+            ds.series.forEach(
+                (s) ->
+                    if s.observations?
+                        ds.observations = ds.observations.concat s.observations.map((o) -> s.dimensions.concat o, s.attributes)
+                    else if s.attributes?
+                        ds.observations = ds.observations.concat [ s.dimensions.concat s.attributes ]
+                    else
+                        ds.observations = ds.observations.concat [ s.dimensions ]
+            )
             delete ds.series
 
+    indexObservations = (ds) ->
+        observations = {}
+        dimCount = rslt.structure.dimensions.observation.length
+        for obs in ds.observations
+            key = obs[0...dimCount].join ':'
+            value = obs[dimCount..]
+            observations[key] = value
+        ds.observations = observations
+
     reformatResults = false
-    pkg = rslt.structure.packaging
+    newStr = rslt.structure
 
     if dimAtObs?
         if dimAtObs is 'AllDimensions'
             # Check if we have dimensions at series or dataset levels
-            reformatResults = true if 0 < pkg.dataSetDimensions.length
-            reformatResults = true if 0 < pkg.seriesDimensions.length
+            reformatResults = true if 0 < str.dimensions.dataSet.length
+            reformatResults = true if 0 < str.dimensions.series.length
         else
-            reformatResults = true if 1 < pkg.seriesDimensions.length
-            reformatResults = dimAtObs isnt pkg.observationDimensions[0]
+            reformatResults = true if 1 < str.dimensions.series.length
+            reformatResults = dimAtObs isnt str.dimensions.observation[0].id
 
     if reformatResults
         if dimAtObs is 'AllDimensions'
-            newPkg =
-                dataSetDimensions:[]
-                seriesDimensions: []
-                observationDimensions: pkg.dataSetDimensions.concat pkg.seriesDimensions, pkg.observationDimensions
-                dataSetAttributes: pkg.dataSetAttributes
-                seriesAttributes: []
-                observationAttributes: pkg.observationAttributes.concat pkg.seriesAttributes
+            newStr.dimensions =
+                dataSet: []
+                series: []
+                observation: newStr.dimensions.dataSet.concat newStr.dimensions.series, newStr.dimensions.observation
+            newStr.attributes =
+                dataSet: newStr.attributes.dataSet
+                series: []
+                observation: newStr.attributes.observation.concat newStr.attributes.series
         else
-            newPkg =
-                dataSetDimensions: pkg.dataSetDimensions.filter (d) -> d isnt dimAtObs
-                seriesDimensions: pkg.seriesDimensions.concat(pkg.observationDimensions).filter (d) -> d isnt dimAtObs
-                observationDimensions: [ dimAtObs ]
-                dataSetAttributes: pkg.dataSetAttributes
-                seriesAttributes: pkg.seriesAttributes
-                observationAttributes: pkg.observationAttributes
+            newStr.dimensions =
+                dataSet: newStr.dimensions.dataSet.filter (d) -> d.id isnt dimAtObs
+                series: newStr.dimensions.series.concat(newStr.dimensions.observation).filter (d) -> d.id isnt dimAtObs
+                observation: newStr.dimensions.series.concat(newStr.dimensions.observation).filter (d) -> d.id is dimAtObs
+            newStr.attributes =
+                dataSet: newStr.attributes.dataSet
+                series: newStr.attributes.series
+                observation: newStr.attributes.observation
 
-        dims = newPkg.dataSetDimensions.concat newPkg.seriesDimensions, newPkg.observationDimensions
+        dims = newStr.dimensions.dataSet.concat newStr.dimensions.series, newStr.dimensions.observation
         dimAtObsPos = dims.indexOf dimAtObs
         dimCount = dims.length
 
         rslt.dataSets.forEach flattenDataSet
         rslt.dataSets.forEach formatFlatDataSet unless dimAtObs is 'AllDimensions'
-        rslt.structure.packaging = newPkg
+        rslt.dataSets.forEach indexObservations if dimAtObs is 'AllDimensions' and request.query.extraParams is 'index'
 
     #---------------------------------------------------------------------------
+
+    # Check if we can move any attributes or dimensions to data set level
+
+    compressStructure = (type) ->
+        compress = type.series.map (d) -> d.values.length < 2
+        type.dataSet = type.dataSet.concat type.series.filter( (d, i) -> compress[i] )
+        type.series = type.series.filter (d, i) -> not compress[i]
+        compress
+
+    compressDims = compressStructure rslt.structure.dimensions
+    compressAttrs = compressStructure rslt.structure.attributes
+
+    compressDataSet = (dataSet) ->
+        return unless  dataSet.series?
+        dataSet.dimensions ?= []
+        dataSet.dimensions = dataSet.dimensions.concat dataSet.series[0].dimensions.filter (d, i) -> compressDims[i]
+        dataSet.series.forEach (s) -> s.dimensions = s.dimensions.filter (d, i) -> not compressDims[i]
+        dataSet.attributes ?= []
+        dataSet.attributes = dataSet.attributes.concat dataSet.series[0].attributes.filter (d, i) -> compressAttrs[i]
+        dataSet.series.forEach (s) -> s.attributes = s.attributes.filter (d, i) -> not compressAttrs[i]
+
+    rslt.dataSets.forEach compressDataSet
 
     return
 
@@ -768,7 +820,7 @@ validateRequest = (request, response) ->
         response.setHeader 'Access-Control-Allow-Origin', '*'
 
     if methods.indexOf( request.method ) is -1
-        response.statusCode = 405
+        response.statusCode = HTTP_METHOD_NOT_ALLOWED
         response.result.errors.push 'Supported methods: ' + methods.join(', ')
         return
 
@@ -777,7 +829,7 @@ validateRequest = (request, response) ->
         for type in mediaTypes
             matches += request.headers['accept'].indexOf(type) + 1
         if matches is 0
-            response.statusCode = 406
+            response.statusCode = HTTP_NOT_ACCEPTABLE
             response.result.errors.push 'Supported media types: ' + mediaTypes.join(',')
             return
 
@@ -804,7 +856,7 @@ validateRequest = (request, response) ->
 
             if username isnt 'test' or password isnt 'test'
                 response.setHeader 'WWW-Authenticate', 'BASIC realm="data/ECB,ECB_ICP1"'
-                response.statusCode = 401
+                response.statusCode = HTTP_UNAUTHORIZED
                 response.result.errors.push 'authorization required'
                 return
 
@@ -813,7 +865,7 @@ compressResponse = (request, response) ->
 
     sendResponse = (err, body) ->
         if err?
-            response.statusCode = 500
+            response.statusCode = HTTP_INTERNAL_SERVER_ERROR
             response.end()
             return
 
@@ -865,30 +917,33 @@ handleRequest = (request, response) ->
     response.setHeader 'Pragma',                      'no-cache'
     response.setHeader 'Content-Type',                'application/json'
     response.setHeader 'Content-Language',            'en'
-    response.statusCode = 200
+    response.statusCode = HTTP_OK
     response.result =
         'sdmx-proto-json': dataset['sdmx-proto-json']
         header:
             id: "IREF#{ process.hrtime()[0] }#{ process.hrtime()[1] }"
             test: if NODE_ENV is 'production' then false else true
             prepared: (new Date()).toISOString()
+            sender:
+                id: SERVER_NAME
+                name: SERVER_NAME
         errors: []
 
     validateRequest request, response
 
-    if response.statusCode is 200
+    if response.statusCode is HTTP_OK
         parse request, response
 
-    if response.statusCode is 200
+    if response.statusCode is HTTP_OK
         dataflow = findDataFlow request, response
 
     if request.method is 'OPTIONS'
         response.setHeader 'Content-Length', 0
     else
-        if response.statusCode is 200
+        if response.statusCode is HTTP_OK
             query dataflow, request, response
 
-        if response.statusCode is 200
+        if response.statusCode is HTTP_OK
             response.result.header.name = dataset.header.name
             response.result.errors = null
 
@@ -906,26 +961,27 @@ test = () ->
 
     req =
         method: 'GET'
-        url: '/data/ECB_ICP1/M.PT+FI.N.073000.4.INX?startPeriod=2009&endPeriod=2009&dimensionAtObservation=REF_AREA'
+        #url: '/data/ECB_ICP1/M.PT+FI.N.073000.4.INX?startPeriod=2009&endPeriod=2009&dimensionAtObservation=REF_AREA'
+        url: '/data/ECB_ICP1/M.PT+FI.N.073000.4.INX?startPeriod=2009&endPeriod=2009'
         headers:
             accept: 'application/json'
 
     handleRequest req, res
 
     #console.log res
-    console.log JSON.stringify res.result, null, 2
+    #console.log JSON.stringify res.result.dataSets, null, 2
 
 #-------------------------------------------------------------------------------
 # Initialise and start the server
 
 log 'starting'
 
-#process.on 'uncaughtException', (err) ->
-#    log err
-#    process.exit()
+process.on 'uncaughtException', (err) ->
+    log err
+    process.exit()
 
 # Load data set from file
-dataset = loadDataset DATA_FILE
+dataset = loadDataset path.join( path.dirname( fs.realpathSync(__filename)), DATA_FILE )
 
 # Start an HTTP server
 http.createServer( handleRequest ).listen PORT_NUMBER

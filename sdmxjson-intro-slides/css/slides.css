@@ -7,6 +7,19 @@ body {
 
 /*----------------------------------------------------------------------------*/
 
+.step {
+    position: relative;
+    width: 900px;
+    padding: 40px;
+    margin: 20px auto;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing:    border-box;
+    -ms-box-sizing:     border-box;
+    -o-box-sizing:      border-box;
+    box-sizing:         border-box;
+}
+
 .impress-enabled .step-overview .step {
     opacity: 1;
     cursor: pointer;
@@ -23,7 +36,9 @@ body {
     transition:         opacity 1s;
 }
 
-.impress-enabled .step.active { opacity: 1 }
+.impress-enabled .step.active {
+    opacity: 1
+}
 
 /*----------------------------------------------------------------------------*/
 
