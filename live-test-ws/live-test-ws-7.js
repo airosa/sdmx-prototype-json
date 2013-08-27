@@ -16,7 +16,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS-7';
 
-  SERVER_VERSION = '0.6.9';
+  SERVER_VERSION = '0.6.10';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -1391,10 +1391,10 @@
     }
     encoding = request.headers['accept-encoding'];
     if (encoding != null) {
-      if (encoding.match(/\bdeflate\b/)) {
-        response.setHeader('Content-Encoding', 'deflate');
-      } else if (encoding.match(/\bgzip\b/)) {
+      if (encoding.match(/\bgzip\b/)) {
         response.setHeader('Content-Encoding', 'gzip');
+      } else if (encoding.match(/\bdeflate\b/)) {
+        response.setHeader('Content-Encoding', 'deflate');
       }
     }
     if (request.headers['access-control-request-headers'] != null) {

@@ -9,7 +9,7 @@ util = require 'util'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS-7'
-SERVER_VERSION = '0.6.9'
+SERVER_VERSION = '0.6.10'
 PORT_NUMBER = process.env.PORT or 8081
 NODE_ENV = process.env.NODE_ENV or 'test'
 DATA_FILE = 'hicp-coicop-inx-sdmx.json'
@@ -1099,10 +1099,10 @@ validateRequest = (request, response) ->
 
     encoding = request.headers['accept-encoding']
     if encoding?
-        if encoding.match /\bdeflate\b/
-            response.setHeader 'Content-Encoding', 'deflate'
-        else if encoding.match /\bgzip\b/
+        if encoding.match /\bgzip\b/
             response.setHeader 'Content-Encoding', 'gzip'
+        else if encoding.match /\bdeflate\b/
+            response.setHeader 'Content-Encoding', 'deflate'
 
     if request.headers['access-control-request-headers']?
         response.setHeader 'Access-Control-Allow-Headers', request.headers['access-control-request-headers']
