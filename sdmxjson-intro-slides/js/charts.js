@@ -179,11 +179,14 @@
           })
           .y( function(d) { return y(d.obsValue); } );
 
+        var colours = d3.scale.category10();
+
         var addSeriesToChart = function(series, position) {
 
           // Draw the line for the series
           chart.append("svg:path")
             .attr("d", line(series.values))
+            .style("stroke", colours(position) )
             .attr("class", "line line" + position);
 
           // Draw the line for the legend
@@ -192,7 +195,7 @@
             .attr("y", 20 + (position * 20))
             .attr("height", 2)
             .attr("width", 40)
-            .attr("class", "line" + position);
+            .style("stroke", colours(position) );
 
           /*
             Draw text for the legend. In the request we are only varying

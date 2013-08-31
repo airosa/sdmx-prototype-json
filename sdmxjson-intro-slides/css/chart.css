@@ -2,36 +2,30 @@ path, line, rect {
   stroke-width: 1;
   fill: none;
 }
+
 .line {
   stroke-width: 2;
 }
-.line0 {
-  stroke: green;
-}
-.line1 {
-  stroke: maroon;
-}
-.line2 {
-  stroke: blue;
-}
-.line3 {
-  stroke: yellow;
-}
+
 .axis {
   shape-rendering: crispEdges;
 }
+
 .y.axis line, .y.axis path, .x.axis line, .x.axis path {
   stroke: lightgrey;
 }
+
 .y.axis text, .x.axis text {
   font-size: 12px;
 }
+
 .series-title, .chart-title {
   font-size: 12px;
   line-height: 120%;
-  padding:0px;
-  margin:0px;
+  padding: 0px;
+  margin: 0px;
 }
+
 .chart-footer {
   font-size: 10px;
   line-height: 120%;
