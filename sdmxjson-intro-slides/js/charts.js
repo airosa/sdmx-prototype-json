@@ -10,17 +10,8 @@
 
         handleResponse = function(error, message) {
             if (error) return console.warn(error);
+
             console.log('Handling response: ' + message.header.id);
-
-            /* Convert start and end dates to JavaScript dates and add them to time dimensions */
-
-            sdmxjsonlib.response.addStartAndEndDatesToTimeDimension(message);
-
-            /* Convert dimension and attribute ids to camelCase and add them to all components */
-
-            sdmxjsonlib.response.addPropertyNamesToComponents(message);
-
-            /* Start drawing the chart */
 
             drawChart(selector, message);
 
@@ -52,19 +43,26 @@
     drawChart = function(selector, message) {
         console.log('Drawing the chart');
 
+
+        /* Convert start and end dates to JavaScript dates and add them to time dimensions */
+
+        sdmxjsonlib.response.addStartAndEndDatesToTimeDimension(message);
+
+        /* Convert dimension and attribute ids to camelCase and add them to all components */
+
+        sdmxjsonlib.response.addPropertyNamesToComponents(message);
+
         /*
-          Map dimensions and attributes (=components) into an array and then store them in a map.
+          Map dimensions and attributes (=components) into an object.
           We are mapping all components also the those at the data set level.
           Property names were added to the components earlier.
         */
 
-        var structure = {};
-        var structureArray = sdmxjsonlib.response.mapStructure(message, sdmxjsonlib.mapComponent, false);
-        structureArray.forEach( function(o) { structure[o.propertyName] = o; } );
+        var structure = sdmxjsonlib.response.mapComponentsToObject(message, sdmxjsonlib.response.identity, false);
 
         /* Map data sets in the sdmx-json message into an array of observations */
 
-        var data = sdmxjsonlib.response.mapDataSets(message, sdmxjsonlib.response.mapObservationToObjectWithKeys);
+        var data = sdmxjsonlib.response.mapDataSetsToArray(message, sdmxjsonlib.response.obsToStructureSpecific);
 
         /*
           == Rest of the code uses only d3 functionality. ==
@@ -78,7 +76,7 @@
         };
 
         var nest = d3.nest();
-        nest.key( function(o) { return o.seriesKey; } );
+        nest.key( function(o) { return o._seriesKey; } );
         nest.sortValues(sortByEndDate);
         var series = nest.entries(data);
 
@@ -153,16 +151,18 @@
           These components are all at the data set level so we can just take the first value.
         */
 
+        var title = '';
         if (structure.compilation)
-          var title = '<abbr title="' + structure.compilation.values[0].name + '">'
-            + structure.icpItem.values[0].name + '</abbr>';
+          title = '<abbr title="' + structure.compilation.values[0].name + '">' + structure.icpItem.values[0].name + '</abbr>';
         else
-          var title = structure.icpItem.values[0].name;
+          title = structure.icpItem.values[0].name;
 
-        title = title
-          + ', ' + structure.icpSuffix.values[0].name
-          + ', ' + structure.adjustment.values[0].name
-          + ', ' + structure.unitIndexBase.values[0].name;
+        title = [
+          title,
+          structure.icpSuffix.values[0].name,
+          structure.adjustment.values[0].name,
+          structure.unitIndexBase.values[0].name
+        ].join(', ');
 
         chartRoot.select('.chart-title').html(title);
 
@@ -174,7 +174,7 @@
           */
           .x( function(d) {
               var diff = (d.timePeriod.endDate-d.timePeriod.startDate)/2;
-              var midDate = new Date(d.timePeriod.startDate.getTime()+diff)
+              var midDate = new Date(d.timePeriod.startDate.getTime()+diff);
               return x(midDate);
           })
           .y( function(d) { return y(d.obsValue); } );
@@ -187,7 +187,7 @@
           chart.append("svg:path")
             .attr("d", line(series.values))
             .style("stroke", colours(position) )
-            .attr("class", "line line" + position);
+            .attr("class", "line");
 
           // Draw the line for the legend
           chart.append("svg:rect")
