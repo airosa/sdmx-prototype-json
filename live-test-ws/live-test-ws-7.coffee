@@ -9,7 +9,7 @@ util = require 'util'
 # Globals and constants
 
 SERVER_NAME = 'LIVE-TEST-WS-7'
-SERVER_VERSION = '0.6.10'
+SERVER_VERSION = '0.6.11'
 PORT_NUMBER = process.env.PORT or 8081
 NODE_ENV = process.env.NODE_ENV or 'test'
 DATA_FILE = 'hicp-coicop-inx-sdmx.json'
@@ -672,6 +672,7 @@ query = (msg, request, response) ->
             name: comp.name
             description: comp.description
             role: comp.role
+            keyPosition: comp.keyPosition
             values: []
 
         for key, value of componentValuesInResults[comp.id]

@@ -1,7 +1,7 @@
 {
   "name":         	"live-test-ws-7",
   "subdomain":      "live-test-ws-7",
-  "version":      	"0.6.10",
+  "version":      	"0.6.11",
   "description":    "Experimental SDMX RESTful web service for JSON testing and development",
   "keywords":     	["sdmx", "coffeescript"],
   "author":       	"Sami Airo",
