@@ -16,7 +16,7 @@
 
   SERVER_NAME = 'LIVE-TEST-WS-7';
 
-  SERVER_VERSION = '0.6.10';
+  SERVER_VERSION = '0.6.11';
 
   PORT_NUMBER = process.env.PORT || 8081;
 
@@ -837,6 +837,7 @@
         name: comp.name,
         description: comp.description,
         role: comp.role,
+        keyPosition: comp.keyPosition,
         values: []
       };
       _ref2 = componentValuesInResults[comp.id];
