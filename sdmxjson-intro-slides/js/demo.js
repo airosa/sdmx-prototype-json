@@ -34,14 +34,14 @@
 
             var sizeInfo = [
                 'Response: ' + Math.round(response.responseText.length / 1024) + ' KB',
-                'Compressed: ' + Math.round(compressed / 1024) + ' KB'
+                //'Compressed: ' + Math.round(compressed / 1024) + ' KB'
             ];
 
             var serverTime = response.getResponseHeader('x-runtime') ? response.getResponseHeader('x-runtime') : NaN;
 
             var speedInfo = [
-                'Server: ' + serverTime + ' ms',
-                'Network: ' + (startHandle - start -  serverTime) + ' ms',
+                //'Server: ' + serverTime + ' ms',
+                //'Network: ' + (startHandle - start -  serverTime) + ' ms',
                 'Client: ' + (Date.now() - startHandle) + ' ms',
                 'Total: ' + (Date.now() - start) + ' ms'
             ];
@@ -69,15 +69,18 @@
             large: 'M.FI+DE+FR+ES.N..4.INX'
         };
 
-        var ws = 'http://live-test-ws-7.nodejitsu.com/data';
-        var dataSet = 'ECB_ICP1';
+        //var ws = 'http://live-test-ws-7.nodejitsu.com/data';
+        //var ws = 'http://localhost:8081/data';
+        var ws = 'http://a-sdw-wsrest.ecb.europa.eu/service/data';
+        //var dataSet = 'ECB_ICP1';
+        var dataSet = 'ICP';
         var params = 'dimensionAtObservation=TIME_PERIOD';
         var url = [ ws, dataSet, keys[size] ].join('/') + '?' + params;
 
         var start = Date.now();
         d3.select('#demo-alert').style('opacity','1');
 
-        d3.xhr(url, 'application/json', handleResponse);
+        d3.xhr(url).header('Accept','application/json').get(handleResponse);
     };
 
     root.demo = lib;
