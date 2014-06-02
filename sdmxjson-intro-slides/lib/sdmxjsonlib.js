@@ -11,7 +11,7 @@
     response: {}
   };
 
-  lib.version = '0.2.0';
+  lib.version = '0.3.0';
 
   lib.response.identity = function(obj) {
     return obj;
@@ -286,6 +286,25 @@
         return a.propertyName = lib.response._normalizeSdmxIdString(a.id);
       });
     }
+    return msg;
+  };
+
+  lib.response.addKeyPositionToDimensions = function(msg) {
+    if (msg == null) {
+      return msg;
+    }
+
+    var dims = msg.structure.dimensions;
+    var dataSetLevel = (dims.dataSet ? dims.dataSet : []);
+    var seriesLevel = (dims.series ? dims.series : []);
+    var obsLevel = (dims.observation ? dims.observation : []);
+
+    var iterator = function(d, i) {
+      d.keyPosition = (d.keyPosition? d.keyPosition: i);
+    };
+
+    [].concat(dataSetLevel, seriesLevel, obsLevel).forEach(iterator);
+
     return msg;
   };
 

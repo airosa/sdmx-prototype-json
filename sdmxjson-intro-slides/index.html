@@ -33,7 +33,7 @@
         SDMX Global Conference 2013<br>
         OECD</P>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">1/17</p>
         </footer>
@@ -57,7 +57,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">2/17</p>
         </footer>
@@ -72,7 +72,7 @@
             <img src="img/sdmx-tech-stds.svg" style="width:550px;" alt="SDMX technical standards">
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">3/17</p>
         </footer>
@@ -88,7 +88,7 @@
             <img src="img/conceptual-design.png" style="width:700px;" alt="Conceptual design">
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">4/17</p>
         </footer>
@@ -111,7 +111,7 @@
                 <p class="caption">For Mobile Devices</p>
             </div>
             <div class="pic-2x2" style="float:left;">
-                <a title="By Zarek [CC-BY-2.0 (http://creativecommons.org/licenses/by/2.0)], via Wikimedia Commons" href="http://commons.wikimedia.org/wiki/File:Assembly2004-areena01.jpg"><img width="350" alt="Assembly2004-areena" src="http://upload.wikimedia.org/wikipedia/commons/e/ea/Assembly2004-areena01.jpg"/></a>
+                <a title="By VeronicaTherese (Own Work) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" href="http://commons.wikimedia.org/wiki/File%3AOpenPlanRedBalloon1.jpg"><img width="350"/></a>
                 <p class="caption">For Diverse Developers</p>
             </div>
             <div class="pic-2x2" style="float:right">
@@ -120,7 +120,7 @@
             </div>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">5/17</p>
         </footer>
@@ -151,7 +151,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">6/17</p>
         </footer>
@@ -181,7 +181,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">7/17</p>
         </footer>
@@ -201,7 +201,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">8/17</p>
         </footer>
@@ -221,7 +221,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">9/17</p>
         </footer>
@@ -243,7 +243,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">10/17</p>
         </footer>
@@ -281,7 +281,7 @@
                         <td id="speed-large"></td>
                     </tr>
                     <tr>
-                        <th>Size</th>
+                        <th>Size (uncompressed)</th>
                         <td></td>
                         <td id="size-small"></td>
                         <td id="size-medium"></td>
@@ -290,18 +290,15 @@
                 </tbody>
             </table>
             <dl>
-                <dt>Test Data Set</dt>
-                <dd>Consumer price indices data for the Euro zone. Total of
-                    2.210 series with 324.850 observations.Includes 14 attributes
-                    (TITLE_COMPL, OBS_STATUS etc.).</dd>
-                <dt>Test Server</dt>
-                <dd>Small cloud instance with very limited resources hosted in North America.
-                    Server processing times are highly dependent on the server implementation.</dd>
+                <dt>Data Set</dt>
+                <dd>Harmonised Index of Consumer Prices (HICP) for the euro area.</dd>
+                <dt>Server</dt>
+                <dd>European Central Bank SDMX 2.1 RESTful <a href="http://a-sdw-wsrest.ecb.europa.eu">Web Service</a></dd>
             </dl>
             <div id="demo-alert" class="indicator"><p>Please Wait...</p></div>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">11/17</p>
         </footer>
@@ -320,7 +317,7 @@
             <div style="position:absolute; bottom:60px; width:100%;">
             <p class="text-box" style="margin: 20px auto 20px auto; width:600px;">This time series chart is
                 not a static picture. Client running this presentation sends a
-                <a href="http://live-test-ws-7.nodejitsu.com/data/ECB_ICP1/M.DE+FR+ES.N.011700.4.INX?dimensionAtObservation=TIME_PERIOD" target="_blank">request</a> to a test
+                <a href="http://a-sdw-wsrest.ecb.europa.eu/service/data/ICP/M.DE+FR+ES.N.011700.4.INX?dimensionAtObservation=TIME_PERIOD&startPeriod=2005" target="_blank">request</a> to a test
                 server running SDMX 2.1 RESTful Web Service and displays the data in the JSON response.
                 JavaScript visualisation library <a href="http://d3js.org" target="_blank">D3.js</a> provides the charting
                 functionality. <a onClick="charts.makeRequest('#dynamic-chart','011700');">Refresh Chart</a>
@@ -328,7 +325,7 @@
             </div>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">12/17</p>
         </footer>
@@ -354,7 +351,7 @@
             </div>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">13/17</p>
         </footer>
@@ -370,7 +367,7 @@
             <a href="http://goo.gl/9x3lH4" target="_blank">http://goo.gl/9x3lH4</a>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">14/17</p>
         </footer>
@@ -385,7 +382,7 @@
             <img src="img/sdmx-ws-models.svg" style="width:100%;" alt="Usage scenarios">
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">15/17</p>
         </footer>
@@ -413,7 +410,7 @@
             </ul>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">16/17</p>
         </footer>
@@ -431,7 +428,7 @@
             <p style="position:absolute; bottom:30px; width:100%; color:white; font-weight:bold;">That’s all, Thank You!</p>
         </section>
         <footer>
-            <p class="date">2013-09-12</p>
+            <p class="date">2014-06-02</p>
             <p class="text">DRAFT</p>
             <p class="page">17/17</p>
         </footer>

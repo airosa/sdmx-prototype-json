@@ -10,7 +10,6 @@
 
         handleResponse = function(error, message) {
             if (error) return console.warn(error);
-
             console.log('Handling response: ' + message.header.id);
 
             drawChart(selector, message);
@@ -22,14 +21,17 @@
 
         clearChart(selector);
 
-        var ws = 'http://live-test-ws-7.nodejitsu.com/data';
-        var dataSet = 'ECB_ICP1';
+        //var ws = 'http://live-test-ws-7.nodejitsu.com/data';
+        //var ws = 'http://localhost:8081/data';
+        var ws = 'http://a-sdw-wsrest.ecb.europa.eu/service/data'
+        //var dataSet = 'ECB_ICP1';
+        var dataSet = 'ICP';
         var key = 'M.DE+FR+ES.N.' + icpItem + '.4.INX';
-        var params = 'dimensionAtObservation=TIME_PERIOD';
+        var params = 'dimensionAtObservation=TIME_PERIOD&startPeriod=2005';
         var url = [ ws, dataSet, key ].join('/') + '?' + params;
         console.log(url);
 
-        d3.json(url, handleResponse);
+        d3.json(url).header('Accept','application/json').get(handleResponse);
     };
 
 
@@ -52,6 +54,10 @@
 
         sdmxjsonlib.response.addPropertyNamesToComponents(message);
 
+        /* Adds keyPosition properties with default values to dimensions if they are missing */
+
+        sdmxjsonlib.response.addKeyPositionToDimensions(message);
+
         /*
           Map dimensions and attributes (=components) into an object.
           We are mapping all components also the those at the data set level.
@@ -63,6 +69,7 @@
         /* Map data sets in the sdmx-json message into an array of observations */
 
         var data = sdmxjsonlib.response.mapDataSetsToArray(message, sdmxjsonlib.response.obsToStructureSpecific);
+        console.log(data);
 
         /*
           == Rest of the code uses only d3 functionality. ==
@@ -79,6 +86,7 @@
         nest.key( function(o) { return o._seriesKey; } );
         nest.sortValues(sortByEndDate);
         var series = nest.entries(data);
+        console.log(series);
 
         /* Calculate minimum and maximum values for both x and y axis */
 
@@ -152,7 +160,7 @@
         */
 
         var title = '';
-        if (structure.compilation)
+        if (structure.compilation && structure.compilation.values[0] && structure.compilation.values[0].name)
           title = '<abbr title="' + structure.compilation.values[0].name + '">' + structure.icpItem.values[0].name + '</abbr>';
         else
           title = structure.icpItem.values[0].name;
