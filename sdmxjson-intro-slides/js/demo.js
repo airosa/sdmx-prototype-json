@@ -30,14 +30,14 @@
                 'Attributes: ' + attrsCount
             ];
 
-            var compressed  = response.getResponseHeader('content-length') ? response.getResponseHeader('content-length') : NaN;
+            //var compressed  = response.getResponseHeader('content-length') ? response.getResponseHeader('content-length') : NaN;
 
             var sizeInfo = [
                 'Response: ' + Math.round(response.responseText.length / 1024) + ' KB',
                 //'Compressed: ' + Math.round(compressed / 1024) + ' KB'
             ];
 
-            var serverTime = response.getResponseHeader('x-runtime') ? response.getResponseHeader('x-runtime') : NaN;
+            //var serverTime = response.getResponseHeader('x-runtime') ? response.getResponseHeader('x-runtime') : NaN;
 
             var speedInfo = [
                 //'Server: ' + serverTime + ' ms',

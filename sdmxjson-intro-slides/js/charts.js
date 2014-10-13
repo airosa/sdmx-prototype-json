@@ -21,17 +21,21 @@
 
         clearChart(selector);
 
-        //var ws = 'http://live-test-ws-7.nodejitsu.com/data';
-        //var ws = 'http://localhost:8081/data';
-        var ws = 'http://a-sdw-wsrest.ecb.europa.eu/service/data'
-        //var dataSet = 'ECB_ICP1';
-        var dataSet = 'ICP';
-        var key = 'M.DE+FR+ES.N.' + icpItem + '.4.INX';
-        var params = 'dimensionAtObservation=TIME_PERIOD&startPeriod=2005';
-        var url = [ ws, dataSet, key ].join('/') + '?' + params;
-        console.log(url);
+        var req = new sdmxjsonlib.request.URL();
 
-        d3.json(url).header('Accept','application/json').get(handleResponse);
+        req.hostname = 'a-sdw-wsrest.ecb.europa.eu';
+        req.path.pathname = 'service';
+        req.path.resource = 'data';
+
+        req.path.dataFlow.id = 'ICP';
+        req.path.key = [ 'M', [ 'DE', 'FR', 'ES' ], 'N', icpItem, '4', 'INX' ];
+
+        req.query.dimensionAtObservation = 'TIME_PERIOD';
+        req.query.startPeriod = '2005';
+
+        console.log(req.href());
+
+        d3.json(req.href()).header('Accept','application/json').get(handleResponse);
     };
 
 
@@ -45,31 +49,17 @@
     drawChart = function(selector, message) {
         console.log('Drawing the chart');
 
-
-        /* Convert start and end dates to JavaScript dates and add them to time dimensions */
-
-        sdmxjsonlib.response.addStartAndEndDatesToTimeDimension(message);
-
-        /* Convert dimension and attribute ids to camelCase and add them to all components */
-
-        sdmxjsonlib.response.addPropertyNamesToComponents(message);
-
-        /* Adds keyPosition properties with default values to dimensions if they are missing */
-
-        sdmxjsonlib.response.addKeyPositionToDimensions(message);
-
         /*
           Map dimensions and attributes (=components) into an object.
           We are mapping all components also the those at the data set level.
           Property names were added to the components earlier.
         */
 
-        var structure = sdmxjsonlib.response.mapComponentsToObject(message, sdmxjsonlib.response.identity, false);
+        var structure = sdmxjsonlib.response.mapComponentsForD3(message);
 
         /* Map data sets in the sdmx-json message into an array of observations */
 
-        var data = sdmxjsonlib.response.mapDataSetsToArray(message, sdmxjsonlib.response.obsToStructureSpecific);
-        console.log(data);
+        var data = sdmxjsonlib.response.mapDataSetsForD3(message);
 
         /*
           == Rest of the code uses only d3 functionality. ==
@@ -86,12 +76,11 @@
         nest.key( function(o) { return o._seriesKey; } );
         nest.sortValues(sortByEndDate);
         var series = nest.entries(data);
-        console.log(series);
 
         /* Calculate minimum and maximum values for both x and y axis */
 
-        var minDate = d3.min( data, function(o) { return o.timePeriod.startDate; } );
-        var maxDate = d3.max( data, function(o) { return o.timePeriod.endDate; } );
+        var minDate = d3.min( data, function(o) { return o.timePeriod._startDate; } );
+        var maxDate = d3.max( data, function(o) { return o.timePeriod._endDate; } );
         var valueExtent = d3.extent( data, function(o) { return o.obsValue; } );
 
         /* set up svg object */
@@ -181,8 +170,8 @@
             Calculate the mid point for each time period to indicate period average.
           */
           .x( function(d) {
-              var diff = (d.timePeriod.endDate-d.timePeriod.startDate)/2;
-              var midDate = new Date(d.timePeriod.startDate.getTime()+diff);
+              var diff = (d.timePeriod._endDate - d.timePeriod._startDate)/2;
+              var midDate = new Date(d.timePeriod._startDate.getTime() + diff);
               return x(midDate);
           })
           .y( function(d) { return y(d.obsValue); } );
