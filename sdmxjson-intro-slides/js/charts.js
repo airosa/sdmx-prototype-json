@@ -67,8 +67,8 @@
         */
 
         var sortByEndDate = function(a, b) {
-          var ad = a.timePeriod.endDate;
-          var bd = b.timePeriod.endDate;
+          var ad = a.timePeriod._endDate;
+          var bd = b.timePeriod._endDate;
           return ad < bd ? -1 : ad > bd ? 1 : 0;
         };
 
