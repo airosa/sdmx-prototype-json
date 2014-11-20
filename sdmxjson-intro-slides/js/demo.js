@@ -71,7 +71,7 @@
 
         //var ws = 'http://live-test-ws-7.nodejitsu.com/data';
         //var ws = 'http://localhost:8081/data';
-        var ws = 'http://a-sdw-wsrest.ecb.europa.eu/service/data';
+        var ws = 'http://sdw-wsrest.ecb.europa.eu/service/data';
         //var dataSet = 'ECB_ICP1';
         var dataSet = 'ICP';
         var params = 'dimensionAtObservation=TIME_PERIOD';

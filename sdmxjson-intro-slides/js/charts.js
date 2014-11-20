@@ -23,7 +23,7 @@
 
         var req = new sdmxjsonlib.request.URL();
 
-        req.hostname = 'a-sdw-wsrest.ecb.europa.eu';
+        req.hostname = 'sdw-wsrest.ecb.europa.eu';
         req.path.pathname = 'service';
         req.path.resource = 'data';
 
